@@ -28,7 +28,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Photoprism',
       theme: ThemeData(
         // This is the theme of your application.
         //
@@ -41,13 +41,13 @@ class MyApp extends StatelessWidget {
         // is not restarted.
         primarySwatch: Colors.blue,
       ),
-      home: MyHomePage(title: 'Flutter Demo Home Page'),
+      home: MainPage(title: 'Photoprism Home'),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
+class MainPage extends StatefulWidget {
+  MainPage({Key key, this.title}) : super(key: key);
 
   // This widget is the home page of your application. It is stateful, meaning
   // that it has a State object (defined below) that contains fields that affect
@@ -61,18 +61,27 @@ class MyHomePage extends StatefulWidget {
   final String title;
 
   @override
-  _MyHomePageState createState() => _MyHomePageState();
+  _MainPageState createState() => _MainPageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _MainPageState extends State<MainPage> {
   int _counter = 0;
   List<Widget> imageList = new List();
   File _image;
   String _ordner = "";
   String _datei = "";
+  PageController _myPage;
+  int _selectedIndex = 0;
+
+  void _onItemTapped(int index) {
+    _myPage.jumpToPage(index);
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
 
   void getImages() async {
-    http.Response response = await http.get('http://10.0.2.40:2342/api/v1/photos?count=60');
+    http.Response response = await http.get('https://demo.photoprism.org/api/v1/photos?count=1000');
     final parsed = json.decode(response.body).cast<Map<String, dynamic>>();
 
     List<Photo> photoList = parsed.map<Photo>((json) => Photo.fromJson(json)).toList();
@@ -81,7 +90,7 @@ class _MyHomePageState extends State<MyHomePage> {
     for (Photo photo in photoList) {
       newImages.add(Center(
           child: Image.network(
-            'http://10.0.2.40:2342/api/v1/thumbnails/'+photo.fileHash+'/tile_224',
+            'https://demo.photoprism.org/api/v1/thumbnails/'+photo.fileHash+'/tile_224',
           )
       ));
     }
@@ -135,6 +144,13 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _myPage = PageController(initialPage: 0);
+    _selectedIndex = 0;
+  }
+
+  @override
   Widget build(BuildContext context) {
     // This method is rerun every time setState is called, for instance as done
     // by the _incrementCounter method above.
@@ -148,40 +164,78 @@ class _MyHomePageState extends State<MyHomePage> {
         // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
       ),
-      body: GridView.count(
-        crossAxisCount: 3,
-        mainAxisSpacing: 4,
-        crossAxisSpacing: 4,
-        children: imageList,
+      body: PageView(
+        physics: NeverScrollableScrollPhysics(),
+        controller: _myPage,
+        children: <Widget>[
+          GridView.count(
+          crossAxisCount: 3,
+            mainAxisSpacing: 4,
+            crossAxisSpacing: 4,
+            children: imageList,
+          ),
+          GridView.count(
+            crossAxisCount: 3,
+            mainAxisSpacing: 4,
+            crossAxisSpacing: 4,
+            children: List.generate(100, (index) {
+              return Center(
+                child: Text(
+                  'Album $index',
+                  style: Theme.of(context).textTheme.headline,
+                ),
+              );
+            }),
+          ),
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                Text(
+                  'You have pushed the button this many times:',
+                ),
+                Text(
+                  '$_counter',
+                  style: Theme.of(context).textTheme.display1,
+                ),
+                Center(
+                  child: _image == null
+                      ? Text('No image selected.')
+                      : Text("Ordner: $_ordner, Datei: $_datei"),
+//                  : Image.file(_image),
+                ),
+                RaisedButton(
+                  child: const Text('Select image', semanticsLabel: ''),
+                  onPressed: getImage,
+                ),
+                RaisedButton(
+                  child: const Text('Upload image', semanticsLabel: ''),
+                  onPressed: uploadImage,
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
-//      body: Center(
-//        child: Column(
-//          mainAxisAlignment: MainAxisAlignment.center,
-//          children: <Widget>[
-//            Text(
-//              'You have pushed the button this many times:',
-//            ),
-//            Text(
-//              '$_counter',
-//              style: Theme.of(context).textTheme.display1,
-//            ),
-//            Center(
-//              child: _image == null
-//                  ? Text('No image selected.')
-//                  : Text("Ordner: $_ordner, Datei: $_datei"),
-////                  : Image.file(_image),
-//            ),
-//            RaisedButton(
-//              child: const Text('Select image', semanticsLabel: ''),
-//              onPressed: getImage,
-//            ),
-//            RaisedButton(
-//              child: const Text('Upload image', semanticsLabel: ''),
-//              onPressed: uploadImage,
-//            ),
-//          ],
-//        ),
-//      ),
+      bottomNavigationBar: BottomNavigationBar(
+        items: const <BottomNavigationBarItem>[
+          BottomNavigationBarItem(
+            icon: Icon(Icons.photo),
+            title: Text('Photos'),
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.photo_album),
+            title: Text('Albums'),
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.settings),
+            title: Text('Settings'),
+          ),
+        ],
+        currentIndex: _selectedIndex,
+        selectedItemColor: Colors.amber[800],
+        onTap: _onItemTapped,
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: getImages,
         tooltip: 'Increment',
