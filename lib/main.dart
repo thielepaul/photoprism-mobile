@@ -7,6 +7,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as p;
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:photo_view/photo_view.dart';
+import 'package:photo_view/photo_view_gallery.dart';
 
 final uploader = FlutterUploader();
 
@@ -35,6 +37,38 @@ class Album {
       id: json['AlbumUUID'] as String,
       name: json['AlbumName'] as String,
     );
+  }
+}
+
+class PhotoView extends StatelessWidget {
+  int currentPhotoIndex;
+  List<Photo> photos;
+  String photoprismURL;
+  PageController pageController;
+
+  PhotoView(int currentPhotoIndex, List<Photo> photos, String photoprismURL) {
+    this.currentPhotoIndex = currentPhotoIndex;
+    this.photos = photos;
+    this.photoprismURL = photoprismURL;
+    this.pageController = PageController(initialPage: this.currentPhotoIndex);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+        child: PhotoViewGallery.builder(
+      scrollPhysics: const BouncingScrollPhysics(),
+      builder: (BuildContext context, int index) {
+        return PhotoViewGalleryPageOptions(
+          imageProvider: NetworkImage(photoprismURL + "/api/v1/thumbnails/"+ this.photos[index].fileHash +"/fit_1920"),
+          initialScale: PhotoViewComputedScale.contained,
+          minScale: PhotoViewComputedScale.contained,
+          maxScale: PhotoViewComputedScale.covered * 1.5,
+        );
+      },
+      itemCount: photos.length,
+      pageController: pageController,
+    ));
   }
 }
 
@@ -80,13 +114,13 @@ class _MainPageState extends State<MainPage> {
   File _image;
   String _ordner = "";
   String _datei = "";
-  String photoprism_url = "";
+  String photoprismURL = "";
   PageController _myPage;
   int _selectedIndex = 0;
   TextEditingController _textFieldController = TextEditingController();
 
   _displayDialog(BuildContext context) async {
-    _textFieldController.text = photoprism_url;
+    _textFieldController.text = photoprismURL;
     return showDialog(
         context: context,
         builder: (context) {
@@ -94,7 +128,8 @@ class _MainPageState extends State<MainPage> {
             title: Text('Enter Photoprism URL'),
             content: TextField(
               controller: _textFieldController,
-              decoration: InputDecoration(hintText: "https://demo.photoprism.org"),
+              decoration:
+                  InputDecoration(hintText: "https://demo.photoprism.org"),
             ),
             actions: <Widget>[
               FlatButton(
@@ -127,7 +162,7 @@ class _MainPageState extends State<MainPage> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setString("url", _url);
     setState(() {
-      photoprism_url = _url;
+      photoprismURL = _url;
     });
   }
 
@@ -135,26 +170,40 @@ class _MainPageState extends State<MainPage> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String _url = prefs.getString("url");
     setState(() {
-      photoprism_url = _url;
+      photoprismURL = _url;
     });
   }
 
   void loadPhotos() async {
     http.Response response =
-        await http.get(photoprism_url + '/api/v1/photos?count=1000');
+        await http.get(photoprismURL + '/api/v1/photos?count=1000');
     final parsed = json.decode(response.body).cast<Map<String, dynamic>>();
 
     List<Photo> photoList =
         parsed.map<Photo>((json) => Photo.fromJson(json)).toList();
 
     List<Widget> photos = new List();
+    int i = 0;
     for (Photo photo in photoList) {
+      int currentPhotoIndex = i;
       photos.add(Center(
+        child: GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => PhotoView(currentPhotoIndex, photoList, photoprismURL)),
+            );
+          },
           child: Image.network(
-        photoprism_url + '/api/v1/thumbnails/' +
-            photo.fileHash +
-            '/tile_224',
-      )));
+            photoprismURL +
+                '/api/v1/thumbnails/' +
+                photo.fileHash +
+                '/tile_224',
+          ),
+        ),
+      ));
+      i++;
     }
 
     setState(() {
@@ -164,7 +213,7 @@ class _MainPageState extends State<MainPage> {
 
   Future loadAlbums() async {
     http.Response response =
-        await http.get(photoprism_url + '/api/v1/albums?count=1000');
+        await http.get(photoprismURL + '/api/v1/albums?count=1000');
     final parsed = json.decode(response.body).cast<Map<String, dynamic>>();
 
     List<Album> albums =
@@ -174,9 +223,7 @@ class _MainPageState extends State<MainPage> {
     for (Album album in albums) {
       newAlbums.add(GridTile(
         child: Image.network(
-          photoprism_url + '/api/v1/albums/' +
-              album.id +
-              '/thumbnail/tile_224',
+          photoprismURL + '/api/v1/albums/' + album.id + '/thumbnail/tile_224',
         ),
         footer: GestureDetector(
           child: GridTileBar(
@@ -199,7 +246,7 @@ class _MainPageState extends State<MainPage> {
     var savedDir = "/sdcard/DCIM/Camera/";
     var filename = "PANO_20190611_122500.jpg";
     final taskId = await uploader.enqueue(
-        url: "http://10.0.2.40:2342/api/v1/upload/test",
+        url: photoprismURL + "/api/v1/upload/test",
         //required: url to upload to
         files: [
           FileItem(filename: _datei, savedDir: _ordner, fieldname: "files")
@@ -212,7 +259,7 @@ class _MainPageState extends State<MainPage> {
         tag: "upload 1"); // unique tag for upload taskS
     final subscription = uploader.result.listen((result) async {
       var response =
-          await http.post("http://10.0.2.40:2342/api/v1/import/upload/test");
+          await http.post(photoprismURL + "/api/v1/import/upload/test");
     }, onError: (ex, stacktrace) {});
   }
 
@@ -293,7 +340,7 @@ class _MainPageState extends State<MainPage> {
             children: <Widget>[
               ListTile(
                 title: Text("Photoprism URL"),
-                subtitle: Text(photoprism_url),
+                subtitle: Text(photoprismURL),
                 onTap: () {
                   _displayDialog(context);
                 },
@@ -337,7 +384,7 @@ class _MainPageState extends State<MainPage> {
       floatingActionButton: FloatingActionButton(
         onPressed: refreshPhotos,
         tooltip: 'Increment',
-        child: Icon(Icons.add),
+        child: Icon(Icons.refresh),
       ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
