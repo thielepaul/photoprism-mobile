@@ -1,5 +1,5 @@
+import 'dart:convert';
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_uploader/flutter_uploader.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -10,6 +10,18 @@ import 'package:http/http.dart' as http;
 final uploader = FlutterUploader();
 
 void main() => runApp(MyApp());
+
+class Photo {
+  final String fileHash;
+
+  Photo({this.fileHash});
+
+  factory Photo.fromJson(Map<String, dynamic> json) {
+    return Photo(
+      fileHash: json['FileHash'] as String,
+    );
+  }
+}
 
 class MyApp extends StatelessWidget {
   // This widget is the root of your application.
@@ -54,11 +66,36 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
+  List<Widget> imageList = new List();
   File _image;
   String _ordner = "";
   String _datei = "";
 
+  void getImages() async {
+    http.Response response = await http.get('http://10.0.2.40:2342/api/v1/photos?count=60');
+    final parsed = json.decode(response.body).cast<Map<String, dynamic>>();
+
+    List<Photo> photoList = parsed.map<Photo>((json) => Photo.fromJson(json)).toList();
+
+    List<Widget> newImages = new List();
+    for (Photo photo in photoList) {
+      newImages.add(Center(
+          child: Image.network(
+            'http://10.0.2.40:2342/api/v1/thumbnails/'+photo.fileHash+'/tile_224',
+          )
+      ));
+    }
+
+    setState(() {
+      imageList = newImages;
+    });
+  }
+
   void uploadImage() async {
+    Map<PermissionGroup, PermissionStatus> permissions = await PermissionHandler().requestPermissions([PermissionGroup.storage]);
+
+    var savedDir = "/sdcard/DCIM/Camera/";
+    var filename = "PANO_20190611_122500.jpg";
     final taskId = await uploader.enqueue(
         url: "http://10.0.2.40:2342/api/v1/upload/test", //required: url to upload to
         files: [FileItem(filename: _datei, savedDir: _ordner, fieldname:"files")], // required: list of files that you want to upload
@@ -111,52 +148,42 @@ class _MyHomePageState extends State<MyHomePage> {
         // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
       ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Invoke "debug painting" (press "p" in the console, choose the
-          // "Toggle Debug Paint" action from the Flutter Inspector in Android
-          // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
-          // to see the wireframe for each widget.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.display1,
-            ),
-            Center(
-              child: _image == null
-                  ? Text('No image selected.')
-                  : Text("Ordner: $_ordner, Datei: $_datei"),
-//                  : Image.file(_image),
-            ),
-            RaisedButton(
-              child: const Text('Select image', semanticsLabel: ''),
-              onPressed: getImage,
-            ),
-            RaisedButton(
-              child: const Text('Upload image', semanticsLabel: ''),
-              onPressed: uploadImage,
-            ),
-          ],
-        ),
+      body: GridView.count(
+        crossAxisCount: 3,
+        mainAxisSpacing: 4,
+        crossAxisSpacing: 4,
+        children: imageList,
       ),
+//      body: Center(
+//        child: Column(
+//          mainAxisAlignment: MainAxisAlignment.center,
+//          children: <Widget>[
+//            Text(
+//              'You have pushed the button this many times:',
+//            ),
+//            Text(
+//              '$_counter',
+//              style: Theme.of(context).textTheme.display1,
+//            ),
+//            Center(
+//              child: _image == null
+//                  ? Text('No image selected.')
+//                  : Text("Ordner: $_ordner, Datei: $_datei"),
+////                  : Image.file(_image),
+//            ),
+//            RaisedButton(
+//              child: const Text('Select image', semanticsLabel: ''),
+//              onPressed: getImage,
+//            ),
+//            RaisedButton(
+//              child: const Text('Upload image', semanticsLabel: ''),
+//              onPressed: uploadImage,
+//            ),
+//          ],
+//        ),
+//      ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
+        onPressed: getImages,
         tooltip: 'Increment',
         child: Icon(Icons.add),
       ), // This trailing comma makes auto-formatting nicer for build methods.
