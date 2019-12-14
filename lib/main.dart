@@ -23,6 +23,35 @@ class Photo {
   }
 }
 
+class Album {
+  final String id;
+  final String name;
+
+  Album({this.id, this.name});
+
+  factory Album.fromJson(Map<String, dynamic> json) {
+    return Album(
+      id: json['AlbumUUID'] as String,
+      name: json['AlbumName'] as String,
+    );
+  }
+}
+
+class _GridTitleText extends StatelessWidget {
+  const _GridTitleText(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      alignment: Alignment.centerLeft,
+      child: Text(text),
+    );
+  }
+}
+
 class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
@@ -67,6 +96,7 @@ class MainPage extends StatefulWidget {
 class _MainPageState extends State<MainPage> {
   int _counter = 0;
   List<Widget> imageList = new List();
+  List<Widget> albumList = new List();
   File _image;
   String _ordner = "";
   String _datei = "";
@@ -80,42 +110,86 @@ class _MainPageState extends State<MainPage> {
     });
   }
 
-  void getImages() async {
-    http.Response response = await http.get('https://demo.photoprism.org/api/v1/photos?count=1000');
+  void loadPhotos() async {
+    http.Response response =
+        await http.get('https://demo.photoprism.org/api/v1/photos?count=1000');
     final parsed = json.decode(response.body).cast<Map<String, dynamic>>();
 
-    List<Photo> photoList = parsed.map<Photo>((json) => Photo.fromJson(json)).toList();
+    List<Photo> photoList =
+        parsed.map<Photo>((json) => Photo.fromJson(json)).toList();
 
-    List<Widget> newImages = new List();
+    List<Widget> photos = new List();
     for (Photo photo in photoList) {
-      newImages.add(Center(
+      photos.add(Center(
           child: Image.network(
-            'https://demo.photoprism.org/api/v1/thumbnails/'+photo.fileHash+'/tile_224',
-          )
+        'https://demo.photoprism.org/api/v1/thumbnails/' +
+            photo.fileHash +
+            '/tile_224',
+      )));
+    }
+
+    setState(() {
+      imageList = photos;
+    });
+  }
+
+  Future loadAlbums() async {
+    http.Response response =
+        await http.get('https://demo.photoprism.org/api/v1/albums?count=1000');
+    final parsed = json.decode(response.body).cast<Map<String, dynamic>>();
+
+    List<Album> albums =
+        parsed.map<Album>((json) => Album.fromJson(json)).toList();
+
+    List<Widget> newAlbums = new List();
+    for (Album album in albums) {
+      newAlbums.add(GridTile(
+        child: Image.network(
+          'https://demo.photoprism.org/api/v1/albums/' +
+              album.id +
+              '/thumbnail/tile_224',
+        ),
+        footer: GestureDetector(
+          child: GridTileBar(
+            backgroundColor: Colors.black45,
+            title: _GridTitleText(album.name),
+          ),
+        ),
+        // Center(
+        // child: Image.network(
+        //   'https://demo.photoprism.org/api/v1/albums/' + album.id + '/thumbnail/tile_224',
+        // )
+        //)
       ));
     }
 
     setState(() {
-      imageList = newImages;
+      albumList = newAlbums;
     });
   }
 
   void uploadImage() async {
-    Map<PermissionGroup, PermissionStatus> permissions = await PermissionHandler().requestPermissions([PermissionGroup.storage]);
+    Map<PermissionGroup, PermissionStatus> permissions =
+        await PermissionHandler().requestPermissions([PermissionGroup.storage]);
 
     var savedDir = "/sdcard/DCIM/Camera/";
     var filename = "PANO_20190611_122500.jpg";
     final taskId = await uploader.enqueue(
-        url: "http://10.0.2.40:2342/api/v1/upload/test", //required: url to upload to
-        files: [FileItem(filename: _datei, savedDir: _ordner, fieldname:"files")], // required: list of files that you want to upload
-        method: UploadMethod.POST, // HTTP method  (POST or PUT or PATCH)
-        showNotification: false, // send local notification (android only) for upload status
+        url: "http://10.0.2.40:2342/api/v1/upload/test",
+        //required: url to upload to
+        files: [
+          FileItem(filename: _datei, savedDir: _ordner, fieldname: "files")
+        ],
+        // required: list of files that you want to upload
+        method: UploadMethod.POST,
+        // HTTP method  (POST or PUT or PATCH)
+        showNotification: false,
+        // send local notification (android only) for upload status
         tag: "upload 1"); // unique tag for upload taskS
     final subscription = uploader.result.listen((result) async {
-      var response = await http.post("http://10.0.2.40:2342/api/v1/import/upload/test");
-    }, onError: (ex, stacktrace) {
-    });
-
+      var response =
+          await http.post("http://10.0.2.40:2342/api/v1/import/upload/test");
+    }, onError: (ex, stacktrace) {});
   }
 
   Future getImage() async {
@@ -130,8 +204,10 @@ class _MainPageState extends State<MainPage> {
   }
 
   Future _incrementCounter() async {
-    Map<PermissionGroup, PermissionStatus> permissions = await PermissionHandler().requestPermissions([PermissionGroup.storage]);
-    Map<PermissionGroup, PermissionStatus> permissions_photos = await PermissionHandler().requestPermissions([PermissionGroup.photos]);
+    Map<PermissionGroup, PermissionStatus> permissions =
+        await PermissionHandler().requestPermissions([PermissionGroup.storage]);
+    Map<PermissionGroup, PermissionStatus> permissions_photos =
+        await PermissionHandler().requestPermissions([PermissionGroup.photos]);
 
     setState(() {
       // This call to setState tells the Flutter framework that something has
@@ -148,6 +224,8 @@ class _MainPageState extends State<MainPage> {
     super.initState();
     _myPage = PageController(initialPage: 0);
     _selectedIndex = 0;
+    loadAlbums();
+    loadPhotos();
   }
 
   @override
@@ -169,23 +247,17 @@ class _MainPageState extends State<MainPage> {
         controller: _myPage,
         children: <Widget>[
           GridView.count(
-          crossAxisCount: 3,
+            crossAxisCount: 3,
             mainAxisSpacing: 4,
             crossAxisSpacing: 4,
             children: imageList,
           ),
           GridView.count(
-            crossAxisCount: 3,
-            mainAxisSpacing: 4,
-            crossAxisSpacing: 4,
-            children: List.generate(100, (index) {
-              return Center(
-                child: Text(
-                  'Album $index',
-                  style: Theme.of(context).textTheme.headline,
-                ),
-              );
-            }),
+            crossAxisCount: 2,
+            mainAxisSpacing: 10,
+            crossAxisSpacing: 10,
+            children: albumList,
+            padding: const EdgeInsets.all(10),
           ),
           Center(
             child: Column(
@@ -237,7 +309,7 @@ class _MainPageState extends State<MainPage> {
         onTap: _onItemTapped,
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: getImages,
+        onPressed: loadAlbums,
         tooltip: 'Increment',
         child: Icon(Icons.add),
       ), // This trailing comma makes auto-formatting nicer for build methods.
