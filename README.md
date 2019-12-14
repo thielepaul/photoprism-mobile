@@ -1,6 +1,6 @@
 # photoprism
 
-Photoprism
+A new Flutter project.
 
 ## Getting Started
 

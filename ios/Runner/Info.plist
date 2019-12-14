@@ -22,38 +22,6 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
-	<key>NSAppleMusicUsageDescription</key>
-	<string>Music!</string>
-	<key>NSCalendarsUsageDescription</key>
-	<string>Calendars</string>
-	<key>NSCameraUsageDescription</key>
-	<string>camera</string>
-	<key>NSContactsUsageDescription</key>
-	<string>contacts</string>
-	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>Always and when in use!</string>
-	<key>NSLocationAlwaysUsageDescription</key>
-	<string>Can I haz location always?</string>
-	<key>NSLocationUsageDescription</key>
-	<string>Older devices need location.</string>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Need location when in use</string>
-	<key>NSMicrophoneUsageDescription</key>
-	<string>microphone</string>
-	<key>NSMotionUsageDescription</key>
-	<string>motion</string>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>photos</string>
-	<key>NSRemindersUsageDescription</key>
-	<string>reminders</string>
-	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>speech</string>
-	<key>UIBackgroundModes</key>
-	<array>
-		<string>fetch</string>
-		<string>processing</string>
-		<string>remote-notification</string>
-	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
@@ -73,7 +41,5 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
-	<key>kTCCServiceMediaLibrary</key>
-	<string>media</string>
 </dict>
 </plist>

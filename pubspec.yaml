@@ -1,5 +1,5 @@
 name: photoprism
-description: Photoprism
+description: An app for photoprism.
 
 # The following defines the version and build number for your application.
 # A version number is three numbers separated by dots, like 1.2.43
@@ -27,6 +27,7 @@ dependencies:
   permission_handler: ^4.0.0
   image_picker: ^0.6.1
   http: ^0.12.0
+  shared_preferences: ^0.5.6
 
 dev_dependencies:
   flutter_test:
