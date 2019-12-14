@@ -56,18 +56,26 @@ class PhotoView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-        child: PhotoViewGallery.builder(
-      scrollPhysics: const BouncingScrollPhysics(),
-      builder: (BuildContext context, int index) {
-        return PhotoViewGalleryPageOptions(
-          imageProvider: NetworkImage(photoprismURL + "/api/v1/thumbnails/"+ this.photos[index].fileHash +"/fit_1920"),
-          initialScale: PhotoViewComputedScale.contained,
-          minScale: PhotoViewComputedScale.contained,
-          maxScale: PhotoViewComputedScale.covered * 1.5,
-        );
+        child: GestureDetector(
+      child: PhotoViewGallery.builder(
+        scrollPhysics: const BouncingScrollPhysics(),
+        builder: (BuildContext context, int index) {
+          return PhotoViewGalleryPageOptions(
+            imageProvider: NetworkImage(photoprismURL +
+                "/api/v1/thumbnails/" +
+                this.photos[index].fileHash +
+                "/fit_1920"),
+            initialScale: PhotoViewComputedScale.contained,
+            minScale: PhotoViewComputedScale.contained,
+            maxScale: PhotoViewComputedScale.covered * 1.5,
+          );
+        },
+        itemCount: photos.length,
+        pageController: pageController,
+      ),
+      onTap: () {
+        Navigator.pop(context);
       },
-      itemCount: photos.length,
-      pageController: pageController,
     ));
   }
 }
@@ -192,7 +200,8 @@ class _MainPageState extends State<MainPage> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                  builder: (context) => PhotoView(currentPhotoIndex, photoList, photoprismURL)),
+                  builder: (context) =>
+                      PhotoView(currentPhotoIndex, photoList, photoprismURL)),
             );
           },
           child: Image.network(
