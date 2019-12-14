@@ -80,8 +80,41 @@ class _MainPageState extends State<MainPage> {
   File _image;
   String _ordner = "";
   String _datei = "";
+  String photoprism_url = "";
   PageController _myPage;
   int _selectedIndex = 0;
+  TextEditingController _textFieldController = TextEditingController();
+
+  _displayDialog(BuildContext context) async {
+    _textFieldController.text = photoprism_url;
+    return showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: Text('Enter Photoprism URL'),
+            content: TextField(
+              controller: _textFieldController,
+              decoration: InputDecoration(hintText: "https://demo.photoprism.org"),
+            ),
+            actions: <Widget>[
+              FlatButton(
+                child: Text('Cancel'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+              FlatButton(
+                child: Text('Save'),
+                onPressed: () {
+                  setURL(_textFieldController.text);
+                  refreshPhotos();
+                  Navigator.of(context).pop();
+                },
+              )
+            ],
+          );
+        });
+  }
 
   void _onItemTapped(int index) {
     _myPage.jumpToPage(index);
@@ -90,22 +123,25 @@ class _MainPageState extends State<MainPage> {
     });
   }
 
-  void setURL(String url) async {
+  Future setURL(String _url) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    prefs.setString("url", url);
+    prefs.setString("url", _url);
+    setState(() {
+      photoprism_url = _url;
+    });
   }
 
-  Future<String> getURL(String url) async {
+  Future getURL() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    String url = prefs.getString("url");
-    return url;
+    String _url = prefs.getString("url");
+    setState(() {
+      photoprism_url = _url;
+    });
   }
-
-
 
   void loadPhotos() async {
     http.Response response =
-        await http.get('https://demo.photoprism.org/api/v1/photos?count=1000');
+        await http.get(photoprism_url + '/api/v1/photos?count=1000');
     final parsed = json.decode(response.body).cast<Map<String, dynamic>>();
 
     List<Photo> photoList =
@@ -115,7 +151,7 @@ class _MainPageState extends State<MainPage> {
     for (Photo photo in photoList) {
       photos.add(Center(
           child: Image.network(
-        'https://demo.photoprism.org/api/v1/thumbnails/' +
+        photoprism_url + '/api/v1/thumbnails/' +
             photo.fileHash +
             '/tile_224',
       )));
@@ -128,7 +164,7 @@ class _MainPageState extends State<MainPage> {
 
   Future loadAlbums() async {
     http.Response response =
-        await http.get('https://demo.photoprism.org/api/v1/albums?count=1000');
+        await http.get(photoprism_url + '/api/v1/albums?count=1000');
     final parsed = json.decode(response.body).cast<Map<String, dynamic>>();
 
     List<Album> albums =
@@ -138,7 +174,7 @@ class _MainPageState extends State<MainPage> {
     for (Album album in albums) {
       newAlbums.add(GridTile(
         child: Image.network(
-          'https://demo.photoprism.org/api/v1/albums/' +
+          photoprism_url + '/api/v1/albums/' +
               album.id +
               '/thumbnail/tile_224',
         ),
@@ -207,13 +243,18 @@ class _MainPageState extends State<MainPage> {
     });
   }
 
+  void refreshPhotos() async {
+    await getURL();
+    loadAlbums();
+    loadPhotos();
+  }
+
   @override
   void initState() {
     super.initState();
     _myPage = PageController(initialPage: 0);
     _selectedIndex = 0;
-    loadAlbums();
-    loadPhotos();
+    refreshPhotos();
   }
 
   @override
@@ -248,13 +289,15 @@ class _MainPageState extends State<MainPage> {
             padding: const EdgeInsets.all(10),
           ),
           Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: <Widget>[
-                ListTile(
-                  title: Text("Photoprism URL"),
-                  subtitle: Text("https://demo.photoprism.org"),
-                  onTap: (){},
-                ),
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: <Widget>[
+              ListTile(
+                title: Text("Photoprism URL"),
+                subtitle: Text(photoprism_url),
+                onTap: () {
+                  _displayDialog(context);
+                },
+              ),
 //                Center(
 //                  child: _image == null
 //                      ? Text('No image selected.')
@@ -268,8 +311,8 @@ class _MainPageState extends State<MainPage> {
 //                  child: const Text('Upload image', semanticsLabel: ''),
 //                  onPressed: uploadImage,
 //                ),
-              ],
-            )
+            ],
+          )
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -292,7 +335,7 @@ class _MainPageState extends State<MainPage> {
         onTap: _onItemTapped,
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: loadAlbums,
+        onPressed: refreshPhotos,
         tooltip: 'Increment',
         child: Icon(Icons.add),
       ), // This trailing comma makes auto-formatting nicer for build methods.
