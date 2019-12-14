@@ -6,6 +6,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as p;
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 final uploader = FlutterUploader();
 
@@ -58,35 +59,14 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Photoprism',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // Try running your application with "flutter run". You'll see the
-        // application has a blue toolbar. Then, without quitting the app, try
-        // changing the primarySwatch below to Colors.green and then invoke
-        // "hot reload" (press "r" in the console where you ran "flutter run",
-        // or simply save your changes to "hot reload" in a Flutter IDE).
-        // Notice that the counter didn't reset back to zero; the application
-        // is not restarted.
-        primarySwatch: Colors.blue,
-      ),
-      home: MainPage(title: 'Photoprism Home'),
+      theme: ThemeData(),
+      home: MainPage(title: 'Photoprism'),
     );
   }
 }
 
 class MainPage extends StatefulWidget {
   MainPage({Key key, this.title}) : super(key: key);
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
   final String title;
 
   @override
@@ -109,6 +89,19 @@ class _MainPageState extends State<MainPage> {
       _selectedIndex = index;
     });
   }
+
+  void setURL(String url) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setString("url", url);
+  }
+
+  Future<String> getURL(String url) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String url = prefs.getString("url");
+    return url;
+  }
+
+
 
   void loadPhotos() async {
     http.Response response =
@@ -155,11 +148,6 @@ class _MainPageState extends State<MainPage> {
             title: _GridTitleText(album.name),
           ),
         ),
-        // Center(
-        // child: Image.network(
-        //   'https://demo.photoprism.org/api/v1/albums/' + album.id + '/thumbnail/tile_224',
-        // )
-        //)
       ));
     }
 
@@ -259,34 +247,29 @@ class _MainPageState extends State<MainPage> {
             children: albumList,
             padding: const EdgeInsets.all(10),
           ),
-          Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+          Column(
+              mainAxisAlignment: MainAxisAlignment.start,
               children: <Widget>[
-                Text(
-                  'You have pushed the button this many times:',
+                ListTile(
+                  title: Text("Photoprism URL"),
+                  subtitle: Text("https://demo.photoprism.org"),
+                  onTap: (){},
                 ),
-                Text(
-                  '$_counter',
-                  style: Theme.of(context).textTheme.display1,
-                ),
-                Center(
-                  child: _image == null
-                      ? Text('No image selected.')
-                      : Text("Ordner: $_ordner, Datei: $_datei"),
-//                  : Image.file(_image),
-                ),
-                RaisedButton(
-                  child: const Text('Select image', semanticsLabel: ''),
-                  onPressed: getImage,
-                ),
-                RaisedButton(
-                  child: const Text('Upload image', semanticsLabel: ''),
-                  onPressed: uploadImage,
-                ),
+//                Center(
+//                  child: _image == null
+//                      ? Text('No image selected.')
+//                      : Text("Ordner: $_ordner, Datei: $_datei"),
+//                ),
+//                RaisedButton(
+//                  child: const Text('Select image', semanticsLabel: ''),
+//                  onPressed: getImage,
+//                ),
+//                RaisedButton(
+//                  child: const Text('Upload image', semanticsLabel: ''),
+//                  onPressed: uploadImage,
+//                ),
               ],
-            ),
-          ),
+            )
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
