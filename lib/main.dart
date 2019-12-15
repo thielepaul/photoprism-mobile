@@ -10,8 +10,11 @@ import 'package:photoprism/pages/photoview.dart';
 import 'package:photoprism/model/album.dart';
 import 'package:photoprism/model/photo.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:photoprism/settings.dart';
+import 'package:photoprism/hexcolor.dart';
 
 final uploader = FlutterUploader();
+Settings settings = Settings();
 
 void main() => runApp(MyApp());
 
@@ -151,6 +154,7 @@ class _MainPageState extends State<MainPage> {
     await getPhotoprismUrl();
     loadAlbums();
     loadPhotos();
+    settings.loadSettings(photoprismUrl);
   }
 
   @override
@@ -239,7 +243,7 @@ class _MainPageState extends State<MainPage> {
           ),
         ],
         currentIndex: _selectedPageIndex,
-        selectedItemColor: Colors.amber[800],
+        selectedItemColor: HexColor(settings.applicationColor),
         onTap: _onTappedNavigationBar,
       );
 
@@ -248,6 +252,7 @@ class _MainPageState extends State<MainPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
+        backgroundColor: HexColor(settings.applicationColor),
       ),
       body: PageView(
           physics: NeverScrollableScrollPhysics(),
