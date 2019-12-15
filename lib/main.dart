@@ -157,6 +157,20 @@ class _MainPageState extends State<MainPage> {
     settings.loadSettings(photoprismUrl);
   }
 
+  Future<void> refreshPhotosPull() async
+  {
+    print('refreshing photos..');
+    await getPhotoprismUrl();
+    loadPhotos();
+  }
+
+  Future<void> refreshAlbumsPull() async
+  {
+    print('refreshing albums..');
+    await getPhotoprismUrl();
+    loadAlbums();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -258,16 +272,17 @@ class _MainPageState extends State<MainPage> {
           physics: NeverScrollableScrollPhysics(),
           controller: _pageController,
           children: <Widget>[
-            photosPage(),
-            albumsPage(),
+            RefreshIndicator(
+              child: photosPage(),
+              onRefresh: refreshPhotosPull
+            ),
+            RefreshIndicator(
+              child: albumsPage(),
+              onRefresh: refreshAlbumsPull
+            ),
             settingsPage(),
           ]),
       bottomNavigationBar: navigationBar(),
-      floatingActionButton: FloatingActionButton(
-        onPressed: refreshPhotos,
-        tooltip: 'Increment',
-        child: Icon(Icons.refresh),
-      ),
     );
   }
 }
