@@ -92,6 +92,9 @@ class _MainPageState extends State<MainPage> {
   Future getPhotoprismUrl() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String _url = prefs.getString("url");
+    if (_url == null) {
+      _url = "https://demo.photoprism.org";
+    }
     setState(() {
       photoprismUrl = _url;
     });
@@ -135,7 +138,7 @@ class _MainPageState extends State<MainPage> {
                   context,
                   MaterialPageRoute(
                       builder: (context) =>
-                          AlbumView(albumList[index])),
+                          AlbumView(albumList[index], photoprismUrl)),
                 );
               },
               child: GridTile(

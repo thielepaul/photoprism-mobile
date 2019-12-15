@@ -2,19 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:photoprism/api/photos.dart';
 import 'package:photoprism/hexcolor.dart';
 import 'package:photoprism/model/album.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../main.dart';
 
 class AlbumView extends StatefulWidget {
   Album album;
+  String photoprismUrl;
 
-  AlbumView(Album album) {
+  AlbumView(Album album, String photoprismUrl) {
     this.album = album;
   }
 
   @override
-  _AlbumViewState createState() => _AlbumViewState(album);
+  _AlbumViewState createState() => _AlbumViewState(album, photoprismUrl);
 }
 
 class _AlbumViewState extends State<AlbumView> {
@@ -27,10 +27,11 @@ class _AlbumViewState extends State<AlbumView> {
   Album album;
   String _albumTitle = "";
 
-  _AlbumViewState(Album album) {
+  _AlbumViewState(Album album, String photoprismUrl) {
     this.album = album;
     this.photos = Photos.withAlbum(album);
     this._albumTitle = album.name;
+    this.photoprismUrl = photoprismUrl;
   }
 
   void _scrollListener() async {
@@ -53,17 +54,8 @@ class _AlbumViewState extends State<AlbumView> {
   }
 
   void refreshPhotos() async {
-    await getPhotoprismUrl();
     loadPhotos();
     settings.loadSettings(photoprismUrl);
-  }
-
-  Future getPhotoprismUrl() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String _url = prefs.getString("url");
-    setState(() {
-      photoprismUrl = _url;
-    });
   }
 
   @override
