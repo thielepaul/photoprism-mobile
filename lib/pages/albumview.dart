@@ -11,6 +11,7 @@ class AlbumView extends StatefulWidget {
 
   AlbumView(Album album, String photoprismUrl) {
     this.album = album;
+    this.photoprismUrl = photoprismUrl;
   }
 
   @override
