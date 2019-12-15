@@ -115,13 +115,15 @@ class _MainPageState extends State<MainPage> {
   Future<void> refreshPhotosPull() async {
     print('refreshing photos..');
     await getPhotoprismUrl();
-    photos.loadPhotos(photoprismUrl);
+    await photos.loadPhotos(photoprismUrl);
+    loadPhotos();
   }
 
   Future<void> refreshAlbumsPull() async {
     print('refreshing albums..');
     await getPhotoprismUrl();
-    albums.loadAlbums(photoprismUrl);
+    await albums.loadAlbums(photoprismUrl);
+    loadAlbums();
   }
 
   @override
