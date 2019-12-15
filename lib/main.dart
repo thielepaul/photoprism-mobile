@@ -1,15 +1,7 @@
-import 'dart:convert';
-import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_uploader/flutter_uploader.dart';
-import 'package:permission_handler/permission_handler.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:path/path.dart' as p;
-import 'package:http/http.dart' as http;
-import 'package:photoprism/pages/albumview.dart';
-import 'package:photoprism/pages/photoview.dart';
-import 'package:photoprism/model/album.dart';
-import 'package:photoprism/model/photo.dart';
+import 'package:photoprism/api/albums.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:photoprism/settings.dart';
 import 'package:photoprism/hexcolor.dart';
@@ -20,21 +12,6 @@ final uploader = FlutterUploader();
 Settings settings = Settings();
 
 void main() => runApp(MyApp());
-
-class _GridTitleText extends StatelessWidget {
-  const _GridTitleText(this.text);
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return FittedBox(
-      fit: BoxFit.scaleDown,
-      alignment: Alignment.centerLeft,
-      child: Text(text),
-    );
-  }
-}
 
 class MyApp extends StatelessWidget {
   // This widget is the root of your application.
@@ -68,6 +45,7 @@ class _MainPageState extends State<MainPage> {
   TextEditingController _urlTextFieldController = TextEditingController();
   String photoprismUrl = "";
   Photos photos = Photos();
+  Albums albums = Albums();
   ScrollController _scrollController;
 
   void _scrollListener() async {
@@ -108,57 +86,18 @@ class _MainPageState extends State<MainPage> {
   }
 
   void loadPhotos() async {
-    await photos.loadPhotos(photoprismUrl);
+    await photos.loadPhotosFromNetworkOrCache(photoprismUrl);
     GridView gridView = photos.getGridView(photoprismUrl, _scrollController);
     setState(() {
       _photosGridView = gridView;
     });
   }
 
-  Future loadAlbums() async {
-    http.Response response =
-        await http.get(photoprismUrl + '/api/v1/albums?count=1000');
-    final parsed = json.decode(response.body).cast<Map<String, dynamic>>();
-
-    List<Album> albumList =
-        parsed.map<Album>((json) => Album.fromJson(json)).toList();
-
-    GridView albumsGridView = GridView.builder(
-        gridDelegate: new SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          mainAxisSpacing: 10,
-          crossAxisSpacing: 10,
-        ),
-        padding: const EdgeInsets.all(10),
-        itemCount: albumList.length,
-        itemBuilder: (context, index) {
-          return GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) =>
-                          AlbumView(albumList[index], photoprismUrl)),
-                );
-              },
-              child: GridTile(
-                child: Image.network(
-                  photoprismUrl +
-                      '/api/v1/albums/' +
-                      albumList[index].id +
-                      '/thumbnail/tile_224',
-                ),
-                footer: GestureDetector(
-                  child: GridTileBar(
-                    backgroundColor: Colors.black45,
-                    title: _GridTitleText(albumList[index].name),
-                  ),
-                ),
-              ));
-        });
-
+  void loadAlbums() async {
+    await albums.loadAlbumsFromNetworkOrCache(photoprismUrl);
+    GridView gridView = albums.getGridView(photoprismUrl);
     setState(() {
-      _albumsGridView = albumsGridView;
+      _albumsGridView = gridView;
     });
   }
 
@@ -169,16 +108,20 @@ class _MainPageState extends State<MainPage> {
     settings.loadSettings(photoprismUrl);
   }
 
+  void emptyCache() async {
+    await DefaultCacheManager().emptyCache();
+  }
+
   Future<void> refreshPhotosPull() async {
     print('refreshing photos..');
     await getPhotoprismUrl();
-    loadPhotos();
+    photos.loadPhotos(photoprismUrl);
   }
 
   Future<void> refreshAlbumsPull() async {
     print('refreshing albums..');
     await getPhotoprismUrl();
-    loadAlbums();
+    albums.loadAlbums(photoprismUrl);
   }
 
   @override
@@ -240,6 +183,12 @@ class _MainPageState extends State<MainPage> {
               });
             },
           ),
+          ListTile(
+            title: Text("Empty cache"),
+            onTap: () {
+              emptyCache();
+            },
+          )
         ],
       );
 

@@ -47,7 +47,7 @@ class _AlbumViewState extends State<AlbumView> {
   }
 
   void loadPhotos() async {
-    await photos.loadPhotos(photoprismUrl);
+    await photos.loadPhotosFromNetworkOrCache(photoprismUrl);
     GridView gridView = photos.getGridView(photoprismUrl, _scrollController);
     setState(() {
       _photosGridView = gridView;

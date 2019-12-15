@@ -10,4 +10,9 @@ class Album {
       name: json['AlbumName'] as String,
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        'AlbumUUID': id,
+        'AlbumName': name,
+      };
 }

@@ -8,4 +8,8 @@ class Photo {
       fileHash: json['FileHash'] as String,
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        'FileHash': fileHash,
+      };
 }
