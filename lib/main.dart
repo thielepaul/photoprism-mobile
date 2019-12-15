@@ -13,6 +13,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:photoprism/settings.dart';
 import 'package:photoprism/hexcolor.dart';
 
+import 'api/photos.dart';
+
 final uploader = FlutterUploader();
 Settings settings = Settings();
 
@@ -54,12 +56,25 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
-  GridView _photosGridVew = GridView.count(crossAxisCount: 1,);
+  GridView _photosGridView = GridView.count(crossAxisCount: 1,);
   GridView _albumsGridView = GridView.count(crossAxisCount: 1,);
   PageController _pageController;
   int _selectedPageIndex = 0;
   TextEditingController _urlTextFieldController = TextEditingController();
   String photoprismUrl = "";
+  Photos photos = Photos();
+  ScrollController _scrollController;
+
+  void _scrollListener() async {
+    if (_scrollController.position.extentAfter < 500) {
+      await photos.loadMorePhotos(photoprismUrl);
+
+      GridView gridView = photos.getGridView(photoprismUrl, _scrollController);
+      setState(() {
+        _photosGridView = gridView;
+      });
+    }
+  }
 
   Future setPhotoprismUrl(String _url) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -85,43 +100,10 @@ class _MainPageState extends State<MainPage> {
   }
 
   void loadPhotos() async {
-    http.Response response =
-        await http.get(photoprismUrl + '/api/v1/photos?count=1000');
-    final parsed = json.decode(response.body).cast<Map<String, dynamic>>();
-
-    List<Photo> photoList =
-        parsed.map<Photo>((json) => Photo.fromJson(json)).toList();
-
-    GridView photosGridView = GridView.builder(
-        gridDelegate: new SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 3,
-          mainAxisSpacing: 4,
-          crossAxisSpacing: 4,
-        ),
-        itemCount: photoList.length,
-        itemBuilder: (context, index) {
-          return Center(
-            child: GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) =>
-                          PhotoView(index, photoList, photoprismUrl)),
-                );
-              },
-              child: Image.network(
-                photoprismUrl +
-                    '/api/v1/thumbnails/' +
-                    photoList[index].fileHash +
-                    '/tile_224',
-              ),
-            ),
-          );
-        });
-
+    await photos.loadPhotos(photoprismUrl);
+    GridView gridView = photos.getGridView(photoprismUrl, _scrollController);
     setState(() {
-      _photosGridVew = photosGridView;
+      _photosGridView = gridView;
     });
   }
 
@@ -187,6 +169,13 @@ class _MainPageState extends State<MainPage> {
     _pageController = PageController(initialPage: 0);
     _selectedPageIndex = 0;
     refreshPhotos();
+    _scrollController = new ScrollController()..addListener(_scrollListener);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_scrollListener);
+    super.dispose();
   }
 
   _settingsDisplayUrlDialog(BuildContext context) async {
@@ -236,7 +225,7 @@ class _MainPageState extends State<MainPage> {
         ],
       );
 
-  photosPage() => _photosGridVew;
+  photosPage() => _photosGridView;
 
   albumsPage() => _albumsGridView;
 
