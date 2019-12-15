@@ -54,8 +54,8 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
-  List<Widget> _imageList = new List();
-  List<Widget> _albumList = new List();
+  GridView _photosGridVew = GridView.count(crossAxisCount: 1,);
+  GridView _albumsGridView = GridView.count(crossAxisCount: 1,);
   PageController _pageController;
   int _selectedPageIndex = 0;
   TextEditingController _urlTextFieldController = TextEditingController();
@@ -92,33 +92,36 @@ class _MainPageState extends State<MainPage> {
     List<Photo> photoList =
         parsed.map<Photo>((json) => Photo.fromJson(json)).toList();
 
-    List<Widget> photos = new List();
-    int i = 0;
-    for (Photo photo in photoList) {
-      int currentPhotoIndex = i;
-      photos.add(Center(
-        child: GestureDetector(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) =>
-                      PhotoView(currentPhotoIndex, photoList, photoprismUrl)),
-            );
-          },
-          child: Image.network(
-            photoprismUrl +
-                '/api/v1/thumbnails/' +
-                photo.fileHash +
-                '/tile_224',
-          ),
+    GridView photosGridView = GridView.builder(
+        gridDelegate: new SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 3,
+          mainAxisSpacing: 4,
+          crossAxisSpacing: 4,
         ),
-      ));
-      i++;
-    }
+        itemCount: photoList.length,
+        itemBuilder: (context, index) {
+          return Center(
+            child: GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) =>
+                          PhotoView(index, photoList, photoprismUrl)),
+                );
+              },
+              child: Image.network(
+                photoprismUrl +
+                    '/api/v1/thumbnails/' +
+                    photoList[index].fileHash +
+                    '/tile_224',
+              ),
+            ),
+          );
+        });
 
     setState(() {
-      _imageList = photos;
+      _photosGridVew = photosGridView;
     });
   }
 
@@ -127,26 +130,33 @@ class _MainPageState extends State<MainPage> {
         await http.get(photoprismUrl + '/api/v1/albums?count=1000');
     final parsed = json.decode(response.body).cast<Map<String, dynamic>>();
 
-    List<Album> albums =
-        parsed.map<Album>((json) => Album.fromJson(json)).toList();
+    List<Album> albumList =
+    parsed.map<Album>((json) => Album.fromJson(json)).toList();
 
-    List<Widget> newAlbums = new List();
-    for (Album album in albums) {
-      newAlbums.add(GridTile(
-        child: Image.network(
-          photoprismUrl + '/api/v1/albums/' + album.id + '/thumbnail/tile_224',
+    GridView albumsGridView = GridView.builder(
+        gridDelegate: new SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            mainAxisSpacing: 10,
+            crossAxisSpacing: 10,
         ),
-        footer: GestureDetector(
-          child: GridTileBar(
-            backgroundColor: Colors.black45,
-            title: _GridTitleText(album.name),
-          ),
-        ),
-      ));
-    }
+        padding: const EdgeInsets.all(10),
+        itemCount: albumList.length,
+        itemBuilder: (context, index) {
+          return GridTile(
+            child: Image.network(
+              photoprismUrl + '/api/v1/albums/' + albumList[index].id + '/thumbnail/tile_224',
+            ),
+            footer: GestureDetector(
+              child: GridTileBar(
+                backgroundColor: Colors.black45,
+                title: _GridTitleText(albumList[index].name),
+              ),
+            ),
+          );
+        });
 
     setState(() {
-      _albumList = newAlbums;
+      _albumsGridView = albumsGridView;
     });
   }
 
@@ -226,20 +236,9 @@ class _MainPageState extends State<MainPage> {
         ],
       );
 
-  photosPage() => GridView.count(
-        crossAxisCount: 3,
-        mainAxisSpacing: 4,
-        crossAxisSpacing: 4,
-        children: _imageList,
-      );
+  photosPage() => _photosGridVew;
 
-  albumsPage() => GridView.count(
-        crossAxisCount: 2,
-        mainAxisSpacing: 10,
-        crossAxisSpacing: 10,
-        children: _albumList,
-        padding: const EdgeInsets.all(10),
-      );
+  albumsPage() => _albumsGridView;
 
   navigationBar() => BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
