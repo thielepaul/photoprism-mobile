@@ -63,7 +63,7 @@ class _AlbumViewState extends State<AlbumView> {
   void initState() {
     super.initState();
     refreshPhotos();
-    _scrollController = new ScrollController()..addListener(_scrollListener);
+    _scrollController = new ScrollController()..addListener(_scrollListener); // fehler?
   }
 
   @override
@@ -72,11 +72,37 @@ class _AlbumViewState extends State<AlbumView> {
     super.dispose();
   }
 
+  void deleteAlbum(int choice) {
+    if (choice == 0) {
+      print("renaming album");
+    }
+    else if (choice == 1) {
+      print("deleting album");
+      Navigator.pop(context);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(_albumTitle),
+        actions: <Widget>[
+          // overflow menu
+          PopupMenuButton<int>(
+            onSelected: deleteAlbum,
+            itemBuilder: (BuildContext context) => [
+              PopupMenuItem(
+                value: 0,
+                child: Text("Rename album"),
+              ),
+              PopupMenuItem(
+                value: 1,
+                child: Text("Delete album"),
+              ),
+            ],
+          ),
+        ],
         backgroundColor: HexColor(settings.applicationColor),
       ),
       body: _photosGridView,
