@@ -1,5 +1,6 @@
 stages:
   - build
+  - deploy
 
 build-apk:
   stage: build
@@ -10,3 +11,17 @@ build-apk:
   artifacts:
     paths:
       - photoprism.apk
+
+pages:
+  stage: deploy
+  dependencies:
+  - build-apk
+  script:
+  - mkdir public
+  - cp photoprism.apk public/
+  artifacts:
+    paths:
+    - public
+  only:
+  - master
+
