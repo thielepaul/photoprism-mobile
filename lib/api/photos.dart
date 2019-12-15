@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:photoprism/model/album.dart';
 import 'package:photoprism/model/photo.dart';
 import 'package:http/http.dart' as http;
 import 'package:photoprism/pages/photoview.dart';
@@ -8,6 +9,13 @@ import 'package:photoprism/pages/photoview.dart';
 class Photos {
   List<Photo> photoList;
   bool isLoading = false;
+  Album album;
+
+  Photos();
+
+  Photos.withAlbum(Album album) {
+    this.album = album;
+  }
 
   Future loadMorePhotos(String photoprismUrl) async {
     if (isLoading) {
@@ -15,9 +23,13 @@ class Photos {
     }
     isLoading = true;
     print("loading more photos");
-    http.Response response = await http.get(photoprismUrl +
+    var url = photoprismUrl +
         '/api/v1/photos?count=100&offset=' +
-        photoList.length.toString());
+        photoList.length.toString();
+    if (this.album != null) {
+      url += "&album=" + this.album.id;
+    }
+    http.Response response = await http.get(url);
     final parsed = json.decode(response.body).cast<Map<String, dynamic>>();
     photoList
         .addAll(parsed.map<Photo>((json) => Photo.fromJson(json)).toList());
@@ -25,8 +37,12 @@ class Photos {
   }
 
   Future loadPhotos(String photoprismUrl) async {
+    var url = photoprismUrl + '/api/v1/photos?count=100';
+    if (this.album != null) {
+      url += "&album=" + this.album.id;
+    }
     http.Response response =
-    await http.get(photoprismUrl + '/api/v1/photos?count=100');
+    await http.get(url);
     final parsed = json.decode(response.body).cast<Map<String, dynamic>>();
 
     photoList = parsed.map<Photo>((json) => Photo.fromJson(json)).toList();

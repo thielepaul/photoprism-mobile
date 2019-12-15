@@ -6,6 +6,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as p;
 import 'package:http/http.dart' as http;
+import 'package:photoprism/pages/albumview.dart';
 import 'package:photoprism/pages/photoview.dart';
 import 'package:photoprism/model/album.dart';
 import 'package:photoprism/model/photo.dart';
@@ -56,8 +57,12 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
-  GridView _photosGridView = GridView.count(crossAxisCount: 1,);
-  GridView _albumsGridView = GridView.count(crossAxisCount: 1,);
+  GridView _photosGridView = GridView.count(
+    crossAxisCount: 1,
+  );
+  GridView _albumsGridView = GridView.count(
+    crossAxisCount: 1,
+  );
   PageController _pageController;
   int _selectedPageIndex = 0;
   TextEditingController _urlTextFieldController = TextEditingController();
@@ -113,28 +118,40 @@ class _MainPageState extends State<MainPage> {
     final parsed = json.decode(response.body).cast<Map<String, dynamic>>();
 
     List<Album> albumList =
-    parsed.map<Album>((json) => Album.fromJson(json)).toList();
+        parsed.map<Album>((json) => Album.fromJson(json)).toList();
 
     GridView albumsGridView = GridView.builder(
         gridDelegate: new SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            mainAxisSpacing: 10,
-            crossAxisSpacing: 10,
+          crossAxisCount: 2,
+          mainAxisSpacing: 10,
+          crossAxisSpacing: 10,
         ),
         padding: const EdgeInsets.all(10),
         itemCount: albumList.length,
         itemBuilder: (context, index) {
-          return GridTile(
-            child: Image.network(
-              photoprismUrl + '/api/v1/albums/' + albumList[index].id + '/thumbnail/tile_224',
-            ),
-            footer: GestureDetector(
-              child: GridTileBar(
-                backgroundColor: Colors.black45,
-                title: _GridTitleText(albumList[index].name),
-              ),
-            ),
-          );
+          return GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) =>
+                          AlbumView(albumList[index])),
+                );
+              },
+              child: GridTile(
+                child: Image.network(
+                  photoprismUrl +
+                      '/api/v1/albums/' +
+                      albumList[index].id +
+                      '/thumbnail/tile_224',
+                ),
+                footer: GestureDetector(
+                  child: GridTileBar(
+                    backgroundColor: Colors.black45,
+                    title: _GridTitleText(albumList[index].name),
+                  ),
+                ),
+              ));
         });
 
     setState(() {
@@ -149,15 +166,13 @@ class _MainPageState extends State<MainPage> {
     settings.loadSettings(photoprismUrl);
   }
 
-  Future<void> refreshPhotosPull() async
-  {
+  Future<void> refreshPhotosPull() async {
     print('refreshing photos..');
     await getPhotoprismUrl();
     loadPhotos();
   }
 
-  Future<void> refreshAlbumsPull() async
-  {
+  Future<void> refreshAlbumsPull() async {
     print('refreshing albums..');
     await getPhotoprismUrl();
     loadAlbums();
@@ -260,14 +275,8 @@ class _MainPageState extends State<MainPage> {
           physics: NeverScrollableScrollPhysics(),
           controller: _pageController,
           children: <Widget>[
-            RefreshIndicator(
-              child: photosPage(),
-              onRefresh: refreshPhotosPull
-            ),
-            RefreshIndicator(
-              child: albumsPage(),
-              onRefresh: refreshAlbumsPull
-            ),
+            RefreshIndicator(child: photosPage(), onRefresh: refreshPhotosPull),
+            RefreshIndicator(child: albumsPage(), onRefresh: refreshAlbumsPull),
             settingsPage(),
           ]),
       bottomNavigationBar: navigationBar(),
