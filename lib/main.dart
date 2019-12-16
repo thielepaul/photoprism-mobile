@@ -164,7 +164,8 @@ class _MainPageState extends State<MainPage> {
                 child: Text('Save'),
                 onPressed: () {
                   setPhotoprismUrl(_urlTextFieldController.text);
-                  // refreshPhotos();
+                  refreshPhotosPull();
+                  refreshAlbumsPull();
                   Navigator.of(context).pop();
                 },
               )
