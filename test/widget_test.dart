@@ -1,30 +1,49 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility that Flutter provides. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:photoprism/main.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
+  testWidgets('bottom navigation bar switches between pages', (WidgetTester tester) async {
     await tester.pumpWidget(MyApp());
+    expect(find.byKey(ValueKey("photosGridView")), findsOneWidget);
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
-
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
+    await tester.tap(find.byIcon(Icons.photo_album));
     await tester.pump();
+    expect(find.byKey(ValueKey("albumsGridView")), findsOneWidget);
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    await tester.tap(find.byIcon(Icons.settings));
+    await tester.pump();
+    expect(find.text("Photoprism URL"), findsOneWidget);
+
+    await tester.tap(find.byIcon(Icons.photo));
+    await tester.pump();
+    expect(find.byKey(ValueKey("photosGridView")), findsOneWidget);
+  });
+
+  testWidgets('clicking on photoprism URL opens dialog', (WidgetTester tester) async {
+    await tester.pumpWidget(MyApp());
+    await tester.tap(find.byIcon(Icons.settings));
+    await tester.pump();
+    expect(find.text("Photoprism URL"), findsOneWidget);
+
+    await tester.tap(find.text("Photoprism URL"));
+    await tester.pump();
+    expect(find.text("Enter Photoprism URL"), findsOneWidget);
+    expect(find.text("Save"), findsOneWidget);
+    expect(find.text("Cancel"), findsOneWidget);
+    expect(find.byKey(ValueKey("photoprismUrlTextField")), findsOneWidget);
+
+    await tester.enterText(find.byKey(ValueKey("photoprismUrlTextField")), "http://example.com/test");
+    await tester.tap(find.text("Cancel"));
+    await tester.pump();
+    expect(find.text("http://example.com/test"), findsNothing);
+
+    await tester.tap(find.text("Photoprism URL"));
+    await tester.pump();
+    await tester.enterText(find.byKey(ValueKey("photoprismUrlTextField")), "http://example.com/test");
+    await tester.tap(find.text("Save"));
+    await tester.pump();
+    expect(find.text("http://example.com/test"), findsOneWidget);
   });
 }
