@@ -27,7 +27,7 @@ jobs:
     steps:
     - uses: actions/download-artifact@v1
         with:
-        name: photoprism-apk
+          name: photoprism-apk
     - run: mv photoprism-apk/app-release.apk photoprism.apk
     - name: Create Release
         id: create_release
