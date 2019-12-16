@@ -40,5 +40,5 @@ jobs:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         - uses: AButler/upload-release-assets@v1.0
           with:
-            files: 'artifacts/*,packages/*.nupkg'
+            files: 'photoprism.apk'
             repo-token: ${{ secrets.GITHUB_TOKEN }}
