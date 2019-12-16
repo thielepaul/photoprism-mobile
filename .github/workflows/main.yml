@@ -30,23 +30,10 @@ jobs:
       with:
         name: photoprism-apk
     - run: mv photoprism-apk/app-release.apk photoprism.apk
-    - name: Create Release
-      id: create_release
-      uses: actions/create-release@v1.0.0
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - uses: marvinpinto/action-automatic-releases@v0.3.0
       with:
-        tag_name: release-${{ github.sha }}
-        release_name: Release ${{ github.sha }}
-        draft: false
-        prerelease: false
-    - name: Upload Release Asset
-      id: upload-release-asset
-      uses: actions/upload-release-asset@v1.0.1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./photoprism.apk
-        asset_name: photoprism.apk
-        asset_content_type: application/zip
+        repo_token: "${{ secrets.GITHUB_TOKEN }}"
+        automatic_release_tag: "latest"
+        prerelease: true
+        title: "Development CI Build"
+        files: photoprism.apk
