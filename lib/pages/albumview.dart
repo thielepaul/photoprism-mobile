@@ -27,6 +27,7 @@ class _AlbumViewState extends State<AlbumView> {
   ScrollController _scrollController;
   Album album;
   String _albumTitle = "";
+  TextEditingController _urlTextFieldController = TextEditingController();
 
   _AlbumViewState(Album album, String photoprismUrl) {
     this.album = album;
@@ -75,11 +76,43 @@ class _AlbumViewState extends State<AlbumView> {
   void deleteAlbum(int choice) {
     if (choice == 0) {
       print("renaming album");
+
     }
     else if (choice == 1) {
       print("deleting album");
-      Navigator.pop(context);
+      setState(() {
+        _deleteDialog(context);
+      });
     }
+  }
+
+  _deleteDialog(BuildContext context) async {
+    return showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: Text('Delete Album'),
+            content: Text('Are you sure you want to delete this album?'),
+            actions: <Widget>[
+              FlatButton(
+                child: Text('Cancel'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+              FlatButton(
+                child: Text('Delete'),
+                onPressed: () {
+                  // close dialog
+                  Navigator.pop(context);
+
+                  // go back to albums
+                  Navigator.pop(context);
+                },
+              )
+            ],
+          );
+        });
   }
 
   @override
