@@ -7,10 +7,6 @@ jobs:
 
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/upload-artifact@v1
-      with:
-        name: photoprism-apk
-        path: build/app/outputs/apk/release/
     - uses: actions/checkout@v1
     - uses: actions/setup-java@v1
       with:
@@ -20,3 +16,7 @@ jobs:
         channel: 'stable'
     - run: flutter pub get
     - run: flutter build apk
+    - uses: actions/upload-artifact@v1
+      with:
+        name: photoprism-apk
+        path: build/app/outputs/apk/release/
