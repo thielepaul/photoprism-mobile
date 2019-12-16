@@ -1,5 +1,5 @@
 # Photoprism App for iOS and Android
 
-Download the apk from here: https://thielepaul.gitlab.io/photoprism_app/photoprism.apk
+An apk is built for each commit using Github Actions and can be downloaded as an artifact.
 
 ![alt text](assets/iphone_photo.png "iPhone App Photos View")
