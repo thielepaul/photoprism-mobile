@@ -16,4 +16,4 @@
 The latest .apk file can be downloaded [here](https://github.com/photoprism/photoprism-mobile/releases/latest/download/photoprism.apk).
 
 ### iOS
-For iOS you have to build the app by source.
+For iOS you have to build the app from source.
