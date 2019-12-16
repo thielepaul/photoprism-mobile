@@ -33,10 +33,10 @@ jobs:
       with:
         name: photoprism-apk
     - run: mv photoprism-apk/app-release.apk photoprism.apk
-    - uses: marvinpinto/action-automatic-releases@v0.3.0
-      with:
-        repo_token: "${{ secrets.GITHUB_TOKEN }}"
-        automatic_release_tag: "latest"
-        prerelease: true
-        title: "Development CI Build"
-        files: photoprism.apk
+    #- uses: marvinpinto/action-automatic-releases@v0.3.0
+    #  with:
+    #    repo_token: "${{ secrets.GITHUB_TOKEN }}"
+    #    automatic_release_tag: "latest"
+    #    prerelease: true
+    #    title: "Development CI Build"
+    #    files: photoprism.apk
