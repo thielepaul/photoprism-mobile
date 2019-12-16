@@ -4,7 +4,6 @@ on: [push]
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
@@ -20,3 +19,33 @@ jobs:
       with:
         name: photoprism-apk
         path: build/app/outputs/apk/release/
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
+    steps:
+    - uses: actions/download-artifact@v1
+        with:
+        name: photoprism-apk
+    - run: mv photoprism-apk/app-release.apk photoprism.apk
+    - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+    - name: Upload Release Asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./photoprism.apk
+          asset_name: photoprism.apk
+          asset_content_type: application/zip
