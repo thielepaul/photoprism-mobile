@@ -17,20 +17,27 @@ class Settings {
   Future loadSettings(photoprismURL) async {
     print("loading settings..");
 
-    http.Response response = await http.get(photoprismURL + '/api/v1/settings');
+    try {
+      http.Response response = await http.get(
+          photoprismURL + '/api/v1/settings');
 
-    final parsed = json.decode(response.body);
-    this.theme = parsed["theme"];
+      final parsed = json.decode(response.body);
+      this.theme = parsed["theme"];
 
-    this.settingsJson = await rootBundle.loadString('assets/themes.json');
+      this.settingsJson = await rootBundle.loadString('assets/themes.json');
 
-    final parsedSettings = json.decode(this.settingsJson);
+      final parsedSettings = json.decode(this.settingsJson);
 
-    final a = parsedSettings[this.theme];
+      final a = parsedSettings[this.theme];
 
-    print("Color: ");
-    print(a["primary"]);
-    this.applicationColor = a["navigation"];
+      print("Color: ");
+      print(a["primary"]);
+      this.applicationColor = a["navigation"];
+    }
+    catch(_) {
+      // TODO: load cached color
+      this.applicationColor = "#424242";
+    }
 
     return this.applicationColor;
   }
