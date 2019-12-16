@@ -30,7 +30,7 @@ class Settings {
 
     print("Color: ");
     print(a["primary"]);
-    this.applicationColor = a["primary"];
+    this.applicationColor = a["navigation"];
 
     return this.applicationColor;
   }
