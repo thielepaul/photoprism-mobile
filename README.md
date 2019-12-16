@@ -13,7 +13,7 @@
 
 ## Installation
 ### Android
-- The latest .apk file can be downloaded [here](https://github.com/photoprism/photoprism-mobile/releases/latest/download/photoprism.apk).
+- The latest .apk file can be downloaded [here](https://github.com/photoprism/photoprism-mobile/releases/download/latest/photoprism.apk).
 - **Hint**: If a version of the app is already installed, the old app must be uninstalled before installing the new one.
 
 ### iOS
