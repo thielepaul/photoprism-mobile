@@ -41,6 +41,7 @@ class Albums {
   GridView getGridView(
       String photoprismUrl) {
     GridView photosGridView = GridView.builder(
+        key: ValueKey('albumsGridView'),
         gridDelegate: new SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
           mainAxisSpacing: 10,

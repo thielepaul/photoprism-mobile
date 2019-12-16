@@ -36,9 +36,11 @@ class MainPage extends StatefulWidget {
 class _MainPageState extends State<MainPage> {
   GridView _photosGridView = GridView.count(
     crossAxisCount: 1,
+    key: ValueKey('photosGridView'),
   );
   GridView _albumsGridView = GridView.count(
     crossAxisCount: 1,
+    key: ValueKey('albumsGridView'),
   );
   PageController _pageController;
   int _selectedPageIndex = 0;
@@ -62,11 +64,11 @@ class _MainPageState extends State<MainPage> {
   }
 
   Future setPhotoprismUrl(String _url) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    prefs.setString("url", _url);
     setState(() {
       photoprismUrl = _url;
     });
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setString("url", _url);
   }
 
   Future getPhotoprismUrl() async {
@@ -148,11 +150,11 @@ class _MainPageState extends State<MainPage> {
 
   void setNewPhotoprismUrl(url) async {
     Navigator.of(context).pop();
+    await setPhotoprismUrl(url);
     String col = await settings.loadSettings(url);
     setState(() {
       applicationColor = col;
     });
-    await setPhotoprismUrl(url);
     await emptyCache();
     await refreshPhotosPull();
     await refreshAlbumsPull();
@@ -166,6 +168,7 @@ class _MainPageState extends State<MainPage> {
           return AlertDialog(
             title: Text('Enter Photoprism URL'),
             content: TextField(
+              key: ValueKey("photoprismUrlTextField"),
               controller: _urlTextFieldController,
               decoration:
                   InputDecoration(hintText: "https://demo.photoprism.org"),

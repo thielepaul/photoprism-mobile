@@ -78,6 +78,7 @@ class Photos {
   GridView getGridView(
       String photoprismUrl, ScrollController scrollController) {
     GridView photosGridView = GridView.builder(
+        key: ValueKey('photosGridView'),
         controller: scrollController,
         gridDelegate: new SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 3,
