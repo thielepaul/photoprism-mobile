@@ -48,6 +48,8 @@ class _MainPageState extends State<MainPage> {
   Albums albums = Albums();
   ScrollController _scrollController;
 
+  String applicationColor = "#000000";
+
   void _scrollListener() async {
     if (_scrollController.position.extentAfter < 500) {
       await photos.loadMorePhotos(photoprismUrl);
@@ -103,9 +105,12 @@ class _MainPageState extends State<MainPage> {
 
   void refreshPhotos() async {
     await getPhotoprismUrl();
+    String col = await settings.loadSettings(photoprismUrl);
+    setState(() {
+      applicationColor = col;
+    });
     loadAlbums();
     loadPhotos();
-    settings.loadSettings(photoprismUrl);
   }
 
   void emptyCache() async {
@@ -141,6 +146,18 @@ class _MainPageState extends State<MainPage> {
     super.dispose();
   }
 
+  void setNewPhotoprismUrl(url) async {
+    Navigator.of(context).pop();
+    String col = await settings.loadSettings(url);
+    setState(() {
+      applicationColor = col;
+    });
+    await setPhotoprismUrl(url);
+    await emptyCache();
+    await refreshPhotosPull();
+    await refreshAlbumsPull();
+  }
+
   _settingsDisplayUrlDialog(BuildContext context) async {
     _urlTextFieldController.text = photoprismUrl;
     return showDialog(
@@ -163,10 +180,7 @@ class _MainPageState extends State<MainPage> {
               FlatButton(
                 child: Text('Save'),
                 onPressed: () {
-                  setPhotoprismUrl(_urlTextFieldController.text);
-                  refreshPhotosPull();
-                  refreshAlbumsPull();
-                  Navigator.of(context).pop();
+                  setNewPhotoprismUrl(_urlTextFieldController.text);
                 },
               )
             ],
@@ -215,7 +229,7 @@ class _MainPageState extends State<MainPage> {
           ),
         ],
         currentIndex: _selectedPageIndex,
-        selectedItemColor: HexColor(settings.applicationColor),
+        selectedItemColor: HexColor(applicationColor),
         onTap: _onTappedNavigationBar,
       );
 
@@ -224,7 +238,7 @@ class _MainPageState extends State<MainPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
-        backgroundColor: HexColor(settings.applicationColor),
+        backgroundColor: HexColor(applicationColor),
       ),
       body: PageView(
           physics: NeverScrollableScrollPhysics(),

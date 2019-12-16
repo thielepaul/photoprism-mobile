@@ -5,6 +5,8 @@ import 'package:http/http.dart' as http;
 import 'dart:async' show Future;
 import 'package:flutter/services.dart' show rootBundle;
 
+import 'main.dart';
+
 class Settings {
   String theme = "";
   String settingsJson = "";
@@ -25,6 +27,11 @@ class Settings {
     final parsedSettings = json.decode(this.settingsJson);
 
     final a = parsedSettings[this.theme];
+
+    print("Color: ");
+    print(a["primary"]);
     this.applicationColor = a["primary"];
+
+    return this.applicationColor;
   }
 }
