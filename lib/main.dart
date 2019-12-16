@@ -173,12 +173,14 @@ class _MainPageState extends State<MainPage> {
             actions: <Widget>[
               FlatButton(
                 child: Text('Cancel'),
+                textColor: HexColor(applicationColor),
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
               ),
               FlatButton(
                 child: Text('Save'),
+                textColor: HexColor(applicationColor),
                 onPressed: () {
                   setNewPhotoprismUrl(_urlTextFieldController.text);
                 },
@@ -244,8 +246,8 @@ class _MainPageState extends State<MainPage> {
           physics: NeverScrollableScrollPhysics(),
           controller: _pageController,
           children: <Widget>[
-            RefreshIndicator(child: photosPage(), onRefresh: refreshPhotosPull),
-            RefreshIndicator(child: albumsPage(), onRefresh: refreshAlbumsPull),
+            RefreshIndicator(child: photosPage(), onRefresh: refreshPhotosPull, color: HexColor(applicationColor)),
+            RefreshIndicator(child: albumsPage(), onRefresh: refreshAlbumsPull, color: HexColor(applicationColor)),
             settingsPage(),
           ]),
       bottomNavigationBar: navigationBar(),
