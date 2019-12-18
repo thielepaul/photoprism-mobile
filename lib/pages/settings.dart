@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
+import 'package:photoprism/api/albums.dart';
+import 'package:photoprism/api/photos.dart';
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:provider/provider.dart';
 
@@ -10,27 +12,34 @@ class Settings extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-  var photorismModel = Provider.of<PhotoprismModel>(context);
+    var photorismModel = Provider.of<PhotoprismModel>(context);
 
- return Column(
-   mainAxisAlignment: MainAxisAlignment.start,
-   children: <Widget>[
-     ListTile(
-       title: Text("Photoprism URL"),
-       subtitle: Text(photorismModel.photoprismUrl),
-       onTap: () {
-         _settingsDisplayUrlDialog(context);
-       },
-     ),
-     ListTile(
-       title: Text("Empty cache"),
-       onTap: () {
-         emptyCache();
-       },
-     )
-   ],
- );
-}
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: <Widget>[
+        ListTile(
+          title: Text("Photoprism URL"),
+          subtitle: Text(photorismModel.photoprismUrl),
+          onTap: () {
+            _settingsDisplayUrlDialog(context);
+          },
+        ),
+        ListTile(
+          title: Text("Empty cache"),
+          onTap: () {
+            emptyCache();
+          },
+        ),
+        ListTile(
+          title: Text("Reload"),
+          onTap: () {
+            Photos.loadPhotosFromNetworkOrCache(context, Provider.of<PhotoprismModel>(context).photoprismUrl, "");
+            Albums.loadAlbumsFromNetworkOrCache(context, Provider.of<PhotoprismModel>(context).photoprismUrl);
+          },
+        )
+      ],
+    );
+  }
 
   _settingsDisplayUrlDialog(BuildContext context) async {
     var photorismModel = Provider.of<PhotoprismModel>(context);
@@ -46,7 +55,7 @@ class Settings extends StatelessWidget {
               controller: _urlTextFieldController,
               cursorColor: HexColor(photorismModel.applicationColor),
               decoration:
-              InputDecoration(hintText: "https://demo.photoprism.org"),
+                  InputDecoration(hintText: "https://demo.photoprism.org"),
             ),
             actions: <Widget>[
               FlatButton(
@@ -81,4 +90,3 @@ class Settings extends StatelessWidget {
     await DefaultCacheManager().emptyCache();
   }
 }
-

@@ -1,6 +1,8 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:photoprism/api/albums.dart';
+import 'package:photoprism/api/photos.dart';
 import 'package:photoprism/model/album.dart';
 import 'package:photoprism/model/photo.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -13,6 +15,7 @@ class PhotoprismModel extends ChangeNotifier {
   List<Photo> photoList;
   Map<String, Album> albums;
   bool isLoading = false;
+  int selectedPageIndex = 0;
 
   PhotoprismModel() {
     initialize();
@@ -21,6 +24,13 @@ class PhotoprismModel extends ChangeNotifier {
   initialize() async {
     await loadPhotoprismUrl();
     await loadApplicationColor();
+    // Photos.loadPhotosFromNetworkOrCache(context, photoprismUrl, "");
+    // Albums.loadAlbumsFromNetworkOrCache(context, photoprismUrl);
+  }
+
+  void setSelectedPageIndex(int index) {
+    selectedPageIndex = index;
+    notifyListeners();
   }
 
   void setAlbumList(List<Album> albumList) {
@@ -43,6 +53,7 @@ class PhotoprismModel extends ChangeNotifier {
   }
 
   Future saveAlbumListToSharedPrefs() async {
+    print("saveAlbumListToSharedPrefs");
     var key = 'albumList';
     List<Album> albumList = albums.entries.map((e) => e.value).toList();
     SharedPreferences sp = await SharedPreferences.getInstance();
@@ -50,6 +61,7 @@ class PhotoprismModel extends ChangeNotifier {
   }
 
   Future savePhotoListToSharedPrefs(key, photoList) async {
+    print("savePhotoListToSharedPrefs: key: " + key);
     SharedPreferences sp = await SharedPreferences.getInstance();
     sp.setString(key, json.encode(photoList));
   }

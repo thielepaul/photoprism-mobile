@@ -16,6 +16,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class Photos {
   static Future loadPhotosFromNetworkOrCache(
       BuildContext context, String photoprismUrl, String albumId) async {
+    print("loadPhotosFromNetworkOrCache: AlbumID:" + albumId);
     var key = 'photosList';
     key += albumId;
     SharedPreferences sp = await SharedPreferences.getInstance();
@@ -116,6 +117,7 @@ class Photos {
       String photoprismUrl, ScrollController scrollController, String albumId) {
     return Consumer<PhotoprismModel>(
       builder: (context, photoprismModel, child) {
+        print("getGridView: AlbumID:" + albumId);
         final DragSelectGridViewController gridController =
             DragSelectGridViewController();
         if (Photos.getPhotoList(context, albumId) == null) {

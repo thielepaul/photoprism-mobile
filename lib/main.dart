@@ -27,53 +27,34 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Photoprism',
       theme: ThemeData(),
-      home: MainPage(title: 'Photoprism'),
+      home: MainPage('Photoprism', context),
     );
   }
 }
 
-class MainPage extends StatefulWidget {
-  MainPage({Key key, this.title}) : super(key: key);
-  final String title;
-
-  @override
-  _MainPageState createState() => _MainPageState();
-}
-
-class _MainPageState extends State<MainPage> {
-  Widget _photosGridView = Text(
-    "loading",
-    key: ValueKey('photosGridView'),
-  );
-  GridView _albumsGridView = GridView.count(
-    crossAxisCount: 1,
-    key: ValueKey('albumsGridView'),
-  );
+class MainPage extends StatelessWidget {
+  MainPage(String title, BuildContext context) {
+    this.title = title;
+    _pageController = PageController(initialPage: 0);
+    _scrollController = ScrollController()..addListener(_scrollListener);
+    this.context = context;
+  }
+  String title;
   PageController _pageController;
-  int _selectedPageIndex = 0;
-  Albums albums = Albums();
   ScrollController _scrollController;
+  BuildContext context;
+
 
   void _scrollListener() async {
     if (_scrollController.position.extentAfter < 500) {
       await Photos.loadMorePhotos(
           context, Provider.of<PhotoprismModel>(context).photoprismUrl, "");
-
-      setState(() {
-        _photosGridView = Photos.getGridView(
-            context,
-            Provider.of<PhotoprismModel>(context).photoprismUrl,
-            _scrollController,
-            "");
-      });
     }
   }
 
   void _onTappedNavigationBar(int index) {
     _pageController.jumpToPage(index);
-    setState(() {
-      _selectedPageIndex = index;
-    });
+    Provider.of<PhotoprismModel>(context).setSelectedPageIndex(index);
   }
 
   void emptyCache() async {
@@ -87,60 +68,27 @@ class _MainPageState extends State<MainPage> {
 
     await Photos.loadPhotosFromNetworkOrCache(
         context, Provider.of<PhotoprismModel>(context).photoprismUrl, "");
-    setState(() {
-      _photosGridView = Photos.getGridView(
-          context,
-          Provider.of<PhotoprismModel>(context).photoprismUrl,
-          _scrollController,
-          "");
-    });
   }
 
   Future<void> refreshAlbumsPull() async {
     print('refreshing albums..');
-    await albums.loadAlbums(
+    await Albums.loadAlbums(
         context, Provider.of<PhotoprismModel>(context).photoprismUrl);
 
-    await albums.loadAlbumsFromNetworkOrCache(
+    await Albums.loadAlbumsFromNetworkOrCache(
         context, Provider.of<PhotoprismModel>(context).photoprismUrl);
-    GridView gridView =
-        albums.getGridView(Provider.of<PhotoprismModel>(context).photoprismUrl);
-    setState(() {
-      _albumsGridView = gridView;
-    });
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _pageController = PageController(initialPage: 0);
-    _selectedPageIndex = 0;
-
-    WidgetsBinding.instance.addPostFrameCallback((_) => initialize());
-
-    _scrollController = new ScrollController()..addListener(_scrollListener);
   }
 
   void initialize() {
-    refreshPhotosPull();
-    refreshAlbumsPull();
+    // WidgetsBinding.instance.addPostFrameCallback((_) => initialize());
   }
-
-  @override
-  void dispose() {
-    _scrollController.removeListener(_scrollListener);
-    super.dispose();
-  }
-
-  photosPage() => _photosGridView;
-  albumsPage() => _albumsGridView;
 
   @override
   Widget build(BuildContext context) {
     var photorismModel = Provider.of<PhotoprismModel>(context);
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.title),
+        title: Text(title),
         backgroundColor: HexColor(photorismModel.applicationColor),
       ),
       body: PageView(
@@ -148,11 +96,16 @@ class _MainPageState extends State<MainPage> {
           controller: _pageController,
           children: <Widget>[
             RefreshIndicator(
-                child: photosPage(),
+                child: Photos.getGridView(
+                    context,
+                    Provider.of<PhotoprismModel>(context).photoprismUrl,
+                    _scrollController,
+                    ""),
                 onRefresh: refreshPhotosPull,
                 color: HexColor(photorismModel.applicationColor)),
             RefreshIndicator(
-                child: albumsPage(),
+                child: Albums.getGridView(
+                    Provider.of<PhotoprismModel>(context).photoprismUrl),
                 onRefresh: refreshAlbumsPull,
                 color: HexColor(photorismModel.applicationColor)),
             Settings(),
@@ -172,7 +125,7 @@ class _MainPageState extends State<MainPage> {
             title: Text('Settings'),
           ),
         ],
-        currentIndex: _selectedPageIndex,
+        currentIndex: Provider.of<PhotoprismModel>(context).selectedPageIndex,
         selectedItemColor:
             HexColor(Provider.of<PhotoprismModel>(context).applicationColor),
         onTap: _onTappedNavigationBar,
