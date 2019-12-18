@@ -1,3 +1,4 @@
+import 'package:drag_select_grid_view/drag_select_grid_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_uploader/flutter_uploader.dart';
@@ -13,9 +14,9 @@ final uploader = FlutterUploader();
 void main() {
   runApp(
     ChangeNotifierProvider(
-        create: (context) => PhotoprismModel(),
-        child: MyApp(),
-      ),
+      create: (context) => PhotoprismModel(),
+      child: MyApp(),
+    ),
   );
 }
 
@@ -40,8 +41,8 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
-  GridView _photosGridView = GridView.count(
-    crossAxisCount: 1,
+  Widget _photosGridView = Text(
+    "loading",
     key: ValueKey('photosGridView'),
   );
   GridView _albumsGridView = GridView.count(
@@ -50,17 +51,20 @@ class _MainPageState extends State<MainPage> {
   );
   PageController _pageController;
   int _selectedPageIndex = 0;
-  Photos photos = Photos();
   Albums albums = Albums();
   ScrollController _scrollController;
 
   void _scrollListener() async {
     if (_scrollController.position.extentAfter < 500) {
-      await photos.loadMorePhotos(Provider.of<PhotoprismModel>(context).photoprismUrl);
+      await Photos.loadMorePhotos(
+          context, Provider.of<PhotoprismModel>(context).photoprismUrl, "");
 
-      GridView gridView = photos.getGridView(Provider.of<PhotoprismModel>(context).photoprismUrl, _scrollController);
       setState(() {
-        _photosGridView = gridView;
+        _photosGridView = Photos.getGridView(
+            context,
+            Provider.of<PhotoprismModel>(context).photoprismUrl,
+            _scrollController,
+            "");
       });
     }
   }
@@ -78,21 +82,29 @@ class _MainPageState extends State<MainPage> {
 
   Future<void> refreshPhotosPull() async {
     print('refreshing photos..');
-    await photos.loadPhotos(Provider.of<PhotoprismModel>(context).photoprismUrl);
+    await Photos.loadPhotos(
+        context, Provider.of<PhotoprismModel>(context).photoprismUrl, "");
 
-    await photos.loadPhotosFromNetworkOrCache(Provider.of<PhotoprismModel>(context).photoprismUrl);
-    GridView gridView = photos.getGridView(Provider.of<PhotoprismModel>(context).photoprismUrl, _scrollController);
+    await Photos.loadPhotosFromNetworkOrCache(
+        context, Provider.of<PhotoprismModel>(context).photoprismUrl, "");
     setState(() {
-      _photosGridView = gridView;
+      _photosGridView = Photos.getGridView(
+          context,
+          Provider.of<PhotoprismModel>(context).photoprismUrl,
+          _scrollController,
+          "");
     });
   }
 
   Future<void> refreshAlbumsPull() async {
     print('refreshing albums..');
-    await albums.loadAlbums(Provider.of<PhotoprismModel>(context).photoprismUrl);
+    await albums.loadAlbums(
+        context, Provider.of<PhotoprismModel>(context).photoprismUrl);
 
-    await albums.loadAlbumsFromNetworkOrCache(Provider.of<PhotoprismModel>(context).photoprismUrl);
-    GridView gridView = albums.getGridView(Provider.of<PhotoprismModel>(context).photoprismUrl);
+    await albums.loadAlbumsFromNetworkOrCache(
+        context, Provider.of<PhotoprismModel>(context).photoprismUrl);
+    GridView gridView =
+        albums.getGridView(Provider.of<PhotoprismModel>(context).photoprismUrl);
     setState(() {
       _albumsGridView = gridView;
     });
@@ -107,7 +119,6 @@ class _MainPageState extends State<MainPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) => initialize());
 
     _scrollController = new ScrollController()..addListener(_scrollListener);
-
   }
 
   void initialize() {
@@ -136,8 +147,14 @@ class _MainPageState extends State<MainPage> {
           physics: NeverScrollableScrollPhysics(),
           controller: _pageController,
           children: <Widget>[
-            RefreshIndicator(child: photosPage(), onRefresh: refreshPhotosPull, color: HexColor(photorismModel.applicationColor)),
-            RefreshIndicator(child: albumsPage(), onRefresh: refreshAlbumsPull, color: HexColor(photorismModel.applicationColor)),
+            RefreshIndicator(
+                child: photosPage(),
+                onRefresh: refreshPhotosPull,
+                color: HexColor(photorismModel.applicationColor)),
+            RefreshIndicator(
+                child: albumsPage(),
+                onRefresh: refreshAlbumsPull,
+                color: HexColor(photorismModel.applicationColor)),
             Settings(),
           ]),
       bottomNavigationBar: BottomNavigationBar(
@@ -156,7 +173,8 @@ class _MainPageState extends State<MainPage> {
           ),
         ],
         currentIndex: _selectedPageIndex,
-        selectedItemColor: HexColor(Provider.of<PhotoprismModel>(context).applicationColor),
+        selectedItemColor:
+            HexColor(Provider.of<PhotoprismModel>(context).applicationColor),
         onTap: _onTappedNavigationBar,
       ),
     );

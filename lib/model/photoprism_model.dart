@@ -1,6 +1,8 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:photoprism/model/album.dart';
+import 'package:photoprism/model/photo.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/services.dart' show rootBundle;
@@ -8,6 +10,9 @@ import 'package:flutter/services.dart' show rootBundle;
 class PhotoprismModel extends ChangeNotifier {
   String applicationColor = "#424242";
   String photoprismUrl = "https://demo.photoprism.org";
+  List<Photo> photoList;
+  Map<String, Album> albums;
+  bool isLoading = false;
 
   PhotoprismModel() {
     initialize();
@@ -16,6 +21,37 @@ class PhotoprismModel extends ChangeNotifier {
   initialize() async {
     await loadPhotoprismUrl();
     await loadApplicationColor();
+  }
+
+  void setAlbumList(List<Album> albumList) {
+    this.albums =
+        Map.fromIterable(albumList, key: (e) => e.id, value: (e) => e);
+    saveAlbumListToSharedPrefs();
+    notifyListeners();
+  }
+
+  void setPhotoList(List<Photo> photoList) {
+    this.photoList = photoList;
+    savePhotoListToSharedPrefs('photosList', photoList);
+    notifyListeners();
+  }
+
+  void setPhotoListOfAlbum(List<Photo> photoList, String albumId) {
+    albums[albumId].photoList = photoList;
+    savePhotoListToSharedPrefs('photosList' + albumId, photoList);
+    notifyListeners();
+  }
+
+  Future saveAlbumListToSharedPrefs() async {
+    var key = 'albumList';
+    List<Album> albumList = albums.entries.map((e) => e.value).toList();
+    SharedPreferences sp = await SharedPreferences.getInstance();
+    sp.setString(key, json.encode(albumList));
+  }
+
+  Future savePhotoListToSharedPrefs(key, photoList) async {
+    SharedPreferences sp = await SharedPreferences.getInstance();
+    sp.setString(key, json.encode(photoList));
   }
 
   Future<void> setPhotoprismUrl(url) async {
@@ -46,7 +82,8 @@ class PhotoprismModel extends ChangeNotifier {
 
     // load color scheme from server
     try {
-      http.Response response = await http.get(this.photoprismUrl + '/api/v1/settings');
+      http.Response response =
+          await http.get(this.photoprismUrl + '/api/v1/settings');
 
       final settingsJson = json.decode(response.body);
       final themeSetting = settingsJson["theme"];
@@ -61,8 +98,7 @@ class PhotoprismModel extends ChangeNotifier {
       // save new color scheme to shared preferences
       prefs.setString("applicationColor", this.applicationColor);
       notifyListeners();
-    }
-    catch(_) {
+    } catch (_) {
       print("Could not get color scheme from server!");
     }
   }

@@ -1,3 +1,4 @@
+import 'package:drag_select_grid_view/drag_select_grid_view.dart';
 import 'package:flutter/material.dart';
 import 'package:photoprism/api/photos.dart';
 import 'package:photoprism/common/hexcolor.dart';
@@ -7,84 +8,50 @@ import 'package:provider/provider.dart';
 
 import '../main.dart';
 
-class AlbumView extends StatefulWidget {
-  Album album;
-  String photoprismUrl;
-
-  AlbumView(Album album, String photoprismUrl) {
-    this.album = album;
-    this.photoprismUrl = photoprismUrl;
-  }
-
-  @override
-  _AlbumViewState createState() => _AlbumViewState(album, photoprismUrl);
-}
-
-class _AlbumViewState extends State<AlbumView> {
-  GridView _photosGridView = GridView.count(
-    crossAxisCount: 1,
+class AlbumView extends StatelessWidget {
+  Widget _photosGridView = Text(
+    "none",
+    key: ValueKey('photosGridView'),
   );
   String photoprismUrl = "";
-  Photos photos;
   ScrollController _scrollController;
   Album album;
   String _albumTitle = "";
   TextEditingController _urlTextFieldController = TextEditingController();
+  BuildContext context;
 
-  _AlbumViewState(Album album, String photoprismUrl) {
+  AlbumView(BuildContext context, Album album, String photoprismUrl) {
     this.album = album;
-    this.photos = Photos.withAlbum(album);
     this._albumTitle = album.name;
     this.photoprismUrl = photoprismUrl;
+    this.context = context;
+
+    initialize();
+  }
+
+  void initialize() async {
+    print("init albumview");
+    _scrollController = new ScrollController()..addListener(_scrollListener);
   }
 
   void _scrollListener() async {
     if (_scrollController.position.extentAfter < 500) {
-      await photos.loadMorePhotos(photoprismUrl);
-
-      GridView gridView = photos.getGridView(photoprismUrl, _scrollController);
-      setState(() {
-        _photosGridView = gridView;
-      });
+      await Photos.loadMorePhotos(context, photoprismUrl, album.id);
     }
   }
 
-  void loadPhotos() async {
-    await photos.loadPhotosFromNetworkOrCache(photoprismUrl);
-    GridView gridView = photos.getGridView(photoprismUrl, _scrollController);
-    setState(() {
-      _photosGridView = gridView;
-    });
-  }
-
-  void refreshPhotos() async {
-    loadPhotos();
-    Provider.of<PhotoprismModel>(context).loadApplicationColor();
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    refreshPhotos();
-    _scrollController = new ScrollController()..addListener(_scrollListener); // fehler?
-  }
-
-  @override
-  void dispose() {
-    _scrollController.removeListener(_scrollListener);
-    super.dispose();
-  }
+  // @override
+  // void dispose() {
+  //   _scrollController.removeListener(_scrollListener);
+  //   super.dispose();
+  // }
 
   void deleteAlbum(int choice) {
     if (choice == 0) {
       print("renaming album");
-
-    }
-    else if (choice == 1) {
+    } else if (choice == 1) {
       print("deleting album");
-      setState(() {
-        _deleteDialog(context);
-      });
+      _deleteDialog(context);
     }
   }
 
@@ -138,9 +105,11 @@ class _AlbumViewState extends State<AlbumView> {
             ],
           ),
         ],
-        backgroundColor: HexColor(Provider.of<PhotoprismModel>(context).applicationColor),
+        backgroundColor:
+            HexColor(Provider.of<PhotoprismModel>(context).applicationColor),
       ),
-      body: _photosGridView,
+      body: Photos.getGridView(
+          context, photoprismUrl, _scrollController, album.id),
     );
   }
 }
