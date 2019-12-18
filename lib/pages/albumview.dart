@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:photoprism/api/photos.dart';
-import 'package:photoprism/hexcolor.dart';
+import 'package:photoprism/common/hexcolor.dart';
 import 'package:photoprism/model/album.dart';
+import 'package:photoprism/model/photoprism_model.dart';
+import 'package:provider/provider.dart';
 
 import '../main.dart';
 
@@ -57,7 +59,7 @@ class _AlbumViewState extends State<AlbumView> {
 
   void refreshPhotos() async {
     loadPhotos();
-    settings.loadSettings(photoprismUrl);
+    Provider.of<PhotoprismModel>(context).loadApplicationColor();
   }
 
   @override
@@ -136,7 +138,7 @@ class _AlbumViewState extends State<AlbumView> {
             ],
           ),
         ],
-        backgroundColor: HexColor(settings.applicationColor),
+        backgroundColor: HexColor(Provider.of<PhotoprismModel>(context).applicationColor),
       ),
       body: _photosGridView,
     );
