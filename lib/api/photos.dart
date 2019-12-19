@@ -3,11 +3,11 @@ import 'dart:convert';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:drag_select_grid_view/drag_select_grid_view.dart';
 import 'package:flutter/material.dart';
-import 'package:photoprism/common/hexcolor.dart';
 import 'package:photoprism/model/photo.dart';
 import 'package:http/http.dart' as http;
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:photoprism/pages/photoview.dart';
+import 'package:photoprism/widgets/selectable_tile.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -94,13 +94,6 @@ class Photos {
     }
   }
 
-  static Color selectedColor(BuildContext context, bool selected) {
-    if (selected) {
-      return HexColor(Provider.of<PhotoprismModel>(context).applicationColor);
-    }
-    return Color(0x00000000);
-  }
-
   static List<Photo> getPhotoList(context, String albumId) {
     List<Photo> photoList;
     if (albumId == "") {
@@ -122,7 +115,8 @@ class Photos {
   }
 
   void _selectionListener() {
-    print(_gridController.selection);
+    Provider.of<PhotoprismModel>(context)
+        .setSelection(_gridController.selection);
   }
 
   Widget getGridView() {
@@ -142,29 +136,27 @@ class Photos {
         ),
         itemCount: Photos.getPhotoList(context, albumId).length,
         itemBuilder: (context, index, selected) {
-          return Center(
+          return SelectableTile(
             key: ValueKey("PhotoTile"),
-            child: GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => PhotoView(
-                          index,
-                          Photos.getPhotoList(context, albumId),
-                          photoprismUrl)),
-                );
-              },
-              child: CachedNetworkImage(
-                imageUrl: photoprismUrl +
-                    '/api/v1/thumbnails/' +
-                    Photos.getPhotoList(context, albumId)[index].fileHash +
-                    '/tile_224',
-                placeholder: (context, url) => CircularProgressIndicator(),
-                errorWidget: (context, url, error) => Icon(Icons.error),
-                color: selectedColor(context, selected),
-                colorBlendMode: BlendMode.hardLight,
-              ),
+            index: index,
+            selected: selected,
+            gridController: _gridController,
+            context: context,
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => PhotoView(index,
+                        Photos.getPhotoList(context, albumId), photoprismUrl)),
+              );
+            },
+            child: CachedNetworkImage(
+              imageUrl: photoprismUrl +
+                  '/api/v1/thumbnails/' +
+                  Photos.getPhotoList(context, albumId)[index].fileHash +
+                  '/tile_224',
+              placeholder: (context, url) => CircularProgressIndicator(),
+              errorWidget: (context, url, error) => Icon(Icons.error),
             ),
           );
         });

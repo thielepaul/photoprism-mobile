@@ -17,7 +17,7 @@ class PhotoprismModel extends ChangeNotifier {
   Map<String, Album> albums;
   bool isLoading = false;
   int selectedPageIndex = 0;
-  Selection selection;
+  Selection selection = Selection(Set());
 
   PhotoprismModel() {
     initialize();
@@ -31,6 +31,7 @@ class PhotoprismModel extends ChangeNotifier {
   }
 
   void setSelection(Selection selection) {
+    print(selection);
     this.selection = selection;
     notifyListeners();
   }
