@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:drag_select_grid_view/drag_select_grid_view.dart';
 import 'package:flutter/material.dart';
 import 'package:photoprism/api/albums.dart';
 import 'package:photoprism/api/photos.dart';
@@ -16,6 +17,7 @@ class PhotoprismModel extends ChangeNotifier {
   Map<String, Album> albums;
   bool isLoading = false;
   int selectedPageIndex = 0;
+  Selection selection;
 
   PhotoprismModel() {
     initialize();
@@ -23,9 +25,14 @@ class PhotoprismModel extends ChangeNotifier {
 
   initialize() async {
     await loadPhotoprismUrl();
-    await loadApplicationColor();
-    // Photos.loadPhotosFromNetworkOrCache(context, photoprismUrl, "");
-    // Albums.loadAlbumsFromNetworkOrCache(context, photoprismUrl);
+    loadApplicationColor();
+    Photos.loadPhotosFromNetworkOrCache(this, photoprismUrl, "");
+    Albums.loadAlbumsFromNetworkOrCache(this, photoprismUrl);
+  }
+
+  void setSelection(Selection selection) {
+    this.selection = selection;
+    notifyListeners();
   }
 
   void setSelectedPageIndex(int index) {
@@ -47,6 +54,7 @@ class PhotoprismModel extends ChangeNotifier {
   }
 
   void setPhotoListOfAlbum(List<Photo> photoList, String albumId) {
+    print("setPhotoListOfAlbum: albumId: " + albumId);
     albums[albumId].photoList = photoList;
     savePhotoListToSharedPrefs('photosList' + albumId, photoList);
     notifyListeners();

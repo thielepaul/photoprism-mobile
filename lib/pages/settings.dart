@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
-import 'package:photoprism/api/albums.dart';
-import 'package:photoprism/api/photos.dart';
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:provider/provider.dart';
 
 import '../common/hexcolor.dart';
 
 class Settings extends StatelessWidget {
-  TextEditingController _urlTextFieldController = TextEditingController();
+  final TextEditingController _urlTextFieldController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -30,13 +28,6 @@ class Settings extends StatelessWidget {
             emptyCache();
           },
         ),
-        ListTile(
-          title: Text("Reload"),
-          onTap: () {
-            Photos.loadPhotosFromNetworkOrCache(context, Provider.of<PhotoprismModel>(context).photoprismUrl, "");
-            Albums.loadAlbumsFromNetworkOrCache(context, Provider.of<PhotoprismModel>(context).photoprismUrl);
-          },
-        )
       ],
     );
   }
@@ -80,8 +71,8 @@ class Settings extends StatelessWidget {
   void setNewPhotoprismUrl(context, url) async {
     Navigator.of(context).pop();
     await Provider.of<PhotoprismModel>(context).setPhotoprismUrl(url);
-    await Provider.of<PhotoprismModel>(context).loadApplicationColor();
-    await emptyCache();
+    Provider.of<PhotoprismModel>(context).loadApplicationColor();
+    emptyCache();
     //await refreshPhotosPull();
     //await refreshAlbumsPull();
   }

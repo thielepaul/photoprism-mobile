@@ -5,41 +5,37 @@ import 'package:photo_view/photo_view_gallery.dart';
 import 'package:photoprism/model/photo.dart';
 
 class PhotoView extends StatelessWidget {
-  int currentPhotoIndex;
-  List<Photo> photos;
-  String photoprismURL;
-  PageController pageController;
+  final int currentPhotoIndex;
+  final List<Photo> photos;
+  final String photoprismURL;
+  final PageController pageController;
 
-  PhotoView(int currentPhotoIndex, List<Photo> photos, String photoprismURL) {
-    this.currentPhotoIndex = currentPhotoIndex;
-    this.photos = photos;
-    this.photoprismURL = photoprismURL;
-    this.pageController = PageController(initialPage: this.currentPhotoIndex);
-  }
+  PhotoView(this.currentPhotoIndex, this.photos, this.photoprismURL)
+      : this.pageController = PageController(initialPage: currentPhotoIndex);
 
   @override
   Widget build(BuildContext context) {
     return Container(
         child: GestureDetector(
-          child: PhotoViewGallery.builder(
-            scrollPhysics: const BouncingScrollPhysics(),
-            builder: (BuildContext context, int index) {
-              return PhotoViewGalleryPageOptions(
-                imageProvider: CachedNetworkImageProvider(photoprismURL +
-                    "/api/v1/thumbnails/" +
-                    this.photos[index].fileHash +
-                    "/fit_1920"),
-                initialScale: PhotoViewComputedScale.contained,
-                minScale: PhotoViewComputedScale.contained,
-                maxScale: PhotoViewComputedScale.covered * 1.5,
-              );
-            },
-            itemCount: photos.length,
-            pageController: pageController,
-          ),
-          onTap: () {
-            Navigator.pop(context);
-          },
-        ));
+      child: PhotoViewGallery.builder(
+        scrollPhysics: const BouncingScrollPhysics(),
+        builder: (BuildContext context, int index) {
+          return PhotoViewGalleryPageOptions(
+            imageProvider: CachedNetworkImageProvider(photoprismURL +
+                "/api/v1/thumbnails/" +
+                this.photos[index].fileHash +
+                "/fit_1920"),
+            initialScale: PhotoViewComputedScale.contained,
+            minScale: PhotoViewComputedScale.contained,
+            maxScale: PhotoViewComputedScale.covered * 1.5,
+          );
+        },
+        itemCount: photos.length,
+        pageController: pageController,
+      ),
+      onTap: () {
+        Navigator.pop(context);
+      },
+    ));
   }
 }

@@ -1,4 +1,3 @@
-import 'package:drag_select_grid_view/drag_select_grid_view.dart';
 import 'package:flutter/material.dart';
 import 'package:photoprism/api/photos.dart';
 import 'package:photoprism/common/hexcolor.dart';
@@ -6,45 +5,14 @@ import 'package:photoprism/model/album.dart';
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:provider/provider.dart';
 
-import '../main.dart';
-
 class AlbumView extends StatelessWidget {
-  Widget _photosGridView = Text(
-    "none",
-    key: ValueKey('photosGridView'),
-  );
-  String photoprismUrl = "";
-  ScrollController _scrollController;
-  Album album;
-  String _albumTitle = "";
-  TextEditingController _urlTextFieldController = TextEditingController();
-  BuildContext context;
+  final String photoprismUrl;
+  final Album album;
+  final String _albumTitle;
+  final BuildContext context;
 
-  AlbumView(BuildContext context, Album album, String photoprismUrl) {
-    this.album = album;
-    this._albumTitle = album.name;
-    this.photoprismUrl = photoprismUrl;
-    this.context = context;
-
-    initialize();
-  }
-
-  void initialize() async {
-    print("init albumview");
-    _scrollController = new ScrollController()..addListener(_scrollListener);
-  }
-
-  void _scrollListener() async {
-    if (_scrollController.position.extentAfter < 500) {
-      await Photos.loadMorePhotos(context, photoprismUrl, album.id);
-    }
-  }
-
-  // @override
-  // void dispose() {
-  //   _scrollController.removeListener(_scrollListener);
-  //   super.dispose();
-  // }
+  AlbumView(this.context, this.album, this.photoprismUrl)
+      : _albumTitle = album.name;
 
   void deleteAlbum(int choice) {
     if (choice == 0) {
@@ -108,8 +76,7 @@ class AlbumView extends StatelessWidget {
         backgroundColor:
             HexColor(Provider.of<PhotoprismModel>(context).applicationColor),
       ),
-      body: Photos.getGridView(
-          context, photoprismUrl, _scrollController, album.id),
+      body: Photos(context, photoprismUrl, album.id).getGridView(),
     );
   }
 }

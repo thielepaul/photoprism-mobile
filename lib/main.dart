@@ -1,4 +1,3 @@
-import 'package:drag_select_grid_view/drag_select_grid_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_uploader/flutter_uploader.dart';
@@ -33,24 +32,12 @@ class MyApp extends StatelessWidget {
 }
 
 class MainPage extends StatelessWidget {
-  MainPage(String title, BuildContext context) {
-    this.title = title;
-    _pageController = PageController(initialPage: 0);
-    _scrollController = ScrollController()..addListener(_scrollListener);
-    this.context = context;
-  }
-  String title;
-  PageController _pageController;
-  ScrollController _scrollController;
-  BuildContext context;
+  final String title;
+  final PageController _pageController;
+  final BuildContext context;
 
-
-  void _scrollListener() async {
-    if (_scrollController.position.extentAfter < 500) {
-      await Photos.loadMorePhotos(
-          context, Provider.of<PhotoprismModel>(context).photoprismUrl, "");
-    }
-  }
+  MainPage(this.title, this.context)
+      : _pageController = PageController(initialPage: 0);
 
   void _onTappedNavigationBar(int index) {
     _pageController.jumpToPage(index);
@@ -63,29 +50,29 @@ class MainPage extends StatelessWidget {
 
   Future<void> refreshPhotosPull() async {
     print('refreshing photos..');
-    await Photos.loadPhotos(
-        context, Provider.of<PhotoprismModel>(context).photoprismUrl, "");
+    await Photos.loadPhotos(Provider.of<PhotoprismModel>(context),
+        Provider.of<PhotoprismModel>(context).photoprismUrl, "");
 
     await Photos.loadPhotosFromNetworkOrCache(
-        context, Provider.of<PhotoprismModel>(context).photoprismUrl, "");
+        Provider.of<PhotoprismModel>(context),
+        Provider.of<PhotoprismModel>(context).photoprismUrl,
+        "");
   }
 
   Future<void> refreshAlbumsPull() async {
     print('refreshing albums..');
-    await Albums.loadAlbums(
-        context, Provider.of<PhotoprismModel>(context).photoprismUrl);
+    await Albums.loadAlbums(Provider.of<PhotoprismModel>(context),
+        Provider.of<PhotoprismModel>(context).photoprismUrl);
 
     await Albums.loadAlbumsFromNetworkOrCache(
-        context, Provider.of<PhotoprismModel>(context).photoprismUrl);
-  }
-
-  void initialize() {
-    // WidgetsBinding.instance.addPostFrameCallback((_) => initialize());
+        Provider.of<PhotoprismModel>(context),
+        Provider.of<PhotoprismModel>(context).photoprismUrl);
   }
 
   @override
   Widget build(BuildContext context) {
-    var photorismModel = Provider.of<PhotoprismModel>(context);
+    final PhotoprismModel photorismModel =
+        Provider.of<PhotoprismModel>(context);
     return Scaffold(
       appBar: AppBar(
         title: Text(title),
@@ -96,16 +83,15 @@ class MainPage extends StatelessWidget {
           controller: _pageController,
           children: <Widget>[
             RefreshIndicator(
-                child: Photos.getGridView(
-                    context,
-                    Provider.of<PhotoprismModel>(context).photoprismUrl,
-                    _scrollController,
-                    ""),
+                child: Photos(context,
+                        Provider.of<PhotoprismModel>(context).photoprismUrl, "")
+                    .getGridView(),
                 onRefresh: refreshPhotosPull,
                 color: HexColor(photorismModel.applicationColor)),
             RefreshIndicator(
                 child: Albums.getGridView(
-                    Provider.of<PhotoprismModel>(context).photoprismUrl),
+                    Provider.of<PhotoprismModel>(context).photoprismUrl,
+                    context),
                 onRefresh: refreshAlbumsPull,
                 color: HexColor(photorismModel.applicationColor)),
             Settings(),
