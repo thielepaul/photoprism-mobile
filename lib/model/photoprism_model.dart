@@ -24,6 +24,16 @@ class PhotoprismModel extends ChangeNotifier {
     gridController.addListener(notifyListeners);
   }
 
+  DragSelectGridViewController getGridController() {
+    try {
+      gridController.hasListeners;
+    } catch (_) {
+      gridController = DragSelectGridViewController();
+      gridController.addListener(notifyListeners);
+    }
+    return gridController;
+  }
+
   initialize() async {
     await loadPhotoprismUrl();
     loadApplicationColor();
