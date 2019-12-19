@@ -10,13 +10,15 @@ class AlbumView extends StatelessWidget {
   final Album album;
   final String _albumTitle;
   final BuildContext context;
+  final TextEditingController _albumRenameTextFieldController = TextEditingController();
 
   AlbumView(this.context, this.album, this.photoprismUrl)
       : _albumTitle = album.name;
 
-  void deleteAlbum(int choice) {
+  void modifyAlbum(int choice) {
     if (choice == 0) {
       print("renaming album");
+      _renameAlbumDialog(context);
     } else if (choice == 1) {
       print("deleting album");
       _deleteDialog(context);
@@ -43,6 +45,47 @@ class AlbumView extends StatelessWidget {
                   // close dialog
                   Navigator.pop(context);
 
+                  Provider.of<PhotoprismModel>(context).deleteAlbum(album.id);
+                  // go back to albums
+                  Navigator.pop(context);
+                },
+              )
+            ],
+          );
+        });
+  }
+
+  _renameAlbumDialog(BuildContext context) async {
+    var photorismModel = Provider.of<PhotoprismModel>(context);
+    _albumRenameTextFieldController.text = album.name;
+
+    return showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: Text('Rename Album'),
+            content: TextField(
+              key: ValueKey("photoprismUrlTextField"),
+              controller: _albumRenameTextFieldController,
+              cursorColor: HexColor(photorismModel.applicationColor),
+            ),
+            actions: <Widget>[
+              FlatButton(
+                child: Text('Cancel'),
+                textColor: HexColor(photorismModel.applicationColor),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+              FlatButton(
+                child: Text('Save'),
+                textColor: HexColor(photorismModel.applicationColor),
+                onPressed: () {
+                  // close dialog
+                  Navigator.pop(context);
+
+                  Provider.of<PhotoprismModel>(context).renameAlbum(album.id, _albumRenameTextFieldController.text);
+
                   // go back to albums
                   Navigator.pop(context);
                 },
@@ -60,7 +103,7 @@ class AlbumView extends StatelessWidget {
         actions: <Widget>[
           // overflow menu
           PopupMenuButton<int>(
-            onSelected: deleteAlbum,
+            onSelected: modifyAlbum,
             itemBuilder: (BuildContext context) => [
               PopupMenuItem(
                 value: 0,

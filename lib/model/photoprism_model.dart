@@ -92,6 +92,35 @@ class PhotoprismModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  void deleteAlbum(String albumId) async {
+    print("Deleting album " + albumId);
+
+    String body = '{"albums":["' + albumId + '"]}';
+
+    http.Response response =
+    await http.post(this.photoprismUrl + '/api/v1/batch/albums/delete', body: body);
+
+    print('Response status: ${response.statusCode}');
+    print('Response body: ${response.body}');
+
+    Albums.loadAlbums(this, this.photoprismUrl);
+  }
+
+  void renameAlbum(String albumId, String newAlbumName) async {
+    print("Renaming album " + albumId);
+
+    String body = '{"AlbumName":"' + newAlbumName + '"}';
+
+    http.Response response =
+    await http.put(this.photoprismUrl + '/api/v1/albums/' + albumId, body: body);
+
+    print('Response status: ${response.statusCode}');
+    print('Response body: ${response.body}');
+
+    Albums.loadAlbums(this, this.photoprismUrl);
+  }
+
+
   loadPhotoprismUrl() async {
     // load photoprism url from shared preferences
     SharedPreferences prefs = await SharedPreferences.getInstance();
