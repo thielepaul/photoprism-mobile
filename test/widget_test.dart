@@ -2,11 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:photoprism/main.dart';
+import 'package:photoprism/model/photoprism_model.dart';
+import 'package:provider/provider.dart';
 
 void main() {
   testWidgets('bottom navigation bar switches between pages',
       (WidgetTester tester) async {
-    await tester.pumpWidget(MyApp());
+    await tester.pumpWidget(
+      ChangeNotifierProvider(
+        create: (context) => PhotoprismModel(),
+        child: MyApp(),
+      ),
+    );
     expect(find.byKey(ValueKey("photosGridView")), findsOneWidget);
 
     await tester.tap(find.byIcon(Icons.photo_album));
@@ -24,7 +31,12 @@ void main() {
 
   testWidgets('clicking on photoprism URL opens dialog',
       (WidgetTester tester) async {
-    await tester.pumpWidget(MyApp());
+    await tester.pumpWidget(
+      ChangeNotifierProvider(
+        create: (context) => PhotoprismModel(),
+        child: MyApp(),
+      ),
+    );
     await tester.tap(find.byIcon(Icons.settings));
     await tester.pump();
     expect(find.text("Photoprism URL"), findsOneWidget);
@@ -41,6 +53,7 @@ void main() {
     await tester.tap(find.text("Cancel"));
     await tester.pump();
     expect(find.text("http://example.com/test"), findsNothing);
+    expect(find.byKey(ValueKey("photoprismUrlTextField")), findsNothing);
 
     await tester.tap(find.text("Photoprism URL"));
     await tester.pump();
@@ -48,6 +61,7 @@ void main() {
         "http://example.com/test");
     await tester.tap(find.text("Save"));
     await tester.pump();
+    expect(find.byKey(ValueKey("photoprismUrlTextField")), findsNothing);
     expect(find.text("http://example.com/test"), findsOneWidget);
   });
 }

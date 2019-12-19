@@ -75,8 +75,7 @@ class PhotoprismModel extends ChangeNotifier {
   }
 
   Future<void> setPhotoprismUrl(url) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    prefs.setString("url", url);
+    savePhotoprismUrlToPrefs(url);
     this.photoprismUrl = url;
     notifyListeners();
   }
@@ -121,5 +120,10 @@ class PhotoprismModel extends ChangeNotifier {
     } catch (_) {
       print("Could not get color scheme from server!");
     }
+  }
+
+  void savePhotoprismUrlToPrefs(url) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setString("url", url);
   }
 }
