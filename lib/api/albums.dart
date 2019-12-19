@@ -10,7 +10,11 @@ import 'package:photoprism/pages/albumview.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class Albums {
+class Albums extends StatelessWidget {
+  final String photoprismUrl;
+
+  const Albums({Key key, this.photoprismUrl}) : super(key: key);
+
   static Future loadAlbumsFromNetworkOrCache(
       PhotoprismModel model, String photoprismUrl) async {
     var key = 'albumList';
@@ -46,7 +50,8 @@ class Albums {
     return albums.entries.map((e) => e.value).toList();
   }
 
-  static Widget getGridView(String photoprismUrl, BuildContext context) {
+  @override
+  Widget build(BuildContext context) {
     if (Albums.getAlbumList(context) == null) {
       return Text("loading", key: ValueKey("albumsGridView"));
     }

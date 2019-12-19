@@ -24,14 +24,8 @@ class SelectableTile extends StatelessWidget {
       : this.onTapCallback = onTap,
         super(key: key);
 
-  bool isSelected() {
-    Selection selection = Provider.of<PhotoprismModel>(context).selection;
-    return selection.selectedIndexes.contains(index);
-  }
-
   void onTap() {
-    Selection selection = Provider.of<PhotoprismModel>(context).selection;
-    print(selection);
+    Selection selection = gridController.selection;
     if (selection.isSelecting) {
       Set<int> selectedIndexes = selection.selectedIndexes;
       if (selectedIndexes.contains(index)) {
@@ -39,7 +33,6 @@ class SelectableTile extends StatelessWidget {
       } else {
         selectedIndexes.add(index);
       }
-      Navigator.of(context).maybePop();
       gridController.selection = Selection(selectedIndexes);
       return;
     }
@@ -66,7 +59,7 @@ class SelectableTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (isSelected()) {
+    if (selected) {
       return GestureDetector(
         child: getSelectedTile(context),
         onTap: onTap,

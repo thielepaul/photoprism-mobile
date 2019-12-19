@@ -11,16 +11,14 @@ import 'package:photoprism/widgets/selectable_tile.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class Photos {
+class Photos extends StatelessWidget {
   final ScrollController _scrollController;
   final BuildContext context;
   final String photoprismUrl;
   final String albumId;
-  final DragSelectGridViewController _gridController;
 
-  Photos(this.context, this.photoprismUrl, this.albumId)
-      : _scrollController = ScrollController(),
-        _gridController = DragSelectGridViewController();
+  Photos({Key key, this.context, this.photoprismUrl, this.albumId})
+      : _scrollController = ScrollController();
 
   static Future loadPhotosFromNetworkOrCache(
       PhotoprismModel model, String photoprismUrl, String albumId) async {
@@ -114,21 +112,18 @@ class Photos {
     }
   }
 
-  void _selectionListener() {
-    Provider.of<PhotoprismModel>(context)
-        .setSelection(_gridController.selection);
-  }
-
-  Widget getGridView() {
+  @override
+  Widget build(BuildContext context) {
+    DragSelectGridViewController gridController =
+        Provider.of<PhotoprismModel>(context).gridController;
     _scrollController.addListener(_scrollListener);
-    _gridController.addListener(_selectionListener);
     if (Photos.getPhotoList(context, albumId) == null) {
       return Text("loading", key: ValueKey("photosGridView"));
     }
     return DragSelectGridView(
         key: ValueKey('photosGridView'),
         scrollController: _scrollController,
-        gridController: _gridController,
+        gridController: gridController,
         gridDelegate: new SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 3,
           mainAxisSpacing: 4,
@@ -139,9 +134,9 @@ class Photos {
           return SelectableTile(
             key: ValueKey("PhotoTile"),
             index: index,
-            selected: selected,
-            gridController: _gridController,
             context: context,
+            gridController: gridController,
+            selected: selected,
             onTap: () {
               Navigator.push(
                 context,

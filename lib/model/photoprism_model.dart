@@ -17,10 +17,11 @@ class PhotoprismModel extends ChangeNotifier {
   Map<String, Album> albums;
   bool isLoading = false;
   int selectedPageIndex = 0;
-  Selection selection = Selection.empty;
+  DragSelectGridViewController gridController = DragSelectGridViewController();
 
   PhotoprismModel() {
     initialize();
+    gridController.addListener(notifyListeners);
   }
 
   initialize() async {
@@ -28,11 +29,6 @@ class PhotoprismModel extends ChangeNotifier {
     loadApplicationColor();
     Photos.loadPhotosFromNetworkOrCache(this, photoprismUrl, "");
     Albums.loadAlbumsFromNetworkOrCache(this, photoprismUrl);
-  }
-
-  void setSelection(Selection selection) {
-    this.selection = selection;
-    notifyListeners();
   }
 
   void setSelectedPageIndex(int index) {
