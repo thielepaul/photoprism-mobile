@@ -84,7 +84,7 @@ class Albums extends StatelessWidget {
                       '/api/v1/albums/' +
                       Albums.getAlbumList(context)[index].id +
                       '/thumbnail/tile_500',
-                  placeholder: (context, url) => CircularProgressIndicator(),
+                  placeholder: (context, url) => Container(color: Colors.grey),
                   errorWidget: (context, url, error) => Icon(Icons.error),
                 ),
                 footer: GestureDetector(

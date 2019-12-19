@@ -150,7 +150,7 @@ class Photos extends StatelessWidget {
                   '/api/v1/thumbnails/' +
                   Photos.getPhotoList(context, albumId)[index].fileHash +
                   '/tile_224',
-              placeholder: (context, url) => CircularProgressIndicator(),
+              placeholder: (context, url) => Container(color: Colors.grey,),
               errorWidget: (context, url, error) => Icon(Icons.error),
             ),
           );
