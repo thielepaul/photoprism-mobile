@@ -2,45 +2,55 @@ import 'dart:convert';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:photoprism/api/photos.dart';
 import 'package:photoprism/model/album.dart';
 import 'package:http/http.dart' as http;
+import 'package:photoprism/model/photoprism_model.dart';
 import 'package:photoprism/pages/albumview.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class Albums {
-  List<Album> albumList;
-
-  Future loadAlbumsFromNetworkOrCache(String photoprismUrl) async {
+  static Future loadAlbumsFromNetworkOrCache(
+      PhotoprismModel model, String photoprismUrl) async {
     var key = 'albumList';
     SharedPreferences sp = await SharedPreferences.getInstance();
-      if (sp.containsKey(key)) {
-        final parsed =
-            json.decode(sp.getString(key)).cast<Map<String, dynamic>>();
-        albumList = parsed.map<Album>((json) => Album.fromJson(json)).toList();
-        return;
-      }
-    await loadAlbums(photoprismUrl);
+    if (sp.containsKey(key)) {
+      final parsed =
+          json.decode(sp.getString(key)).cast<Map<String, dynamic>>();
+      List<Album> albumList =
+          parsed.map<Album>((json) => Album.fromJson(json)).toList();
+      model.setAlbumList(albumList);
+      return;
+    }
+    await loadAlbums(model, photoprismUrl);
   }
 
-  Future saveAlbumListToSharedPrefs() async {
-    var key = 'albumList';
-    SharedPreferences sp = await SharedPreferences.getInstance();
-    sp.setString(key, json.encode(albumList));
-  }
-
-  Future loadAlbums(String photoprismUrl) async {
+  static Future loadAlbums(PhotoprismModel model, String photoprismUrl) async {
     http.Response response =
         await http.get(photoprismUrl + '/api/v1/albums?count=1000');
     final parsed = json.decode(response.body).cast<Map<String, dynamic>>();
 
-    albumList =
+    List<Album> albumList =
         parsed.map<Album>((json) => Album.fromJson(json)).toList();
-    await saveAlbumListToSharedPrefs();
+
+    model.setAlbumList(albumList);
   }
 
-  GridView getGridView(
-      String photoprismUrl) {
-    GridView photosGridView = GridView.builder(
+  static List<Album> getAlbumList(context) {
+    Map<String, Album> albums =
+        Provider.of<PhotoprismModel>(context, listen: false).albums;
+    if (albums == null) {
+      return null;
+    }
+    return albums.entries.map((e) => e.value).toList();
+  }
+
+  static Widget getGridView(String photoprismUrl, BuildContext context) {
+    if (Albums.getAlbumList(context) == null) {
+      return Text("loading", key: ValueKey("albumsGridView"));
+    }
+    return GridView.builder(
         key: ValueKey('albumsGridView'),
         gridDelegate: new SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
@@ -48,38 +58,39 @@ class Albums {
           crossAxisSpacing: 10,
         ),
         padding: const EdgeInsets.all(10),
-        itemCount: albumList.length,
+        itemCount: Albums.getAlbumList(context).length,
         itemBuilder: (context, index) {
           return GestureDetector(
               onTap: () {
+                Photos.loadPhotosFromNetworkOrCache(
+                    Provider.of<PhotoprismModel>(context),
+                    photoprismUrl,
+                    Albums.getAlbumList(context)[index].id);
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (context) =>
-                          AlbumView(albumList[index], photoprismUrl)),
+                      builder: (context) => AlbumView(context,
+                          Albums.getAlbumList(context)[index], photoprismUrl)),
                 );
               },
               child: GridTile(
                 child: CachedNetworkImage(
-                imageUrl:
-                  photoprismUrl +
+                  imageUrl: photoprismUrl +
                       '/api/v1/albums/' +
-                      albumList[index].id +
+                      Albums.getAlbumList(context)[index].id +
                       '/thumbnail/tile_500',
-                placeholder: (context, url) => CircularProgressIndicator(),
-                errorWidget: (context, url, error) => Icon(Icons.error),
+                  placeholder: (context, url) => CircularProgressIndicator(),
+                  errorWidget: (context, url, error) => Icon(Icons.error),
                 ),
                 footer: GestureDetector(
                   child: GridTileBar(
                     backgroundColor: Colors.black45,
-                    title: _GridTitleText(albumList[index].name),
+                    title: _GridTitleText(
+                        Albums.getAlbumList(context)[index].name),
                   ),
                 ),
               ));
         });
-
-
-    return photosGridView;
   }
 }
 
@@ -97,4 +108,3 @@ class _GridTitleText extends StatelessWidget {
     );
   }
 }
-
