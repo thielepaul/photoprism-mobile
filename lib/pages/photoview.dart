@@ -3,6 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
 import 'package:photoprism/model/photo.dart';
+import 'package:provider/provider.dart';
+
+import '../common/hexcolor.dart';
+import '../model/photoprism_model.dart';
 
 class PhotoView extends StatelessWidget {
   final int currentPhotoIndex;
@@ -15,28 +19,43 @@ class PhotoView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-        key: ValueKey("PhotoView"),
-        child: GestureDetector(
-          child: PhotoViewGallery.builder(
-            scrollPhysics: const BouncingScrollPhysics(),
-            builder: (BuildContext context, int index) {
-              return PhotoViewGalleryPageOptions(
-                imageProvider: CachedNetworkImageProvider(photoprismURL +
-                    "/api/v1/thumbnails/" +
-                    this.photos[index].fileHash +
-                    "/fit_1920"),
-                initialScale: PhotoViewComputedScale.contained,
-                minScale: PhotoViewComputedScale.contained,
-                maxScale: PhotoViewComputedScale.covered * 1.5,
-              );
-            },
-            itemCount: photos.length,
-            pageController: pageController,
+    return Scaffold(
+      appBar: Provider.of<PhotoprismModel>(context).showAppBar ? AppBar(
+        title: Text(""),
+        backgroundColor: HexColor(Provider.of<PhotoprismModel>(context).applicationColor),
+      ) : null,
+      body: GestureDetector(
+          child:Container(
+            color: Colors.black,
+            key: ValueKey("PhotoView"),
+            child: PhotoViewGallery.builder(
+              scrollPhysics: const BouncingScrollPhysics(),
+              builder: (BuildContext context, int index) {
+                return PhotoViewGalleryPageOptions(
+                  imageProvider: CachedNetworkImageProvider(photoprismURL +
+                      "/api/v1/thumbnails/" +
+                      this.photos[index].fileHash +
+                      "/fit_1920"),
+                  initialScale: PhotoViewComputedScale.contained,
+                  minScale: PhotoViewComputedScale.contained,
+                  maxScale: PhotoViewComputedScale.covered * 1.5,
+
+                );
+              },
+              itemCount: photos.length,
+              pageController: pageController,
+            ),
           ),
           onTap: () {
-            Navigator.pop(context);
-          },
-        ));
+            var provider = Provider.of<PhotoprismModel>(context);
+            if (provider.showAppBar == false) {
+              provider.setShowAppBar(true);
+            }
+            else {
+              provider.setShowAppBar(false);
+            }
+          }
+      ),
+    );
   }
 }

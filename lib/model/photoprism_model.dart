@@ -18,6 +18,7 @@ class PhotoprismModel extends ChangeNotifier {
   bool isLoading = false;
   int selectedPageIndex = 0;
   DragSelectGridViewController gridController = DragSelectGridViewController();
+  bool showAppBar = true;
 
   PhotoprismModel() {
     initialize();
@@ -39,6 +40,11 @@ class PhotoprismModel extends ChangeNotifier {
     loadApplicationColor();
     Photos.loadPhotosFromNetworkOrCache(this, photoprismUrl, "");
     Albums.loadAlbumsFromNetworkOrCache(this, photoprismUrl);
+  }
+
+  void setShowAppBar(bool showAppBar) {
+    this.showAppBar = showAppBar;
+    notifyListeners();
   }
 
   void setSelectedPageIndex(int index) {
