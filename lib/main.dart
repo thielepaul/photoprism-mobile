@@ -83,15 +83,17 @@ class MainPage extends StatelessWidget {
           controller: _pageController,
           children: <Widget>[
             RefreshIndicator(
-                child: Photos(context,
-                        Provider.of<PhotoprismModel>(context).photoprismUrl, "")
-                    .getGridView(),
+                child: Photos(
+                    context: context,
+                    photoprismUrl:
+                        Provider.of<PhotoprismModel>(context).photoprismUrl,
+                    albumId: ""),
                 onRefresh: refreshPhotosPull,
                 color: HexColor(photorismModel.applicationColor)),
             RefreshIndicator(
-                child: Albums.getGridView(
-                    Provider.of<PhotoprismModel>(context).photoprismUrl,
-                    context),
+                child: Albums(
+                    photoprismUrl:
+                        Provider.of<PhotoprismModel>(context).photoprismUrl),
                 onRefresh: refreshAlbumsPull,
                 color: HexColor(photorismModel.applicationColor)),
             Settings(),

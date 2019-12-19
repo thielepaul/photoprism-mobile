@@ -76,7 +76,8 @@ class AlbumView extends StatelessWidget {
         backgroundColor:
             HexColor(Provider.of<PhotoprismModel>(context).applicationColor),
       ),
-      body: Photos(context, photoprismUrl, album.id).getGridView(),
+      body: Photos(
+          context: context, photoprismUrl: photoprismUrl, albumId: album.id),
     );
   }
 }
