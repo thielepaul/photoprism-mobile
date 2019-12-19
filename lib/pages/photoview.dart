@@ -16,26 +16,27 @@ class PhotoView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+        key: ValueKey("PhotoView"),
         child: GestureDetector(
-      child: PhotoViewGallery.builder(
-        scrollPhysics: const BouncingScrollPhysics(),
-        builder: (BuildContext context, int index) {
-          return PhotoViewGalleryPageOptions(
-            imageProvider: CachedNetworkImageProvider(photoprismURL +
-                "/api/v1/thumbnails/" +
-                this.photos[index].fileHash +
-                "/fit_1920"),
-            initialScale: PhotoViewComputedScale.contained,
-            minScale: PhotoViewComputedScale.contained,
-            maxScale: PhotoViewComputedScale.covered * 1.5,
-          );
-        },
-        itemCount: photos.length,
-        pageController: pageController,
-      ),
-      onTap: () {
-        Navigator.pop(context);
-      },
-    ));
+          child: PhotoViewGallery.builder(
+            scrollPhysics: const BouncingScrollPhysics(),
+            builder: (BuildContext context, int index) {
+              return PhotoViewGalleryPageOptions(
+                imageProvider: CachedNetworkImageProvider(photoprismURL +
+                    "/api/v1/thumbnails/" +
+                    this.photos[index].fileHash +
+                    "/fit_1920"),
+                initialScale: PhotoViewComputedScale.contained,
+                minScale: PhotoViewComputedScale.contained,
+                maxScale: PhotoViewComputedScale.covered * 1.5,
+              );
+            },
+            itemCount: photos.length,
+            pageController: pageController,
+          ),
+          onTap: () {
+            Navigator.pop(context);
+          },
+        ));
   }
 }

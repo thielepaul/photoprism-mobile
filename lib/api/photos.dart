@@ -143,6 +143,7 @@ class Photos {
         itemCount: Photos.getPhotoList(context, albumId).length,
         itemBuilder: (context, index, selected) {
           return Center(
+            key: ValueKey("PhotoTile"),
             child: GestureDetector(
               onTap: () {
                 Navigator.push(
