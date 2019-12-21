@@ -33,6 +33,7 @@ class Photos extends StatelessWidget {
           parsed.map<Photo>((json) => Photo.fromJson(json)).toList();
       if (albumId == "") {
         model.setPhotoList(photoList);
+      } else {
         model.setPhotoListOfAlbum(photoList, albumId);
       }
       return;
