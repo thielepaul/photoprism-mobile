@@ -79,7 +79,7 @@ void main() {
   testWidgets('album test', (WidgetTester tester) async {
     SharedPreferences.setMockInitialValues({
       'albumList':
-          '[{"AlbumUUID":"00000000-0000-0000-0000-000000000000","AlbumName":"New Album 1"},{"AlbumUUID":"00000000-0000-0000-0000-000000000001","AlbumName":"New Album 2"}]',
+          '[{"AlbumUUID":"00000000-0000-0000-0000-000000000000","AlbumName":"New Album 1", "AlbumCount": 0},{"AlbumUUID":"00000000-0000-0000-0000-000000000001","AlbumName":"New Album 2", "AlbumCount": 0}]',
       'photosList00000000-0000-0000-0000-000000000000':
           '[{"FileHash":"0"}, {"FileHash":"1"}]'
     });
