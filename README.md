@@ -5,7 +5,7 @@
 ## Features
 - View your photoprism photos and albums
 - Photos and albums will be cached so they are available even without internet connection
-- Delete and rename albums
+- Create, rename and delete albums
 
 ## Planned Features
 - Manage photos and albums (delete, rename)
