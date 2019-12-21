@@ -50,22 +50,24 @@ class MainPage extends StatelessWidget {
 
   Future<void> refreshPhotosPull() async {
     print('refreshing photos..');
-    await Photos.loadPhotos(Provider.of<PhotoprismModel>(context),
-        Provider.of<PhotoprismModel>(context).photoprismUrl, "");
 
     await Photos.loadPhotosFromNetworkOrCache(
         Provider.of<PhotoprismModel>(context),
         Provider.of<PhotoprismModel>(context).photoprismUrl,
         "");
+
+    await Photos.loadPhotos(Provider.of<PhotoprismModel>(context),
+        Provider.of<PhotoprismModel>(context).photoprismUrl, "");
   }
 
   Future<void> refreshAlbumsPull() async {
     print('refreshing albums..');
-    await Albums.loadAlbums(Provider.of<PhotoprismModel>(context),
-        Provider.of<PhotoprismModel>(context).photoprismUrl);
 
     await Albums.loadAlbumsFromNetworkOrCache(
         Provider.of<PhotoprismModel>(context),
+        Provider.of<PhotoprismModel>(context).photoprismUrl);
+
+    await Albums.loadAlbums(Provider.of<PhotoprismModel>(context),
         Provider.of<PhotoprismModel>(context).photoprismUrl);
   }
 

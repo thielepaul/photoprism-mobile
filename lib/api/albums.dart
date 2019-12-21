@@ -50,6 +50,18 @@ class Albums extends StatelessWidget {
     return albums.entries.map((e) => e.value).toList();
   }
 
+  String getAlbumPreviewUrl(context, index) {
+    if (Albums.getAlbumList(context)[index].imageCount <= 0) {
+      return "https://raw.githubusercontent.com/photoprism/photoprism-mobile/master/assets/emptyAlbum.jpg";
+    }
+    else {
+      return photoprismUrl +
+          '/api/v1/albums/' +
+          Albums.getAlbumList(context)[index].id +
+          '/thumbnail/tile_500';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (Albums.getAlbumList(context) == null) {
@@ -67,10 +79,13 @@ class Albums extends StatelessWidget {
         itemBuilder: (context, index) {
           return GestureDetector(
               onTap: () {
+                print(Albums.getAlbumList(context)[index].photoList);
                 Photos.loadPhotosFromNetworkOrCache(
                     Provider.of<PhotoprismModel>(context),
                     photoprismUrl,
                     Albums.getAlbumList(context)[index].id);
+                Photos.loadPhotos(Provider.of<PhotoprismModel>(context),
+                    Provider.of<PhotoprismModel>(context).photoprismUrl, Albums.getAlbumList(context)[index].id);
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -80,10 +95,7 @@ class Albums extends StatelessWidget {
               },
               child: GridTile(
                 child: CachedNetworkImage(
-                  imageUrl: photoprismUrl +
-                      '/api/v1/albums/' +
-                      Albums.getAlbumList(context)[index].id +
-                      '/thumbnail/tile_500',
+                  imageUrl: getAlbumPreviewUrl(context, index),
                   placeholder: (context, url) => Container(color: Colors.grey),
                   errorWidget: (context, url, error) => Icon(Icons.error),
                 ),
