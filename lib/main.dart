@@ -79,6 +79,15 @@ class MainPage extends StatelessWidget {
       appBar: AppBar(
         title: Text(title),
         backgroundColor: HexColor(photorismModel.applicationColor),
+        actions: Provider.of<PhotoprismModel>(context).selectedPageIndex == 1 ? <Widget>[
+          IconButton(
+            icon: const Icon(Icons.add),
+            tooltip: 'Create album',
+            onPressed: () {
+              Provider.of<PhotoprismModel>(context).createAlbum();
+            },
+          ),
+        ] : null,
       ),
       body: PageView(
           physics: NeverScrollableScrollPhysics(),

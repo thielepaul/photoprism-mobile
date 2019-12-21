@@ -120,6 +120,19 @@ class PhotoprismModel extends ChangeNotifier {
     Albums.loadAlbums(this, this.photoprismUrl);
   }
 
+  void createAlbum() async {
+    print("Creating new album");
+
+    String body = '{"AlbumName":"New album"}';
+
+    http.Response response =
+    await http.post(this.photoprismUrl + '/api/v1/albums', body: body);
+
+    print('Response status: ${response.statusCode}');
+    print('Response body: ${response.body}');
+
+    Albums.loadAlbums(this, this.photoprismUrl);
+  }
 
   loadPhotoprismUrl() async {
     // load photoprism url from shared preferences
