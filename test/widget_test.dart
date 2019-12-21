@@ -81,7 +81,7 @@ void main() {
       'albumList':
           '[{"AlbumUUID":"00000000-0000-0000-0000-000000000000","AlbumName":"New Album 1", "AlbumCount": 0},{"AlbumUUID":"00000000-0000-0000-0000-000000000001","AlbumName":"New Album 2", "AlbumCount": 0}]',
       'photosList00000000-0000-0000-0000-000000000000':
-          '[{"FileHash":"0"}, {"FileHash":"1"}]'
+          '[{"FileHash":"0", "PhotoUUID":"00000000-0000-0000-0000-000000000000"}, {"FileHash":"1", "PhotoUUID":"00000000-0000-0000-0000-000000000000"}]'
     });
 
     await tester.pumpWidget(
@@ -104,7 +104,7 @@ void main() {
     SharedPreferences.setMockInitialValues({
       'albumList':
           '[{"AlbumUUID":"00000000-0000-0000-0000-000000000000","AlbumName":"New Album 1"}]',
-      'photosList': '[{"FileHash":"0"}, {"FileHash":"1"}, {"FileHash":"2"}]'
+      'photosList': '[{"FileHash":"0", "PhotoUUID":"00000000-0000-0000-0000-000000000000"}, {"FileHash":"1", "PhotoUUID":"00000000-0000-0000-0000-000000000000"}, {"FileHash":"2", "PhotoUUID":"00000000-0000-0000-0000-000000000000"}]'
     });
 
     await tester.pumpWidget(

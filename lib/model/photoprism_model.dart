@@ -136,6 +136,24 @@ class PhotoprismModel extends ChangeNotifier {
     Albums.loadAlbums(this, this.photoprismUrl);
   }
 
+  void addPhotosToAlbum(albumId, context) async {
+    print("Adding photos to album " + albumId);
+
+    List<String> selectedPhotos = [];
+
+    this.gridController.selection.selectedIndexes.forEach((element) {
+      selectedPhotos.add('"' + Photos.getPhotoList(context, "")[element].photoUUID + '"');
+    });
+
+    String body = '{"photos":' + selectedPhotos.toString() + '}';
+
+    http.Response response =
+        await http.post(this.photoprismUrl + '/api/v1/albums/' + albumId + '/photos', body: body);
+
+    this.gridController.clear();
+    Albums.loadAlbums(this, this.photoprismUrl);
+  }
+
   loadPhotoprismUrl() async {
     // load photoprism url from shared preferences
     SharedPreferences prefs = await SharedPreferences.getInstance();

@@ -71,15 +71,29 @@ class MainPage extends StatelessWidget {
         Provider.of<PhotoprismModel>(context).photoprismUrl);
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final PhotoprismModel photorismModel =
-        Provider.of<PhotoprismModel>(context);
-    return Scaffold(
-      appBar: AppBar(
+  AppBar getAppBar(context) {
+    if (Provider.of<PhotoprismModel>(context).selectedPageIndex == 0) {
+      return AppBar(
+        title: Provider.of<PhotoprismModel>(context).gridController.selection.selectedIndexes.length > 0 ? Text("Selected " + Provider.of<PhotoprismModel>(context).gridController.selection.selectedIndexes.length.toString() + " photos") : Text(title),
+        backgroundColor: HexColor(Provider.of<PhotoprismModel>(context).applicationColor),
+        actions: Provider.of<PhotoprismModel>(context).gridController.selection.selectedIndexes.length > 0 ? <Widget>[
+          IconButton(
+            icon: const Icon(Icons.add),
+            tooltip: 'Add to album',
+            onPressed: () {
+              //Provider.of<PhotoprismModel>(context).createAlbum();
+              _selectAlbumDialog(context);
+              print(Provider.of<PhotoprismModel>(context).gridController.selection.selectedIndexes);
+            },
+          ),
+        ] : null,
+      );
+    }
+    else if (Provider.of<PhotoprismModel>(context).selectedPageIndex == 1) {
+      return AppBar(
         title: Text(title),
-        backgroundColor: HexColor(photorismModel.applicationColor),
-        actions: Provider.of<PhotoprismModel>(context).selectedPageIndex == 1 ? <Widget>[
+        backgroundColor: HexColor(Provider.of<PhotoprismModel>(context).applicationColor),
+        actions: <Widget>[
           IconButton(
             icon: const Icon(Icons.add),
             tooltip: 'Create album',
@@ -87,8 +101,46 @@ class MainPage extends StatelessWidget {
               Provider.of<PhotoprismModel>(context).createAlbum();
             },
           ),
-        ] : null,
-      ),
+        ],
+      );
+    }
+    else {
+      return AppBar(
+        title: Text(title),
+        backgroundColor: HexColor(Provider.of<PhotoprismModel>(context).applicationColor),
+      );
+    }
+  }
+
+  _selectAlbumDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Select album'),
+          content: ListView.builder
+            (
+              itemCount: Albums.getAlbumList(context).length,
+              itemBuilder: (BuildContext ctxt, int index) {
+                return GestureDetector(
+                    onTap: () {
+                      Provider.of<PhotoprismModel>(context).addPhotosToAlbum(Albums.getAlbumList(context)[index].id, context);
+                      Navigator.pop(context);
+                    },
+                    child: Card(child:ListTile(title: Text(Albums.getAlbumList(context)[index].name))));
+              }
+          ),
+
+        );
+      });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final PhotoprismModel photorismModel =
+        Provider.of<PhotoprismModel>(context);
+    return Scaffold(
+      appBar: getAppBar(context),
       body: PageView(
           physics: NeverScrollableScrollPhysics(),
           controller: _pageController,
