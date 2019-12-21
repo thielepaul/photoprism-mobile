@@ -86,8 +86,9 @@ class AlbumView extends StatelessWidget {
 
                   Provider.of<PhotoprismModel>(context).renameAlbum(album.id, _albumRenameTextFieldController.text);
 
+
                   // go back to albums
-                  Navigator.pop(context);
+                  //Navigator.pop(context);
                 },
               )
             ],

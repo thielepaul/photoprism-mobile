@@ -118,6 +118,8 @@ class PhotoprismModel extends ChangeNotifier {
     print('Response body: ${response.body}');
 
     Albums.loadAlbums(this, this.photoprismUrl);
+    Photos.loadPhotos(this,
+        this.photoprismUrl, albumId);
   }
 
   void createAlbum() async {
