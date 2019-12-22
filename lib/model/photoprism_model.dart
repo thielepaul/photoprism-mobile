@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:drag_select_grid_view/drag_select_grid_view.dart';
 import 'package:flutter/material.dart';
+import 'package:photo_view/photo_view.dart';
 import 'package:photoprism/api/albums.dart';
 import 'package:photoprism/api/photos.dart';
 import 'package:photoprism/model/album.dart';
@@ -19,6 +20,8 @@ class PhotoprismModel extends ChangeNotifier {
   int selectedPageIndex = 0;
   DragSelectGridViewController gridController = DragSelectGridViewController();
   bool showAppBar = true;
+  Key globalKeyPhotoView = GlobalKey();
+  PhotoViewScaleState photoViewScaleState = PhotoViewScaleState.initial;
 
   PhotoprismModel() {
     initialize();
@@ -97,8 +100,8 @@ class PhotoprismModel extends ChangeNotifier {
 
     String body = '{"albums":["' + albumId + '"]}';
 
-    http.Response response =
-    await http.post(this.photoprismUrl + '/api/v1/batch/albums/delete', body: body);
+    http.Response response = await http
+        .post(this.photoprismUrl + '/api/v1/batch/albums/delete', body: body);
 
     print('Response status: ${response.statusCode}');
     print('Response body: ${response.body}');
@@ -111,15 +114,14 @@ class PhotoprismModel extends ChangeNotifier {
 
     String body = '{"AlbumName":"' + newAlbumName + '"}';
 
-    http.Response response =
-    await http.put(this.photoprismUrl + '/api/v1/albums/' + albumId, body: body);
+    http.Response response = await http
+        .put(this.photoprismUrl + '/api/v1/albums/' + albumId, body: body);
 
     print('Response status: ${response.statusCode}');
     print('Response body: ${response.body}');
 
     Albums.loadAlbums(this, this.photoprismUrl);
-    Photos.loadPhotos(this,
-        this.photoprismUrl, albumId);
+    Photos.loadPhotos(this, this.photoprismUrl, albumId);
   }
 
   void createAlbum() async {
@@ -128,7 +130,7 @@ class PhotoprismModel extends ChangeNotifier {
     String body = '{"AlbumName":"New album"}';
 
     http.Response response =
-    await http.post(this.photoprismUrl + '/api/v1/albums', body: body);
+        await http.post(this.photoprismUrl + '/api/v1/albums', body: body);
 
     print('Response status: ${response.statusCode}');
     print('Response body: ${response.body}');
@@ -142,13 +144,15 @@ class PhotoprismModel extends ChangeNotifier {
     List<String> selectedPhotos = [];
 
     this.gridController.selection.selectedIndexes.forEach((element) {
-      selectedPhotos.add('"' + Photos.getPhotoList(context, "")[element].photoUUID + '"');
+      selectedPhotos
+          .add('"' + Photos.getPhotoList(context, "")[element].photoUUID + '"');
     });
 
     String body = '{"photos":' + selectedPhotos.toString() + '}';
 
-    http.Response response =
-        await http.post(this.photoprismUrl + '/api/v1/albums/' + albumId + '/photos', body: body);
+    http.Response response = await http.post(
+        this.photoprismUrl + '/api/v1/albums/' + albumId + '/photos',
+        body: body);
 
     this.gridController.clear();
     Albums.loadAlbums(this, this.photoprismUrl);
@@ -199,5 +203,10 @@ class PhotoprismModel extends ChangeNotifier {
   Future savePhotoprismUrlToPrefs(url) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setString("url", url);
+  }
+
+  void setPhotoViewScaleState(PhotoViewScaleState scaleState) {
+    photoViewScaleState = scaleState;
+    notifyListeners();
   }
 }
