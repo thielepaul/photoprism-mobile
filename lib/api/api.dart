@@ -52,4 +52,22 @@ class Api {
       return 1;
     }
   }
+
+  static Future<int> addPhotosToAlbum(
+      String albumId, List<String> photoUUIDs, String photoprismUrl) async {
+    String body = '{"photos":' + photoUUIDs.toString() + '}';
+
+    try {
+      http.Response response = await http.post(
+          photoprismUrl + '/api/v1/albums/' + albumId + '/photos',
+          body: body);
+      if (response.statusCode == 200) {
+        return 0;
+      } else {
+        return 2;
+      }
+    } catch (_) {
+      return 1;
+    }
+  }
 }
