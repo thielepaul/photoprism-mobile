@@ -136,7 +136,19 @@ class PhotoprismModel extends ChangeNotifier {
     }
   }
 
-  void addPhotosToAlbum(albumId, context) async {
+  void addPhotosToAlbum(albumId, List<String> photoUUIDs) async {
+    print("Adding photos to album " + albumId);
+
+    var status = await Api.addPhotosToAlbum(albumId, photoUUIDs, photoprismUrl);
+
+    if (status == 0) {
+      await Albums.loadAlbums(this, this.photoprismUrl);
+    } else {
+      // error
+    }
+  }
+
+  void addPhotosToAlbumOld(albumId, context) async {
     print("Adding photos to album " + albumId);
 
     List<String> selectedPhotos = [];

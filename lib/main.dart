@@ -124,7 +124,7 @@ class MainPage extends StatelessWidget {
               itemBuilder: (BuildContext ctxt, int index) {
                 return GestureDetector(
                     onTap: () {
-                      Provider.of<PhotoprismModel>(context).addPhotosToAlbum(Albums.getAlbumList(context)[index].id, context);
+                      Provider.of<PhotoprismModel>(context).addPhotosToAlbumOld(Albums.getAlbumList(context)[index].id, context);
                       Navigator.pop(context);
                     },
                     child: Card(child:ListTile(title: Text(Albums.getAlbumList(context)[index].name))));
