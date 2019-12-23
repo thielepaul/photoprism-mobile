@@ -5,7 +5,7 @@ import 'package:photoprism/common/hexcolor.dart';
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:provider/provider.dart';
 
-class SelectableTile extends StatelessWidget {
+class SelectableTile extends StatefulWidget {
   final Widget child;
   final int index;
   final bool selected;
@@ -13,7 +13,7 @@ class SelectableTile extends StatelessWidget {
   final BuildContext context;
   final DragSelectGridViewController gridController;
 
-  const SelectableTile(
+  SelectableTile(
       {Key key,
       this.child,
       this.index,
@@ -24,50 +24,118 @@ class SelectableTile extends StatelessWidget {
       : this.onTapCallback = onTap,
         super(key: key);
 
-  void onTap() {
-    Selection selection = gridController.selection;
-    if (selection.isSelecting) {
-      Set<int> selectedIndexes = selection.selectedIndexes;
-      if (selectedIndexes.contains(index)) {
-        selectedIndexes.remove(index);
-      } else {
-        selectedIndexes.add(index);
-      }
-      gridController.selection = Selection(selectedIndexes);
-      return;
-    }
-    onTapCallback();
+  _SelectableTileState createState() => _SelectableTileState();
+}
+
+class _SelectableTileState extends State<SelectableTile>
+    with SingleTickerProviderStateMixin {
+  Animation<double> animation;
+  AnimationController controller;
+  bool wasSelected;
+
+  @override
+  void initState() {
+    super.initState();
+    controller = AnimationController(
+        duration: const Duration(milliseconds: 100), vsync: this);
+    wasSelected = widget.selected;
   }
 
-  getSelectedTile(context) => (Stack(
-        children: <Widget>[
-          Padding(
-            padding: EdgeInsets.all(16.0),
-            child: child,
-          ),
-          Positioned(
-            left: 3.0,
-            top: 3.0,
-            child: new Icon(
-              Icons.check_circle,
-              color: HexColor(
-                  Provider.of<PhotoprismModel>(context).applicationColor),
-            ),
-          ),
-        ],
-      ));
+  void onTap() {
+    Selection selection = widget.gridController.selection;
+    if (selection.isSelecting) {
+      Set<int> selectedIndexes = selection.selectedIndexes;
+      if (selectedIndexes.contains(widget.index)) {
+        selectedIndexes.remove(widget.index);
+      } else {
+        selectedIndexes.add(widget.index);
+      }
+      widget.gridController.selection = Selection(selectedIndexes);
+      return;
+    }
+    widget.onTapCallback();
+  }
 
   @override
   Widget build(BuildContext context) {
-    if (selected) {
-      return GestureDetector(
-        child: getSelectedTile(context),
-        onTap: onTap,
-      );
+    if (widget.selected != wasSelected) {
+      wasSelected = widget.selected;
+      animation = Tween<double>(begin: 0, end: 17).animate(controller);
+      if (widget.selected) {
+        controller.forward();
+      } else {
+        controller.reverse();
+      }
+    } else {
+      if (widget.selected) {
+        animation = Tween<double>(begin: 17, end: 17).animate(controller);
+      } else {
+        animation = Tween<double>(begin: 0, end: 0).animate(controller);
+      }
     }
     return GestureDetector(
-      child: child,
-      onTap: onTap,
+        onTap: onTap,
+        child: _AnimatedSelectableTile(
+          animation: animation,
+          child: widget.child,
+          selected: widget.selected,
+        ));
+  }
+
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
+  }
+}
+
+class _AnimatedSelectableTile extends AnimatedWidget {
+  final Widget child;
+  final bool selected;
+
+  const _AnimatedSelectableTile(
+      {Key key, Animation<double> animation, this.child, this.selected})
+      : super(key: key, listenable: animation);
+
+  Widget getIcon(context) {
+    if (selected) {
+      return Positioned(
+        left: 3.0,
+        top: 3.0,
+        child: new Icon(
+          Icons.check_circle,
+          color:
+              HexColor(Provider.of<PhotoprismModel>(context).applicationColor),
+        ),
+      );
+    } else if (Provider.of<PhotoprismModel>(context)
+        .getGridController()
+        .selection
+        .isSelecting) {
+      return Positioned(
+        left: 3.0,
+        top: 3.0,
+        child: new Icon(
+          Icons.radio_button_unchecked,
+          color:
+              HexColor(Provider.of<PhotoprismModel>(context).applicationColor),
+        ),
+      );
+    }
+    return Container();
+  }
+
+  Widget build(BuildContext context) {
+    final animation = listenable as Animation<double>;
+    return Stack(
+      children: <Widget>[
+        Container(
+          color: Color(0xffeeeeee),
+          padding: EdgeInsets.all(animation.value),
+          child: child,
+        ),
+        getIcon(context)
+      ],
     );
   }
 }
