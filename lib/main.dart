@@ -74,25 +74,50 @@ class MainPage extends StatelessWidget {
   AppBar getAppBar(context) {
     if (Provider.of<PhotoprismModel>(context).selectedPageIndex == 0) {
       return AppBar(
-        title: Provider.of<PhotoprismModel>(context).gridController.selection.selectedIndexes.length > 0 ? Text("Selected " + Provider.of<PhotoprismModel>(context).gridController.selection.selectedIndexes.length.toString() + " photos") : Text(title),
-        backgroundColor: HexColor(Provider.of<PhotoprismModel>(context).applicationColor),
-        actions: Provider.of<PhotoprismModel>(context).gridController.selection.selectedIndexes.length > 0 ? <Widget>[
-          IconButton(
-            icon: const Icon(Icons.add),
-            tooltip: 'Add to album',
-            onPressed: () {
-              //Provider.of<PhotoprismModel>(context).createAlbum();
-              _selectAlbumDialog(context);
-              print(Provider.of<PhotoprismModel>(context).gridController.selection.selectedIndexes);
-            },
-          ),
-        ] : null,
+        title: Provider.of<PhotoprismModel>(context)
+                    .gridController
+                    .selection
+                    .selectedIndexes
+                    .length >
+                0
+            ? Text("Selected " +
+                Provider.of<PhotoprismModel>(context)
+                    .gridController
+                    .selection
+                    .selectedIndexes
+                    .length
+                    .toString() +
+                " photos")
+            : Text(title),
+        backgroundColor:
+            HexColor(Provider.of<PhotoprismModel>(context).applicationColor),
+        actions: Provider.of<PhotoprismModel>(context)
+                    .gridController
+                    .selection
+                    .selectedIndexes
+                    .length >
+                0
+            ? <Widget>[
+                IconButton(
+                  icon: const Icon(Icons.add),
+                  tooltip: 'Add to album',
+                  onPressed: () {
+                    //Provider.of<PhotoprismModel>(context).createAlbum();
+                    _selectAlbumDialog(context);
+                    print(Provider.of<PhotoprismModel>(context)
+                        .gridController
+                        .selection
+                        .selectedIndexes);
+                  },
+                ),
+              ]
+            : null,
       );
-    }
-    else if (Provider.of<PhotoprismModel>(context).selectedPageIndex == 1) {
+    } else if (Provider.of<PhotoprismModel>(context).selectedPageIndex == 1) {
       return AppBar(
         title: Text(title),
-        backgroundColor: HexColor(Provider.of<PhotoprismModel>(context).applicationColor),
+        backgroundColor:
+            HexColor(Provider.of<PhotoprismModel>(context).applicationColor),
         actions: <Widget>[
           IconButton(
             icon: const Icon(Icons.add),
@@ -103,36 +128,54 @@ class MainPage extends StatelessWidget {
           ),
         ],
       );
-    }
-    else {
+    } else {
       return AppBar(
         title: Text(title),
-        backgroundColor: HexColor(Provider.of<PhotoprismModel>(context).applicationColor),
+        backgroundColor:
+            HexColor(Provider.of<PhotoprismModel>(context).applicationColor),
       );
     }
   }
 
   _selectAlbumDialog(BuildContext context) {
     showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text('Select album'),
-          content: ListView.builder
-            (
-              itemCount: Albums.getAlbumList(context).length,
-              itemBuilder: (BuildContext ctxt, int index) {
-                return GestureDetector(
-                    onTap: () {
-                      Provider.of<PhotoprismModel>(context).addPhotosToAlbumOld(Albums.getAlbumList(context)[index].id, context);
-                      Navigator.pop(context);
-                    },
-                    child: Card(child:ListTile(title: Text(Albums.getAlbumList(context)[index].name))));
-              }
-          ),
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: Text('Select album'),
+            content: ListView.builder(
+                itemCount: Albums.getAlbumList(context).length,
+                itemBuilder: (BuildContext ctxt, int index) {
+                  return GestureDetector(
+                      onTap: () {
+                        addPhotosToAlbum(
+                            Albums.getAlbumList(context)[index].id, context);
+                      },
+                      child: Card(
+                          child: ListTile(
+                              title: Text(
+                                  Albums.getAlbumList(context)[index].name))));
+                }),
+          );
+        });
+  }
 
-        );
-      });
+  addPhotosToAlbum(albumId, context) async {
+    List<String> selectedPhotos = [];
+
+    Provider.of<PhotoprismModel>(context)
+        .gridController
+        .selection
+        .selectedIndexes
+        .forEach((element) {
+      selectedPhotos.add(Photos.getPhotoList(context, "")[element].photoUUID);
+    });
+
+    await Provider.of<PhotoprismModel>(context)
+        .addPhotosToAlbum(albumId, selectedPhotos);
+
+    Provider.of<PhotoprismModel>(context).gridController.clear();
+    Navigator.pop(context);
   }
 
   @override

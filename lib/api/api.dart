@@ -55,7 +55,14 @@ class Api {
 
   static Future<int> addPhotosToAlbum(
       String albumId, List<String> photoUUIDs, String photoprismUrl) async {
-    String body = '{"photos":' + photoUUIDs.toString() + '}';
+    // wrap uuids in double quotes
+    List<String> photoUUIDsWrapped = [];
+
+    photoUUIDs.forEach((photoUUID) {
+      photoUUIDsWrapped.add('"' + photoUUID + '"');
+    });
+
+    String body = '{"photos":' + photoUUIDsWrapped.toString() + '}';
 
     try {
       http.Response response = await http.post(
