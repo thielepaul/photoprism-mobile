@@ -214,7 +214,6 @@ class MainPage extends StatelessWidget {
 
   addPhotosToAlbum(albumId, context) async {
     Navigator.pop(context);
-    Provider.of<PhotoprismModel>(context).gridController.clear();
 
     List<String> selectedPhotos = [];
 
@@ -226,6 +225,7 @@ class MainPage extends StatelessWidget {
       selectedPhotos.add(Photos.getPhotoList(context, "")[element].photoUUID);
     });
 
+    Provider.of<PhotoprismModel>(context).gridController.clear();
     await Provider.of<PhotoprismModel>(context)
         .addPhotosToAlbum(albumId, selectedPhotos);
   }
