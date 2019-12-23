@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:drag_select_grid_view/drag_select_grid_view.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_uploader/flutter_uploader.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photoprism/api/albums.dart';
 import 'package:photoprism/api/api.dart';
@@ -27,10 +29,33 @@ class PhotoprismModel extends ChangeNotifier {
   bool photoViewMultiTouch = false;
   BuildContext context;
   ProgressDialog pr;
+  FlutterUploader uploader;
 
   PhotoprismModel() {
     initialize();
     gridController.addListener(notifyListeners);
+    uploader = FlutterUploader();
+
+    StreamSubscription _progressSubscription =
+        uploader.progress.listen((progress) {
+      print("Progress: " + progress.progress.toString());
+    });
+
+    StreamSubscription _resultSubscription = uploader.result.listen((result) {
+      print("Upload finished.");
+      importPhotos();
+    });
+  }
+
+  void importPhotos() async {
+    print("Importing photos");
+    //showLoadingScreen("Importing photo(s)..");
+    var response =
+        await http.post(photoprismUrl + "/api/v1/import/", body: "{}");
+    print('Response status: ${response.statusCode}');
+    print('Response body: ${response.body}');
+    await Photos.loadPhotos(this, photoprismUrl, "");
+    hideLoadingScreen();
   }
 
   DragSelectGridViewController getGridController() {
@@ -52,8 +77,7 @@ class PhotoprismModel extends ChangeNotifier {
 
   hideLoadingScreen() {
     Future.delayed(Duration(milliseconds: 500)).then((value) {
-      pr.hide().whenComplete(() {
-      });
+      pr.hide().whenComplete(() {});
     });
     notifyListeners();
   }

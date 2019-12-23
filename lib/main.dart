@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_uploader/flutter_uploader.dart';
@@ -7,8 +10,10 @@ import 'package:provider/provider.dart';
 import 'package:photoprism/common/hexcolor.dart';
 import 'api/photos.dart';
 import 'model/photoprism_model.dart';
+import 'package:path/path.dart';
+import 'package:http/http.dart' as http;
 
-final uploader = FlutterUploader();
+
 
 void main() {
   runApp(
@@ -111,7 +116,29 @@ class MainPage extends StatelessWidget {
                   },
                 ),
               ]
-            : null,
+            : <Widget>[
+          IconButton(
+            icon: const Icon(Icons.cloud_upload),
+            tooltip: 'Upload photo',
+            onPressed: () {
+              uploadImage();
+            },
+          ),
+          /*IconButton(
+            icon: const Icon(Icons.add_photo_alternate),
+            tooltip: 'Import photo',
+            onPressed: () {
+              Provider.of<PhotoprismModel>(context).importPhotos();
+            },
+          ),*/
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            tooltip: 'Refresh photos',
+            onPressed: () {
+              refreshPhotosPull();
+            },
+          )
+              ],
       );
     } else if (Provider.of<PhotoprismModel>(context).selectedPageIndex == 1) {
       return AppBar(
@@ -135,6 +162,31 @@ class MainPage extends StatelessWidget {
             HexColor(Provider.of<PhotoprismModel>(context).applicationColor),
       );
     }
+  }
+
+  uploadImage() async {
+    List<File> files = await FilePicker.getMultiFile();
+
+    List<FileItem> filesToUpload = [];
+
+    files.forEach((f) {
+      filesToUpload.add(FileItem(filename: basename(f.path),
+          savedDir: dirname(f.path),
+          fieldname: "files"));
+    });
+
+    Provider.of<PhotoprismModel>(context).showLoadingScreen("Uploading photo(s)..");
+
+    final taskId = await Provider.of<PhotoprismModel>(context).uploader.enqueue(
+        url: Provider.of<PhotoprismModel>(context).photoprismUrl +
+            "/api/v1/upload/test", //required: url to upload to
+        files: filesToUpload, // required: list of files that you want to upload
+        method: UploadMethod.POST, // HTTP method  (POST or PUT or PATCH)
+        showNotification:
+            false, // send local notification (android only) for upload status
+        tag: "upload 1"); // unique tag for upload taskS
+
+    print("end");
   }
 
   _selectAlbumDialog(BuildContext context) {
@@ -163,7 +215,7 @@ class MainPage extends StatelessWidget {
   addPhotosToAlbum(albumId, context) async {
     Navigator.pop(context);
     Provider.of<PhotoprismModel>(context).gridController.clear();
-    
+
     List<String> selectedPhotos = [];
 
     Provider.of<PhotoprismModel>(context)
@@ -176,9 +228,6 @@ class MainPage extends StatelessWidget {
 
     await Provider.of<PhotoprismModel>(context)
         .addPhotosToAlbum(albumId, selectedPhotos);
-
-
-
   }
 
   @override
@@ -189,25 +238,25 @@ class MainPage extends StatelessWidget {
     return Scaffold(
       appBar: getAppBar(context),
       body: PageView(
-              physics: NeverScrollableScrollPhysics(),
-              controller: _pageController,
-              children: <Widget>[
-                  RefreshIndicator(
-                      child: Photos(
-                          context: context,
-                          photoprismUrl: Provider.of<PhotoprismModel>(context)
-                              .photoprismUrl,
-                          albumId: ""),
-                      onRefresh: refreshPhotosPull,
-                      color: HexColor(photorismModel.applicationColor)),
-                  RefreshIndicator(
-                      child: Albums(
-                          photoprismUrl: Provider.of<PhotoprismModel>(context)
-                              .photoprismUrl),
-                      onRefresh: refreshAlbumsPull,
-                      color: HexColor(photorismModel.applicationColor)),
-                  Settings(),
-                ]),
+          physics: NeverScrollableScrollPhysics(),
+          controller: _pageController,
+          children: <Widget>[
+            RefreshIndicator(
+                child: Photos(
+                    context: context,
+                    photoprismUrl:
+                        Provider.of<PhotoprismModel>(context).photoprismUrl,
+                    albumId: ""),
+                onRefresh: refreshPhotosPull,
+                color: HexColor(photorismModel.applicationColor)),
+            RefreshIndicator(
+                child: Albums(
+                    photoprismUrl:
+                        Provider.of<PhotoprismModel>(context).photoprismUrl),
+                onRefresh: refreshAlbumsPull,
+                color: HexColor(photorismModel.applicationColor)),
+            Settings(),
+          ]),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
