@@ -23,6 +23,7 @@ class PhotoprismModel extends ChangeNotifier {
   bool showAppBar = true;
   Key globalKeyPhotoView = GlobalKey();
   PhotoViewScaleState photoViewScaleState = PhotoViewScaleState.initial;
+  bool photoViewMultiTouch = false;
 
   PhotoprismModel() {
     initialize();
@@ -160,8 +161,7 @@ class PhotoprismModel extends ChangeNotifier {
 
     String body = '{"photos":' + selectedPhotos.toString() + '}';
 
-    http.Response response = await http.post(
-        photoprismUrl + '/api/v1/albums/' + albumId + '/photos',
+    await http.post(photoprismUrl + '/api/v1/albums/' + albumId + '/photos',
         body: body);
 
     this.gridController.clear();
@@ -217,6 +217,11 @@ class PhotoprismModel extends ChangeNotifier {
 
   void setPhotoViewScaleState(PhotoViewScaleState scaleState) {
     photoViewScaleState = scaleState;
+    notifyListeners();
+  }
+
+  void setPhotoViewMultiTouch(bool multiTouch) {
+    photoViewMultiTouch = multiTouch;
     notifyListeners();
   }
 }
