@@ -120,7 +120,7 @@ class PhotoprismModel extends ChangeNotifier {
         // error
       }
     } else {
-      print("Renaming skipped: New annd old album name identical.");
+      print("Renaming skipped: New and old album name identical.");
     }
   }
 
