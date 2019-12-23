@@ -96,38 +96,38 @@ class PhotoprismModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void deleteAlbum(String albumId) async {
-    print("Deleting album " + albumId);
-
-    String body = '{"albums":["' + albumId + '"]}';
-
-    http.Response response = await http
-        .post(this.photoprismUrl + '/api/v1/batch/albums/delete', body: body);
-
-    print('Response status: ${response.statusCode}');
-    print('Response body: ${response.body}');
-
-    Albums.loadAlbums(this, this.photoprismUrl);
-  }
-
-  void renameAlbum(String albumId, String newAlbumName) async {
-    print("Renaming album " + albumId);
-
-    String body = '{"AlbumName":"' + newAlbumName + '"}';
-
-    http.Response response = await http
-        .put(this.photoprismUrl + '/api/v1/albums/' + albumId, body: body);
-
-    print('Response status: ${response.statusCode}');
-    print('Response body: ${response.body}');
-
-    Albums.loadAlbums(this, this.photoprismUrl);
-    Photos.loadPhotos(this, this.photoprismUrl, albumId);
-  }
-
   void createAlbum() async {
     print("Creating new album");
     var status = await Api.createAlbum('New album', photoprismUrl);
+
+    if (status == 0) {
+      await Albums.loadAlbums(this, this.photoprismUrl);
+    } else {
+      // error
+    }
+  }
+
+  void renameAlbum(
+      String albumId, String oldAlbumName, String newAlbumName) async {
+    if (oldAlbumName != newAlbumName) {
+      print("Renaming album " + oldAlbumName + " to " + newAlbumName);
+      var status = await Api.renameAlbum(albumId, newAlbumName, photoprismUrl);
+
+      if (status == 0) {
+        Albums.loadAlbums(this, this.photoprismUrl);
+        Photos.loadPhotos(this, this.photoprismUrl, albumId);
+      } else {
+        // error
+      }
+    } else {
+      print("Renaming skipped: New annd old album name identical.");
+    }
+  }
+
+  void deleteAlbum(String albumId) async {
+    print("Deleting album " + albumId);
+
+    var status = await Api.deleteAlbum(albumId, photoprismUrl);
 
     if (status == 0) {
       await Albums.loadAlbums(this, this.photoprismUrl);
