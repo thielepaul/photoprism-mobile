@@ -4,6 +4,7 @@ import 'package:drag_select_grid_view/drag_select_grid_view.dart';
 import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photoprism/api/albums.dart';
+import 'package:photoprism/api/api.dart';
 import 'package:photoprism/api/photos.dart';
 import 'package:photoprism/model/album.dart';
 import 'package:photoprism/model/photo.dart';
@@ -126,16 +127,13 @@ class PhotoprismModel extends ChangeNotifier {
 
   void createAlbum() async {
     print("Creating new album");
+    var status = await Api.createAlbum('New album', photoprismUrl);
 
-    String body = '{"AlbumName":"New album"}';
-
-    http.Response response =
-        await http.post(this.photoprismUrl + '/api/v1/albums', body: body);
-
-    print('Response status: ${response.statusCode}');
-    print('Response body: ${response.body}');
-
-    Albums.loadAlbums(this, this.photoprismUrl);
+    if (status == 0) {
+      await Albums.loadAlbums(this, this.photoprismUrl);
+    } else {
+      // error
+    }
   }
 
   void addPhotosToAlbum(albumId, context) async {
