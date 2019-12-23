@@ -11,6 +11,7 @@ import 'package:photoprism/model/photo.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:progress_dialog/progress_dialog.dart';
 
 class PhotoprismModel extends ChangeNotifier {
   String applicationColor = "#424242";
@@ -24,6 +25,8 @@ class PhotoprismModel extends ChangeNotifier {
   Key globalKeyPhotoView = GlobalKey();
   PhotoViewScaleState photoViewScaleState = PhotoViewScaleState.initial;
   bool photoViewMultiTouch = false;
+  BuildContext context;
+  ProgressDialog pr;
 
   PhotoprismModel() {
     initialize();
@@ -38,6 +41,21 @@ class PhotoprismModel extends ChangeNotifier {
       gridController.addListener(notifyListeners);
     }
     return gridController;
+  }
+
+  showLoadingScreen(String message) {
+    pr = new ProgressDialog(context);
+    pr.style(message: message);
+    pr.show();
+    notifyListeners();
+  }
+
+  hideLoadingScreen() {
+    Future.delayed(Duration(milliseconds: 500)).then((value) {
+      pr.hide().whenComplete(() {
+      });
+    });
+    notifyListeners();
   }
 
   initialize() async {
@@ -99,6 +117,7 @@ class PhotoprismModel extends ChangeNotifier {
 
   void createAlbum() async {
     print("Creating new album");
+    showLoadingScreen("Creating new album..");
     var status = await Api.createAlbum('New album', photoprismUrl);
 
     if (status == 0) {
@@ -106,12 +125,14 @@ class PhotoprismModel extends ChangeNotifier {
     } else {
       // error
     }
+    hideLoadingScreen();
   }
 
   void renameAlbum(
       String albumId, String oldAlbumName, String newAlbumName) async {
     if (oldAlbumName != newAlbumName) {
       print("Renaming album " + oldAlbumName + " to " + newAlbumName);
+      showLoadingScreen("Renaming album..");
       var status = await Api.renameAlbum(albumId, newAlbumName, photoprismUrl);
 
       if (status == 0) {
@@ -120,6 +141,7 @@ class PhotoprismModel extends ChangeNotifier {
       } else {
         // error
       }
+      hideLoadingScreen();
     } else {
       print("Renaming skipped: New and old album name identical.");
     }
@@ -127,7 +149,7 @@ class PhotoprismModel extends ChangeNotifier {
 
   void deleteAlbum(String albumId) async {
     print("Deleting album " + albumId);
-
+    showLoadingScreen("Deleting album..");
     var status = await Api.deleteAlbum(albumId, photoprismUrl);
 
     if (status == 0) {
@@ -135,6 +157,7 @@ class PhotoprismModel extends ChangeNotifier {
     } else {
       // error
     }
+    hideLoadingScreen();
   }
 
   void addPhotosToAlbum(albumId, List<String> photoUUIDs) async {

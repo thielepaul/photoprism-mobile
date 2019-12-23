@@ -182,28 +182,29 @@ class MainPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final PhotoprismModel photorismModel =
         Provider.of<PhotoprismModel>(context);
+    photorismModel.context = context;
     return Scaffold(
       appBar: getAppBar(context),
       body: PageView(
-          physics: NeverScrollableScrollPhysics(),
-          controller: _pageController,
-          children: <Widget>[
-            RefreshIndicator(
-                child: Photos(
-                    context: context,
-                    photoprismUrl:
-                        Provider.of<PhotoprismModel>(context).photoprismUrl,
-                    albumId: ""),
-                onRefresh: refreshPhotosPull,
-                color: HexColor(photorismModel.applicationColor)),
-            RefreshIndicator(
-                child: Albums(
-                    photoprismUrl:
-                        Provider.of<PhotoprismModel>(context).photoprismUrl),
-                onRefresh: refreshAlbumsPull,
-                color: HexColor(photorismModel.applicationColor)),
-            Settings(),
-          ]),
+              physics: NeverScrollableScrollPhysics(),
+              controller: _pageController,
+              children: <Widget>[
+                  RefreshIndicator(
+                      child: Photos(
+                          context: context,
+                          photoprismUrl: Provider.of<PhotoprismModel>(context)
+                              .photoprismUrl,
+                          albumId: ""),
+                      onRefresh: refreshPhotosPull,
+                      color: HexColor(photorismModel.applicationColor)),
+                  RefreshIndicator(
+                      child: Albums(
+                          photoprismUrl: Provider.of<PhotoprismModel>(context)
+                              .photoprismUrl),
+                      onRefresh: refreshAlbumsPull,
+                      color: HexColor(photorismModel.applicationColor)),
+                  Settings(),
+                ]),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(

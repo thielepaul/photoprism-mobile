@@ -45,9 +45,11 @@ class AlbumView extends StatelessWidget {
                   // close dialog
                   Navigator.pop(context);
 
-                  Provider.of<PhotoprismModel>(context).deleteAlbum(album.id);
                   // go back to albums
                   Navigator.pop(context);
+
+                  Provider.of<PhotoprismModel>(context).deleteAlbum(album.id);
+
                 },
               )
             ],
