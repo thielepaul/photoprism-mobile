@@ -161,6 +161,9 @@ class MainPage extends StatelessWidget {
   }
 
   addPhotosToAlbum(albumId, context) async {
+    Navigator.pop(context);
+    Provider.of<PhotoprismModel>(context).gridController.clear();
+    
     List<String> selectedPhotos = [];
 
     Provider.of<PhotoprismModel>(context)
@@ -174,8 +177,8 @@ class MainPage extends StatelessWidget {
     await Provider.of<PhotoprismModel>(context)
         .addPhotosToAlbum(albumId, selectedPhotos);
 
-    Provider.of<PhotoprismModel>(context).gridController.clear();
-    Navigator.pop(context);
+
+
   }
 
   @override

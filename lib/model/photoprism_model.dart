@@ -162,7 +162,7 @@ class PhotoprismModel extends ChangeNotifier {
 
   void addPhotosToAlbum(albumId, List<String> photoUUIDs) async {
     print("Adding photos to album " + albumId);
-
+    showLoadingScreen("Adding photos to album..");
     var status = await Api.addPhotosToAlbum(albumId, photoUUIDs, photoprismUrl);
 
     if (status == 0) {
@@ -170,6 +170,7 @@ class PhotoprismModel extends ChangeNotifier {
     } else {
       // error
     }
+    hideLoadingScreen();
   }
 
   loadPhotoprismUrl() async {
