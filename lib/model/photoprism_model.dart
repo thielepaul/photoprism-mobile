@@ -101,7 +101,7 @@ class PhotoprismModel extends ChangeNotifier {
     var status = await Api.createAlbum('New album', photoprismUrl);
 
     if (status == 0) {
-      await Albums.loadAlbums(this, this.photoprismUrl);
+      await Albums.loadAlbums(this, photoprismUrl);
     } else {
       // error
     }
@@ -114,8 +114,8 @@ class PhotoprismModel extends ChangeNotifier {
       var status = await Api.renameAlbum(albumId, newAlbumName, photoprismUrl);
 
       if (status == 0) {
-        Albums.loadAlbums(this, this.photoprismUrl);
-        Photos.loadPhotos(this, this.photoprismUrl, albumId);
+        Albums.loadAlbums(this, photoprismUrl);
+        Photos.loadPhotos(this, photoprismUrl, albumId);
       } else {
         // error
       }
@@ -130,7 +130,7 @@ class PhotoprismModel extends ChangeNotifier {
     var status = await Api.deleteAlbum(albumId, photoprismUrl);
 
     if (status == 0) {
-      await Albums.loadAlbums(this, this.photoprismUrl);
+      await Albums.loadAlbums(this, photoprismUrl);
     } else {
       // error
     }
@@ -142,7 +142,7 @@ class PhotoprismModel extends ChangeNotifier {
     var status = await Api.addPhotosToAlbum(albumId, photoUUIDs, photoprismUrl);
 
     if (status == 0) {
-      await Albums.loadAlbums(this, this.photoprismUrl);
+      await Albums.loadAlbums(this, photoprismUrl);
     } else {
       // error
     }
@@ -161,11 +161,11 @@ class PhotoprismModel extends ChangeNotifier {
     String body = '{"photos":' + selectedPhotos.toString() + '}';
 
     http.Response response = await http.post(
-        this.photoprismUrl + '/api/v1/albums/' + albumId + '/photos',
+        photoprismUrl + '/api/v1/albums/' + albumId + '/photos',
         body: body);
 
     this.gridController.clear();
-    Albums.loadAlbums(this, this.photoprismUrl);
+    Albums.loadAlbums(this, photoprismUrl);
   }
 
   loadPhotoprismUrl() async {
