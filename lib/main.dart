@@ -11,11 +11,12 @@ import 'package:photoprism/common/hexcolor.dart';
 import 'api/photos.dart';
 import 'model/photoprism_model.dart';
 import 'package:path/path.dart';
-import 'package:http/http.dart' as http;
-
-
+// use this for debugging animations
+// import 'package:flutter/scheduler.dart' show timeDilation;
 
 void main() {
+  // use this for debugging animations
+  // timeDilation = 10.0;
   runApp(
     ChangeNotifierProvider(
       create: (context) => PhotoprismModel(),
@@ -117,27 +118,27 @@ class MainPage extends StatelessWidget {
                 ),
               ]
             : <Widget>[
-          IconButton(
-            icon: const Icon(Icons.cloud_upload),
-            tooltip: 'Upload photo',
-            onPressed: () {
-              uploadImage();
-            },
-          ),
-          /*IconButton(
+                IconButton(
+                  icon: const Icon(Icons.cloud_upload),
+                  tooltip: 'Upload photo',
+                  onPressed: () {
+                    uploadImage();
+                  },
+                ),
+                /*IconButton(
             icon: const Icon(Icons.add_photo_alternate),
             tooltip: 'Import photo',
             onPressed: () {
               Provider.of<PhotoprismModel>(context).importPhotos();
             },
           ),*/
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            tooltip: 'Refresh photos',
-            onPressed: () {
-              refreshPhotosPull();
-            },
-          )
+                IconButton(
+                  icon: const Icon(Icons.refresh),
+                  tooltip: 'Refresh photos',
+                  onPressed: () {
+                    refreshPhotosPull();
+                  },
+                )
               ],
       );
     } else if (Provider.of<PhotoprismModel>(context).selectedPageIndex == 1) {
@@ -170,12 +171,14 @@ class MainPage extends StatelessWidget {
     List<FileItem> filesToUpload = [];
 
     files.forEach((f) {
-      filesToUpload.add(FileItem(filename: basename(f.path),
+      filesToUpload.add(FileItem(
+          filename: basename(f.path),
           savedDir: dirname(f.path),
           fieldname: "files"));
     });
 
-    Provider.of<PhotoprismModel>(context).showLoadingScreen("Uploading photo(s)..");
+    Provider.of<PhotoprismModel>(context)
+        .showLoadingScreen("Uploading photo(s)..");
 
     final taskId = await Provider.of<PhotoprismModel>(context).uploader.enqueue(
         url: Provider.of<PhotoprismModel>(context).photoprismUrl +

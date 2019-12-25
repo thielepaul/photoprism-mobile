@@ -32,12 +32,19 @@ class _SelectableTileState extends State<SelectableTile>
   Animation<double> animation;
   AnimationController controller;
   bool wasSelected;
+  bool initialState;
 
   @override
   void initState() {
     super.initState();
     controller = AnimationController(
-        duration: const Duration(milliseconds: 100), vsync: this);
+        duration: const Duration(milliseconds: 200), vsync: this);
+    if (widget.selected) {
+      animation = Tween<double>(begin: 17, end: 0).animate(controller);
+    } else {
+      animation = Tween<double>(begin: 0, end: 17).animate(controller);
+    }
+    initialState = widget.selected;
     wasSelected = widget.selected;
   }
 
@@ -60,17 +67,10 @@ class _SelectableTileState extends State<SelectableTile>
   Widget build(BuildContext context) {
     if (widget.selected != wasSelected) {
       wasSelected = widget.selected;
-      animation = Tween<double>(begin: 0, end: 17).animate(controller);
-      if (widget.selected) {
+      if (widget.selected != initialState) {
         controller.forward();
       } else {
         controller.reverse();
-      }
-    } else {
-      if (widget.selected) {
-        animation = Tween<double>(begin: 17, end: 17).animate(controller);
-      } else {
-        animation = Tween<double>(begin: 0, end: 0).animate(controller);
       }
     }
     return GestureDetector(
