@@ -23,10 +23,7 @@ class PhotoprismModel extends ChangeNotifier {
   bool isLoading = false;
   int selectedPageIndex = 0;
   DragSelectGridViewController gridController = DragSelectGridViewController();
-  bool showAppBar = true;
-  Key globalKeyPhotoView = GlobalKey();
   PhotoViewScaleState photoViewScaleState = PhotoViewScaleState.initial;
-  bool photoViewMultiTouch = false;
   BuildContext context;
   ProgressDialog pr;
   FlutterUploader uploader;
@@ -87,11 +84,6 @@ class PhotoprismModel extends ChangeNotifier {
     loadApplicationColor();
     Photos.loadPhotosFromNetworkOrCache(this, photoprismUrl, "");
     Albums.loadAlbumsFromNetworkOrCache(this, photoprismUrl);
-  }
-
-  void setShowAppBar(bool showAppBar) {
-    this.showAppBar = showAppBar;
-    notifyListeners();
   }
 
   void setSelectedPageIndex(int index) {
@@ -246,11 +238,6 @@ class PhotoprismModel extends ChangeNotifier {
 
   void setPhotoViewScaleState(PhotoViewScaleState scaleState) {
     photoViewScaleState = scaleState;
-    notifyListeners();
-  }
-
-  void setPhotoViewMultiTouch(bool multiTouch) {
-    photoViewMultiTouch = multiTouch;
     notifyListeners();
   }
 }

@@ -4,6 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:drag_select_grid_view/drag_select_grid_view.dart';
 import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
+import 'package:photoprism/common/transparent_route.dart';
 import 'package:photoprism/model/photo.dart';
 import 'package:http/http.dart' as http;
 import 'package:photoprism/model/photoprism_model.dart';
@@ -133,32 +134,39 @@ class Photos extends StatelessWidget {
         itemCount: Photos.getPhotoList(context, albumId).length,
         itemBuilder: (context, index, selected) {
           return SelectableTile(
-            key: ValueKey("PhotoTile"),
-            index: index,
-            context: context,
-            gridController: gridController,
-            selected: selected,
-            onTap: () {
-              Provider.of<PhotoprismModel>(context)
-                  .setPhotoViewScaleState(PhotoViewScaleState.initial);
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => FullscreenPhotoGallery(index,
-                        Photos.getPhotoList(context, albumId), photoprismUrl)),
-              );
-            },
-            child: CachedNetworkImage(
-              imageUrl: photoprismUrl +
-                  '/api/v1/thumbnails/' +
-                  Photos.getPhotoList(context, albumId)[index].fileHash +
-                  '/tile_224',
-              placeholder: (context, url) => Container(
-                color: Colors.grey,
-              ),
-              errorWidget: (context, url, error) => Icon(Icons.error),
-            ),
-          );
+              key: ValueKey("PhotoTile"),
+              index: index,
+              context: context,
+              gridController: gridController,
+              selected: selected,
+              onTap: () {
+                Provider.of<PhotoprismModel>(context)
+                    .setPhotoViewScaleState(PhotoViewScaleState.initial);
+                Navigator.push(
+                    context,
+                    TransparentRoute(
+                      builder: (context) =>
+                          FullscreenPhotoGallery(index, albumId),
+                    ));
+              },
+              child: Hero(
+                tag: index.toString(),
+                createRectTween: (begin, end) {
+                  return RectTween(begin: begin, end: end);
+                },
+                child: CachedNetworkImage(
+                  alignment: Alignment.center,
+                  fit: BoxFit.contain,
+                  imageUrl: photoprismUrl +
+                      '/api/v1/thumbnails/' +
+                      Photos.getPhotoList(context, albumId)[index].fileHash +
+                      '/tile_224',
+                  placeholder: (context, url) => Container(
+                    color: Colors.grey,
+                  ),
+                  errorWidget: (context, url, error) => Icon(Icons.error),
+                ),
+              ));
         });
   }
 }
