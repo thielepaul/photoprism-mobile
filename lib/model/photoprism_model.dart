@@ -30,8 +30,9 @@ class PhotoprismModel extends ChangeNotifier {
   BuildContext context;
   ProgressDialog pr;
   FlutterUploader uploader;
-  SharedPreferences prefs;
   List<FileSystemEntity> entries;
+  bool autoUploadState = false;
+  String uploadFolder = "/storage/emulated/0/DCIM/Camer";
 
   PhotoprismModel() {
     initialize();
@@ -53,8 +54,8 @@ class PhotoprismModel extends ChangeNotifier {
       // This is the fetch-event callback.
       print('[BackgroundFetch] Event received');
 
-      if (getAutoUploadState()) {
-        Directory dir = Directory(getUploadFolder());
+      if (autoUploadState) {
+        Directory dir = Directory(uploadFolder);
         entries = dir.listSync(recursive: false)
             .toList();
 
@@ -88,20 +89,27 @@ class PhotoprismModel extends ChangeNotifier {
 
   }
 
-  bool getAutoUploadState() {
-    return prefs.getBool("autoUploadEnabled") ?? false;
-  }
-
-  void setAutoUpload(bool newState) {
-    prefs.setBool("autoUploadEnabled", newState);
+  void getAutoUploadState() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    autoUploadState = prefs.getBool("autoUploadEnabled");
     notifyListeners();
   }
 
-  String getUploadFolder() {
-    return prefs.getString("uploadFolder") ?? "/storage/emulated/0/DCIM/Camera";
+  void setAutoUpload(bool newState) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setBool("autoUploadEnabled", newState);
+    autoUploadState = newState;
+    notifyListeners();
+  }
+
+  void getUploadFolder() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    uploadFolder = prefs.getString("uploadFolder");
+    notifyListeners();
   }
 
   Future<void> setUploadFolder(folder) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setString("uploadFolder", folder);
     notifyListeners();
   }
@@ -162,8 +170,9 @@ class PhotoprismModel extends ChangeNotifier {
   }
 
   initialize() async {
-    prefs = await SharedPreferences.getInstance();
     await loadPhotoprismUrl();
+    await getAutoUploadState();
+    await getUploadFolder();
     loadApplicationColor();
     Photos.loadPhotosFromNetworkOrCache(this, photoprismUrl, "");
     Albums.loadAlbumsFromNetworkOrCache(this, photoprismUrl);
@@ -182,11 +191,12 @@ class PhotoprismModel extends ChangeNotifier {
       //print("Progress: " + progress.progress.toString());
     });
 
-    StreamSubscription _resultSubscription = uploader.result.listen((result) {
+    StreamSubscription _resultSubscription = uploader.result.listen((result) async {
       print("Upload finished.");
       print(result.statusCode == 200);
       print("Upload success!");
 
+      SharedPreferences prefs = await SharedPreferences.getInstance();
       List<String> alreadyUploadedPhotos = prefs.getStringList("alreadyUploadedPhotos") ?? List<String>();
 
       // add uploaded photos to shared pref

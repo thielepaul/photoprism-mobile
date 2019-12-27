@@ -34,7 +34,7 @@ class Settings extends StatelessWidget {
         SwitchListTile(
           title: Text("Auto Upload"),
           secondary: const Icon(Icons.cloud_upload),
-          value: Provider.of<PhotoprismModel>(context).getAutoUploadState(),
+          value: Provider.of<PhotoprismModel>(context).autoUploadState,
           onChanged: (bool newState) {
             print(newState);
             Provider.of<PhotoprismModel>(context).setAutoUpload(newState);
@@ -42,7 +42,7 @@ class Settings extends StatelessWidget {
         ),
         ListTile(
           title: Text("Upload folder"),
-          subtitle: Text(photorismModel.getUploadFolder()),
+          subtitle: Text(photorismModel.uploadFolder),
           onTap: () {
             getUploadFolder(context);
           },
@@ -101,7 +101,7 @@ class Settings extends StatelessWidget {
 
   _settingsDisplayUploadFolderDialog(BuildContext context) async {
     var photorismModel = Provider.of<PhotoprismModel>(context);
-    _uploadFolderTextFieldController.text = photorismModel.getUploadFolder();
+    _uploadFolderTextFieldController.text = photorismModel.uploadFolder;
 
     return showDialog(
         context: context,
