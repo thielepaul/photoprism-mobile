@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
+import 'package:background_fetch/background_fetch.dart';
 import 'package:drag_select_grid_view/drag_select_grid_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_uploader/flutter_uploader.dart';
@@ -14,6 +16,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:progress_dialog/progress_dialog.dart';
+import 'package:path/path.dart';
 
 class PhotoprismModel extends ChangeNotifier {
   String applicationColor = "#424242";
@@ -27,26 +30,135 @@ class PhotoprismModel extends ChangeNotifier {
   BuildContext context;
   ProgressDialog pr;
   FlutterUploader uploader;
+  SharedPreferences prefs;
+  List<FileSystemEntity> entries;
 
   PhotoprismModel() {
     initialize();
+    initPlatformState();
     gridController.addListener(notifyListeners);
     uploader = FlutterUploader();
+    BackgroundFetch.start().then((int status) {
+      print('[BackgroundFetch] start success: $status');
+    }).catchError((e) {
+      print('[BackgroundFetch] start FAILURE: $e');
+    });
 
     StreamSubscription _progressSubscription =
         uploader.progress.listen((progress) {
-      print("Progress: " + progress.progress.toString());
+      //print("Progress: " + progress.progress.toString());
     });
 
     StreamSubscription _resultSubscription = uploader.result.listen((result) {
       print("Upload finished.");
-      importPhotos();
+      print(result.statusCode == 200);
+      print("Upload success!");
+
+      List<String> alreadyUploadedPhotos = prefs.getStringList("alreadyUploadedPhotos") ?? List<String>();
+
+      // add uploaded photos to shared pref
+      entries.forEach((e) {
+        if (!alreadyUploadedPhotos.contains(e.path)) {
+          alreadyUploadedPhotos.add(e.path);
+        }
+      });
+
+      prefs.setStringList("alreadyUploadedPhotos", alreadyUploadedPhotos);
     });
+  }
+
+  // Platform messages are asynchronous, so we initialize in an async method.
+  Future<void> initPlatformState() async {
+    // Configure BackgroundFetch.
+    BackgroundFetch.configure(BackgroundFetchConfig(
+        minimumFetchInterval: 15,
+        stopOnTerminate: false,
+        enableHeadless: false,
+        requiresBatteryNotLow: false,
+        requiresCharging: false,
+        requiresStorageNotLow: false,
+        requiresDeviceIdle: false,
+        requiredNetworkType: BackgroundFetchConfig.NETWORK_TYPE_NONE
+    ), () async {
+      // This is the fetch-event callback.
+      print('[BackgroundFetch] Event received');
+
+      if (getAutoUploadState()) {
+        Directory dir = Directory(getUploadFolder());
+        entries = dir.listSync(recursive: false)
+            .toList();
+
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        List<String> alreadyUploadedPhotos = prefs.getStringList("alreadyUploadedPhotos") ??
+            List<String>();
+
+        List<FileSystemEntity> entriesToUpload = [];
+
+        entries.forEach((entry) {
+          if (!alreadyUploadedPhotos.contains(entry.path)) {
+            entriesToUpload.add(entry);
+            print("Uploading " + entry.path);
+          }
+        });
+        if (entriesToUpload.length > 0) {
+          uploadPhoto(entriesToUpload);
+        }
+      }
+      else {
+        print("Auto upload disabled.");
+      }
+      BackgroundFetch.finish();
+    }).then((int status) {
+      print('[BackgroundFetch] configure success: $status');
+
+    }).catchError((e) {
+      print('[BackgroundFetch] configure ERROR: $e');
+
+    });
+
+  }
+
+  bool getAutoUploadState() {
+    return prefs.getBool("autoUploadEnabled") ?? false;
+  }
+
+  void setAutoUpload(bool newState) {
+    prefs.setBool("autoUploadEnabled", newState);
+    notifyListeners();
+  }
+
+  String getUploadFolder() {
+    return prefs.getString("uploadFolder") ?? "/storage/emulated/0/DCIM/Camera";
+  }
+
+  Future<void> setUploadFolder(folder) async {
+    prefs.setString("uploadFolder", folder);
+    notifyListeners();
+  }
+
+  void uploadPhoto(List<FileSystemEntity> files) async {
+    List<FileItem> filesToUpload = [];
+
+    files.forEach((f) {
+      filesToUpload.add(FileItem(
+          filename: basename(f.path),
+          savedDir: dirname(f.path),
+          fieldname: "files"));
+    });
+
+    await uploader.enqueue(
+        url: photoprismUrl +
+            "/api/v1/upload/test", //required: url to upload to
+        files: filesToUpload, // required: list of files that you want to upload
+        method: UploadMethod.POST, // HTTP method  (POST or PUT or PATCH)
+        showNotification:
+        false, // send local notification (android only) for upload status
+        tag: "upload 1");
   }
 
   void importPhotos() async {
     print("Importing photos");
-    //showLoadingScreen("Importing photo(s)..");
+    showLoadingScreen("Importing photos..");
     var response =
         await http.post(photoprismUrl + "/api/v1/import/", body: "{}");
     print('Response status: ${response.statusCode}');
@@ -80,6 +192,7 @@ class PhotoprismModel extends ChangeNotifier {
   }
 
   initialize() async {
+    prefs = await SharedPreferences.getInstance();
     await loadPhotoprismUrl();
     loadApplicationColor();
     Photos.loadPhotosFromNetworkOrCache(this, photoprismUrl, "");

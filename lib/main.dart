@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:background_fetch/background_fetch.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
@@ -125,13 +126,13 @@ class MainPage extends StatelessWidget {
                     uploadImage();
                   },
                 ),
-                /*IconButton(
-            icon: const Icon(Icons.add_photo_alternate),
-            tooltip: 'Import photo',
-            onPressed: () {
-              Provider.of<PhotoprismModel>(context).importPhotos();
-            },
-          ),*/
+                IconButton(
+                  icon: const Icon(Icons.add_photo_alternate),
+                  tooltip: 'Import photo',
+                  onPressed: () {
+                    Provider.of<PhotoprismModel>(context).importPhotos();
+                  },
+                ),
                 IconButton(
                   icon: const Icon(Icons.refresh),
                   tooltip: 'Refresh photos',
