@@ -32,7 +32,7 @@ class PhotoprismModel extends ChangeNotifier {
   FlutterUploader uploader;
   List<FileSystemEntity> entries;
   bool autoUploadState = false;
-  String uploadFolder = "/storage/emulated/0/DCIM/Camer";
+  String uploadFolder = "/storage/emulated/0/DCIM/Camera";
 
   PhotoprismModel() {
     initialize();
@@ -91,7 +91,7 @@ class PhotoprismModel extends ChangeNotifier {
 
   void getAutoUploadState() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    autoUploadState = prefs.getBool("autoUploadEnabled");
+    autoUploadState = prefs.getBool("autoUploadEnabled") ?? false;
     notifyListeners();
   }
 
@@ -104,7 +104,7 @@ class PhotoprismModel extends ChangeNotifier {
 
   void getUploadFolder() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    uploadFolder = prefs.getString("uploadFolder");
+    uploadFolder = prefs.getString("uploadFolder") ?? "/storage/emulated/0/DCIM/Camera";
     notifyListeners();
   }
 
