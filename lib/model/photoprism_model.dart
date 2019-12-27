@@ -35,36 +35,6 @@ class PhotoprismModel extends ChangeNotifier {
 
   PhotoprismModel() {
     initialize();
-    initPlatformState();
-    gridController.addListener(notifyListeners);
-    uploader = FlutterUploader();
-    BackgroundFetch.start().then((int status) {
-      print('[BackgroundFetch] start success: $status');
-    }).catchError((e) {
-      print('[BackgroundFetch] start FAILURE: $e');
-    });
-
-    StreamSubscription _progressSubscription =
-        uploader.progress.listen((progress) {
-      //print("Progress: " + progress.progress.toString());
-    });
-
-    StreamSubscription _resultSubscription = uploader.result.listen((result) {
-      print("Upload finished.");
-      print(result.statusCode == 200);
-      print("Upload success!");
-
-      List<String> alreadyUploadedPhotos = prefs.getStringList("alreadyUploadedPhotos") ?? List<String>();
-
-      // add uploaded photos to shared pref
-      entries.forEach((e) {
-        if (!alreadyUploadedPhotos.contains(e.path)) {
-          alreadyUploadedPhotos.add(e.path);
-        }
-      });
-
-      prefs.setStringList("alreadyUploadedPhotos", alreadyUploadedPhotos);
-    });
   }
 
   // Platform messages are asynchronous, so we initialize in an async method.
@@ -197,6 +167,37 @@ class PhotoprismModel extends ChangeNotifier {
     loadApplicationColor();
     Photos.loadPhotosFromNetworkOrCache(this, photoprismUrl, "");
     Albums.loadAlbumsFromNetworkOrCache(this, photoprismUrl);
+
+    initPlatformState();
+    gridController.addListener(notifyListeners);
+    uploader = FlutterUploader();
+    BackgroundFetch.start().then((int status) {
+      print('[BackgroundFetch] start success: $status');
+    }).catchError((e) {
+      print('[BackgroundFetch] start FAILURE: $e');
+    });
+
+    StreamSubscription _progressSubscription =
+    uploader.progress.listen((progress) {
+      //print("Progress: " + progress.progress.toString());
+    });
+
+    StreamSubscription _resultSubscription = uploader.result.listen((result) {
+      print("Upload finished.");
+      print(result.statusCode == 200);
+      print("Upload success!");
+
+      List<String> alreadyUploadedPhotos = prefs.getStringList("alreadyUploadedPhotos") ?? List<String>();
+
+      // add uploaded photos to shared pref
+      entries.forEach((e) {
+        if (!alreadyUploadedPhotos.contains(e.path)) {
+          alreadyUploadedPhotos.add(e.path);
+        }
+      });
+
+      prefs.setStringList("alreadyUploadedPhotos", alreadyUploadedPhotos);
+    });
   }
 
   void setSelectedPageIndex(int index) {
