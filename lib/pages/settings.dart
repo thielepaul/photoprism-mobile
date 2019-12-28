@@ -1,6 +1,7 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -9,7 +10,8 @@ import '../common/hexcolor.dart';
 
 class Settings extends StatelessWidget {
   final TextEditingController _urlTextFieldController = TextEditingController();
-  final TextEditingController _uploadFolderTextFieldController = TextEditingController();
+  final TextEditingController _uploadFolderTextFieldController =
+      TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -35,9 +37,16 @@ class Settings extends StatelessWidget {
           title: Text("Auto Upload"),
           secondary: const Icon(Icons.cloud_upload),
           value: Provider.of<PhotoprismModel>(context).autoUploadState,
-          onChanged: (bool newState) {
-            print(newState);
-            Provider.of<PhotoprismModel>(context).setAutoUpload(newState);
+          onChanged: (bool newState) async {
+            final PermissionHandler _permissionHandler = PermissionHandler();
+            var result = await _permissionHandler.requestPermissions([PermissionGroup.storage]);
+
+            if (result[PermissionGroup.storage] == PermissionStatus.granted) {
+              print(newState);
+              Provider.of<PhotoprismModel>(context).setAutoUpload(newState);
+            } else {
+              print("Not authorized.");
+            }
           },
         ),
         ListTile(
@@ -77,7 +86,7 @@ class Settings extends StatelessWidget {
               controller: _urlTextFieldController,
               cursorColor: HexColor(photorismModel.applicationColor),
               decoration:
-              InputDecoration(hintText: "https://demo.photoprism.org"),
+                  InputDecoration(hintText: "https://demo.photoprism.org"),
             ),
             actions: <Widget>[
               FlatButton(
@@ -112,7 +121,7 @@ class Settings extends StatelessWidget {
               controller: _uploadFolderTextFieldController,
               cursorColor: HexColor(photorismModel.applicationColor),
               decoration:
-              InputDecoration(hintText: "/storage/emulated/0/DCIM/Camera"),
+                  InputDecoration(hintText: "/storage/emulated/0/DCIM/Camera"),
             ),
             actions: <Widget>[
               FlatButton(
@@ -126,7 +135,8 @@ class Settings extends StatelessWidget {
                 child: Text('Save'),
                 textColor: HexColor(photorismModel.applicationColor),
                 onPressed: () {
-                  setNewUploadFolder(context, _uploadFolderTextFieldController.text);
+                  setNewUploadFolder(
+                      context, _uploadFolderTextFieldController.text);
                 },
               )
             ],
