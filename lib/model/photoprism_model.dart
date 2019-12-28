@@ -57,7 +57,22 @@ class PhotoprismModel extends ChangeNotifier {
       print('[BackgroundFetch] Event received');
 
       if (autoUploadState) {
-        uploadNewPhotos();
+        Directory dir = Directory(uploadFolder);
+        entries = dir.listSync(recursive: false).toList();
+
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        List<String> alreadyUploadedPhotos =
+            prefs.getStringList("alreadyUploadedPhotos") ?? List<String>();
+
+        for (var entry in entries) {
+          if (!alreadyUploadedPhotos.contains(entry.path)) {
+            List<FileSystemEntity> entriesToUpload = [];
+            entriesToUpload.add(entry);
+            print("Uploading " + entry.path);
+            await uploadPhoto(entriesToUpload);
+          }
+        }
+        print("All new photos uploaded.");
       } else {
         print("Auto upload disabled.");
       }
@@ -67,25 +82,6 @@ class PhotoprismModel extends ChangeNotifier {
     }).catchError((e) {
       print('[BackgroundFetch] configure ERROR: $e');
     });
-  }
-
-  void uploadNewPhotos() async {
-    Directory dir = Directory(uploadFolder);
-    entries = dir.listSync(recursive: false).toList();
-
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    List<String> alreadyUploadedPhotos =
-        prefs.getStringList("alreadyUploadedPhotos") ?? List<String>();
-
-    for (var entry in entries) {
-      if (!alreadyUploadedPhotos.contains(entry.path)) {
-        List<FileSystemEntity> entriesToUpload = [];
-        entriesToUpload.add(entry);
-        print("Uploading " + entry.path);
-        await uploadPhoto(entriesToUpload);
-      }
-    }
-    print("All new photos uploaded.");
   }
 
   void getAutoUploadState() async {
