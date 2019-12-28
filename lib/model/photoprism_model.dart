@@ -41,27 +41,27 @@ class PhotoprismModel extends ChangeNotifier {
   // Platform messages are asynchronous, so we initialize in an async method.
   Future<void> initPlatformState() async {
     // Configure BackgroundFetch.
-    BackgroundFetch.configure(BackgroundFetchConfig(
-        minimumFetchInterval: 15,
-        stopOnTerminate: false,
-        enableHeadless: false,
-        requiresBatteryNotLow: false,
-        requiresCharging: false,
-        requiresStorageNotLow: false,
-        requiresDeviceIdle: false,
-        requiredNetworkType: BackgroundFetchConfig.NETWORK_TYPE_NONE
-    ), () async {
+    BackgroundFetch.configure(
+        BackgroundFetchConfig(
+            minimumFetchInterval: 15,
+            stopOnTerminate: false,
+            enableHeadless: false,
+            requiresBatteryNotLow: false,
+            requiresCharging: false,
+            requiresStorageNotLow: false,
+            requiresDeviceIdle: false,
+            requiredNetworkType: BackgroundFetchConfig.NETWORK_TYPE_NONE),
+        () async {
       // This is the fetch-event callback.
       print('[BackgroundFetch] Event received');
 
       if (autoUploadState) {
         Directory dir = Directory(uploadFolder);
-        entries = dir.listSync(recursive: false)
-            .toList();
+        entries = dir.listSync(recursive: false).toList();
 
         SharedPreferences prefs = await SharedPreferences.getInstance();
-        List<String> alreadyUploadedPhotos = prefs.getStringList("alreadyUploadedPhotos") ??
-            List<String>();
+        List<String> alreadyUploadedPhotos =
+            prefs.getStringList("alreadyUploadedPhotos") ?? List<String>();
 
         List<FileSystemEntity> entriesToUpload = [];
 
@@ -74,19 +74,15 @@ class PhotoprismModel extends ChangeNotifier {
         if (entriesToUpload.length > 0) {
           uploadPhoto(entriesToUpload);
         }
-      }
-      else {
+      } else {
         print("Auto upload disabled.");
       }
       BackgroundFetch.finish();
     }).then((int status) {
       print('[BackgroundFetch] configure success: $status');
-
     }).catchError((e) {
       print('[BackgroundFetch] configure ERROR: $e');
-
     });
-
   }
 
   void getAutoUploadState() async {
@@ -104,7 +100,8 @@ class PhotoprismModel extends ChangeNotifier {
 
   void getUploadFolder() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    uploadFolder = prefs.getString("uploadFolder") ?? "/storage/emulated/0/DCIM/Camera";
+    uploadFolder =
+        prefs.getString("uploadFolder") ?? "/storage/emulated/0/DCIM/Camera";
     notifyListeners();
   }
 
@@ -126,12 +123,11 @@ class PhotoprismModel extends ChangeNotifier {
     });
 
     await uploader.enqueue(
-        url: photoprismUrl +
-            "/api/v1/upload/test", //required: url to upload to
+        url: photoprismUrl + "/api/v1/upload/test", //required: url to upload to
         files: filesToUpload, // required: list of files that you want to upload
         method: UploadMethod.POST, // HTTP method  (POST or PUT or PATCH)
         showNotification:
-        false, // send local notification (android only) for upload status
+            false, // send local notification (android only) for upload status
         tag: "upload 1");
   }
 
@@ -188,17 +184,19 @@ class PhotoprismModel extends ChangeNotifier {
     });
 
     StreamSubscription _progressSubscription =
-    uploader.progress.listen((progress) {
+        uploader.progress.listen((progress) {
       //print("Progress: " + progress.progress.toString());
     });
 
-    StreamSubscription _resultSubscription = uploader.result.listen((result) async {
+    StreamSubscription _resultSubscription =
+        uploader.result.listen((result) async {
       print("Upload finished.");
       print(result.statusCode == 200);
       print("Upload success!");
 
       SharedPreferences prefs = await SharedPreferences.getInstance();
-      List<String> alreadyUploadedPhotos = prefs.getStringList("alreadyUploadedPhotos") ?? List<String>();
+      List<String> alreadyUploadedPhotos =
+          prefs.getStringList("alreadyUploadedPhotos") ?? List<String>();
 
       // add uploaded photos to shared pref
       entries.forEach((e) {
