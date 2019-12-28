@@ -111,6 +111,7 @@ class PhotoprismModel extends ChangeNotifier {
   Future<void> setUploadFolder(folder) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setString("uploadFolder", folder);
+    uploadFolder = folder;
     notifyListeners();
   }
 
