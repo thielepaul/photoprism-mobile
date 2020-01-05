@@ -18,7 +18,7 @@ import 'package:progress_dialog/progress_dialog.dart';
 
 class PhotoprismModel extends ChangeNotifier {
   String applicationColor = "#424242";
-  String photoprismUrl = "";
+  String photoprismUrl = "https://demo.photoprism.org";
   List<Photo> photoList;
   Map<String, Album> albums;
   bool isLoading = false;

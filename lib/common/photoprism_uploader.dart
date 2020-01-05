@@ -123,31 +123,35 @@ class PhotoprismUploader {
             requiresStorageNotLow: false,
             requiresDeviceIdle: false,
             requiredNetworkType: BackgroundFetchConfig.NETWORK_TYPE_NONE),
-            () async {
-          print('[BackgroundFetch] Event received');
+        () async {
+      print('[BackgroundFetch] Event received');
 
-          if (autoUploadEnabled) {
-            Directory dir = Directory(autoUploadFolder);
-            entries = dir.listSync(recursive: false).toList();
+      if (autoUploadEnabled) {
+        if (photoprismModel.photoprismUrl != "https://demo.photoprism.org") {
+          Directory dir = Directory(autoUploadFolder);
+          entries = dir.listSync(recursive: false).toList();
 
-            SharedPreferences prefs = await SharedPreferences.getInstance();
-            List<String> alreadyUploadedPhotos =
-                prefs.getStringList("alreadyUploadedPhotos") ?? List<String>();
+          SharedPreferences prefs = await SharedPreferences.getInstance();
+          List<String> alreadyUploadedPhotos =
+              prefs.getStringList("alreadyUploadedPhotos") ?? List<String>();
 
-            for (var entry in entries) {
-              if (!alreadyUploadedPhotos.contains(entry.path)) {
-                List<FileSystemEntity> entriesToUpload = [];
-                entriesToUpload.add(entry);
-                print("Uploading " + entry.path);
-                await uploadPhoto(entriesToUpload);
-              }
+          for (var entry in entries) {
+            if (!alreadyUploadedPhotos.contains(entry.path)) {
+              List<FileSystemEntity> entriesToUpload = [];
+              entriesToUpload.add(entry);
+              print("Uploading " + entry.path);
+              await uploadPhoto(entriesToUpload);
             }
-            print("All new photos uploaded.");
-          } else {
-            print("Auto upload disabled.");
           }
-          BackgroundFetch.finish();
-        }).then((int status) {
+          print("All new photos uploaded.");
+        } else {
+          print("Auto upload disabled for demo page!");
+        }
+      } else {
+        print("Auto upload disabled.");
+      }
+      BackgroundFetch.finish();
+    }).then((int status) {
       print('[BackgroundFetch] configure success: $status');
     }).catchError((e) {
       print('[BackgroundFetch] configure ERROR: $e');
@@ -160,7 +164,8 @@ class PhotoprismUploader {
     var status = await Api.importPhotos(photoprismModel.photoprismUrl);
 
     if (status == 0) {
-      await Photos.loadPhotos(photoprismModel, photoprismModel.photoprismUrl, "");
+      await Photos.loadPhotos(
+          photoprismModel, photoprismModel.photoprismUrl, "");
     } else {
       // error
     }
