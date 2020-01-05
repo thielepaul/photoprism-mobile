@@ -10,6 +10,7 @@ import 'package:photo_view/photo_view.dart';
 import 'package:photoprism/api/albums.dart';
 import 'package:photoprism/api/api.dart';
 import 'package:photoprism/api/photos.dart';
+import 'package:photoprism/common/photoprism_uploader.dart';
 import 'package:photoprism/model/album.dart';
 import 'package:photoprism/model/photo.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -31,9 +32,9 @@ class PhotoprismModel extends ChangeNotifier {
   ProgressDialog pr;
   FlutterUploader uploader;
   List<FileSystemEntity> entries;
-  bool autoUploadEnabled = false;
   String autoUploadFolder = "/storage/emulated/0/DCIM/Camera";
   Completer c;
+  PhotoprismUploader photoprismUploader;
 
   PhotoprismModel() {
     initialize();
@@ -53,7 +54,7 @@ class PhotoprismModel extends ChangeNotifier {
         () async {
       print('[BackgroundFetch] Event received');
 
-      if (autoUploadEnabled) {
+      if (photoprismUploader.autoUploadEnabled) {
         Directory dir = Directory(autoUploadFolder);
         entries = dir.listSync(recursive: false).toList();
 
@@ -79,19 +80,6 @@ class PhotoprismModel extends ChangeNotifier {
     }).catchError((e) {
       print('[BackgroundFetch] configure ERROR: $e');
     });
-  }
-
-  void getAutoUploadState() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    autoUploadEnabled = prefs.getBool("autoUploadEnabled") ?? false;
-    notifyListeners();
-  }
-
-  void setAutoUpload(bool newState) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    prefs.setBool("autoUploadEnabled", newState);
-    autoUploadEnabled = newState;
-    notifyListeners();
   }
 
   void getUploadFolder() async {
@@ -159,12 +147,11 @@ class PhotoprismModel extends ChangeNotifier {
 
   initialize() async {
     await loadPhotoprismUrl();
-    await getAutoUploadState();
     await getUploadFolder();
     loadApplicationColor();
     Photos.loadPhotosFromNetworkOrCache(this, photoprismUrl, "");
     Albums.loadAlbumsFromNetworkOrCache(this, photoprismUrl);
-
+    photoprismUploader = new PhotoprismUploader(this);
     initPlatformState();
     gridController.addListener(notifyListeners);
     uploader = FlutterUploader();
@@ -192,11 +179,13 @@ class PhotoprismModel extends ChangeNotifier {
               prefs.getStringList("alreadyUploadedPhotos") ?? List<String>();
 
           // add uploaded photos to shared pref
-          entries.forEach((e) {
-            if (!alreadyUploadedPhotos.contains(e.path)) {
-              alreadyUploadedPhotos.add(e.path);
-            }
-          });
+          if (entries.length > 0) {
+            entries.forEach((e) {
+              if (!alreadyUploadedPhotos.contains(e.path)) {
+                alreadyUploadedPhotos.add(e.path);
+              }
+            });
+          }
 
           prefs.setStringList("alreadyUploadedPhotos", alreadyUploadedPhotos);
           c.complete();

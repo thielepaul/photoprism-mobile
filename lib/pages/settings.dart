@@ -39,7 +39,9 @@ class Settings extends StatelessWidget {
         SwitchListTile(
           title: Text("Auto Upload"),
           secondary: const Icon(Icons.cloud_upload),
-          value: Provider.of<PhotoprismModel>(context).autoUploadEnabled,
+          value: Provider.of<PhotoprismModel>(context)
+              .photoprismUploader
+              .autoUploadEnabled,
           onChanged: (bool newState) async {
             final PermissionHandler _permissionHandler = PermissionHandler();
             var result = await _permissionHandler
@@ -47,7 +49,9 @@ class Settings extends StatelessWidget {
 
             if (result[PermissionGroup.storage] == PermissionStatus.granted) {
               print(newState);
-              Provider.of<PhotoprismModel>(context).setAutoUpload(newState);
+              Provider.of<PhotoprismModel>(context)
+                  .photoprismUploader
+                  .setAutoUpload(newState);
             } else {
               print("Not authorized.");
             }
