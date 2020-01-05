@@ -91,25 +91,31 @@ class PhotoprismUploader {
     photoprismModel.notifyListeners();
   }
 
-  uploadImage() async {
+  startManualPhotoUpload() async {
     List<File> files = await FilePicker.getMultiFile();
     List<FileItem> filesToUpload = [];
 
-    files.forEach((f) {
-      filesToUpload.add(FileItem(
-          filename: basename(f.path),
-          savedDir: dirname(f.path),
-          fieldname: "files"));
-    });
+    if (files.length > 0) {
+      files.forEach((f) {
+        filesToUpload.add(FileItem(
+            filename: basename(f.path),
+            savedDir: dirname(f.path),
+            fieldname: "files"));
+      });
 
-    photoprismModel.showLoadingScreen("Uploading photo(s)..");
+      if (files.length > 1) {
+        photoprismModel.showLoadingScreen("Uploading photos..");
+      } else {
+        photoprismModel.showLoadingScreen("Uploading photo..");
+      }
 
-    await uploader.enqueue(
-        url: photoprismModel.photoprismUrl + "/api/v1/upload/test",
-        files: filesToUpload,
-        method: UploadMethod.POST,
-        showNotification: false,
-        tag: "manual");
+      await uploader.enqueue(
+          url: photoprismModel.photoprismUrl + "/api/v1/upload/test",
+          files: filesToUpload,
+          method: UploadMethod.POST,
+          showNotification: false,
+          tag: "manual");
+    }
   }
 
   Future<void> initPlatformState() async {

@@ -124,7 +124,7 @@ class MainPage extends StatelessWidget {
                   onPressed: () {
                     Provider.of<PhotoprismModel>(context)
                         .photoprismUploader
-                        .uploadImage();
+                        .startManualPhotoUpload();
                   },
                 ),
                 IconButton(
