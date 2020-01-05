@@ -9,7 +9,7 @@
     <application
         tools:replace="android:label"
         android:name="io.flutter.app.FlutterApplication"
-        android:label="photoprism"
+        android:label="PhotoPrism"
         android:icon="@mipmap/launcher_icon"
         android:usesCleartextTraffic="true">
         <activity

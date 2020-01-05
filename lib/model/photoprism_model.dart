@@ -135,7 +135,6 @@ class PhotoprismModel extends ChangeNotifier {
   void importPhotos() async {
     print("Importing photos");
     updateLoadingScreen("Importing photos..");
-    //showLoadingScreen("Importing photos..");
     var response =
         await http.post(photoprismUrl + "/api/v1/import/", body: "{}");
     print('Response status: ${response.statusCode}');

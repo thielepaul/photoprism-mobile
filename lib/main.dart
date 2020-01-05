@@ -31,9 +31,9 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Photoprism',
+      title: 'PhotoPrism',
       theme: ThemeData(),
-      home: MainPage('Photoprism', context),
+      home: MainPage('PhotoPrism', context),
     );
   }
 }
