@@ -77,4 +77,17 @@ class Api {
       return 1;
     }
   }
+
+  static Future<int> importPhotos(String photoprismUrl) async {
+    try {
+      http.Response response = await http.post(photoprismUrl + "/api/v1/import/", body: "{}");
+      if (response.statusCode == 200) {
+        return 0;
+      } else {
+        return 2;
+      }
+    } catch (_) {
+      return 1;
+    }
+  }
 }

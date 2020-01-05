@@ -39,9 +39,7 @@ class PhotoprismModel extends ChangeNotifier {
     initialize();
   }
 
-  // Platform messages are asynchronous, so we initialize in an async method.
   Future<void> initPlatformState() async {
-    // Configure BackgroundFetch.
     BackgroundFetch.configure(
         BackgroundFetchConfig(
             minimumFetchInterval: 15,
@@ -53,7 +51,6 @@ class PhotoprismModel extends ChangeNotifier {
             requiresDeviceIdle: false,
             requiredNetworkType: BackgroundFetchConfig.NETWORK_TYPE_NONE),
         () async {
-      // This is the fetch-event callback.
       print('[BackgroundFetch] Event received');
 
       if (autoUploadEnabled) {
@@ -132,17 +129,6 @@ class PhotoprismModel extends ChangeNotifier {
     return c.future;
   }
 
-  void importPhotos() async {
-    print("Importing photos");
-    updateLoadingScreen("Importing photos..");
-    var response =
-        await http.post(photoprismUrl + "/api/v1/import/", body: "{}");
-    print('Response status: ${response.statusCode}');
-    print('Response body: ${response.body}');
-    await Photos.loadPhotos(this, photoprismUrl, "");
-    hideLoadingScreen();
-  }
-
   DragSelectGridViewController getGridController() {
     try {
       gridController.hasListeners;
@@ -199,8 +185,7 @@ class PhotoprismModel extends ChangeNotifier {
         if (result.tag == "manual") {
           print("Manual upload success!");
           importPhotos();
-        }
-        else {
+        } else {
           print("Auto upload success!");
           SharedPreferences prefs = await SharedPreferences.getInstance();
           List<String> alreadyUploadedPhotos =
@@ -216,7 +201,6 @@ class PhotoprismModel extends ChangeNotifier {
           prefs.setStringList("alreadyUploadedPhotos", alreadyUploadedPhotos);
           c.complete();
         }
-
       } else {
         print("Upload error!");
       }
@@ -323,6 +307,19 @@ class PhotoprismModel extends ChangeNotifier {
 
     if (status == 0) {
       await Albums.loadAlbums(this, photoprismUrl);
+    } else {
+      // error
+    }
+    hideLoadingScreen();
+  }
+
+  void importPhotos() async {
+    print("Importing photos");
+    updateLoadingScreen("Importing photos..");
+    var status = await Api.importPhotos(photoprismUrl);
+
+    if (status == 0) {
+      await Photos.loadPhotos(this, photoprismUrl, "");
     } else {
       // error
     }
