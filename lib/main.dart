@@ -127,13 +127,6 @@ class MainPage extends StatelessWidget {
                   },
                 ),
                 IconButton(
-                  icon: const Icon(Icons.add_photo_alternate),
-                  tooltip: 'Import photo',
-                  onPressed: () {
-                    Provider.of<PhotoprismModel>(context).importPhotos();
-                  },
-                ),
-                IconButton(
                   icon: const Icon(Icons.refresh),
                   tooltip: 'Refresh photos',
                   onPressed: () {
@@ -188,7 +181,7 @@ class MainPage extends StatelessWidget {
         method: UploadMethod.POST, // HTTP method  (POST or PUT or PATCH)
         showNotification:
             false, // send local notification (android only) for upload status
-        tag: "upload 1"); // unique tag for upload taskS
+        tag: "manual"); // unique tag for upload taskS
 
     print("end");
   }

@@ -134,7 +134,8 @@ class PhotoprismModel extends ChangeNotifier {
 
   void importPhotos() async {
     print("Importing photos");
-    showLoadingScreen("Importing photos..");
+    updateLoadingScreen("Importing photos..");
+    //showLoadingScreen("Importing photos..");
     var response =
         await http.post(photoprismUrl + "/api/v1/import/", body: "{}");
     print('Response status: ${response.statusCode}');
@@ -158,6 +159,10 @@ class PhotoprismModel extends ChangeNotifier {
     pr.style(message: message);
     pr.show();
     notifyListeners();
+  }
+
+  updateLoadingScreen(String message) {
+    pr.update(message: message);
   }
 
   hideLoadingScreen() {
@@ -192,20 +197,27 @@ class PhotoprismModel extends ChangeNotifier {
       print("Upload finished.");
       print(result.statusCode == 200);
       if (result.statusCode == 200) {
-        print("Upload success!");
-        SharedPreferences prefs = await SharedPreferences.getInstance();
-        List<String> alreadyUploadedPhotos =
-            prefs.getStringList("alreadyUploadedPhotos") ?? List<String>();
+        if (result.tag == "manual") {
+          print("Manual upload success!");
+          importPhotos();
+        }
+        else {
+          print("Auto upload success!");
+          SharedPreferences prefs = await SharedPreferences.getInstance();
+          List<String> alreadyUploadedPhotos =
+              prefs.getStringList("alreadyUploadedPhotos") ?? List<String>();
 
-        // add uploaded photos to shared pref
-        entries.forEach((e) {
-          if (!alreadyUploadedPhotos.contains(e.path)) {
-            alreadyUploadedPhotos.add(e.path);
-          }
-        });
+          // add uploaded photos to shared pref
+          entries.forEach((e) {
+            if (!alreadyUploadedPhotos.contains(e.path)) {
+              alreadyUploadedPhotos.add(e.path);
+            }
+          });
 
-        prefs.setStringList("alreadyUploadedPhotos", alreadyUploadedPhotos);
-        c.complete();
+          prefs.setStringList("alreadyUploadedPhotos", alreadyUploadedPhotos);
+          c.complete();
+        }
+
       } else {
         print("Upload error!");
       }
