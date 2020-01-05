@@ -59,7 +59,7 @@ class Settings extends StatelessWidget {
         ),
         ListTile(
           title: Text("Upload folder"),
-          subtitle: Text(photorismModel.autoUploadFolder),
+          subtitle: Text(photorismModel.photoprismUploader.autoUploadFolder),
           onTap: () {
             getUploadFolder(context);
           },
@@ -118,7 +118,7 @@ class Settings extends StatelessWidget {
 
   _settingsDisplayUploadFolderDialog(BuildContext context) async {
     var photorismModel = Provider.of<PhotoprismModel>(context);
-    _uploadFolderTextFieldController.text = photorismModel.autoUploadFolder;
+    _uploadFolderTextFieldController.text = photorismModel.photoprismUploader.autoUploadFolder;
 
     return showDialog(
         context: context,
@@ -164,7 +164,7 @@ class Settings extends StatelessWidget {
 
   void setNewUploadFolder(context, path) async {
     Navigator.of(context).pop();
-    await Provider.of<PhotoprismModel>(context).setUploadFolder(path);
+    await Provider.of<PhotoprismModel>(context).photoprismUploader.setUploadFolder(path);
   }
 
   void emptyCache() async {

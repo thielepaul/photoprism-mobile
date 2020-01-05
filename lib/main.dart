@@ -11,7 +11,6 @@ import 'package:provider/provider.dart';
 import 'package:photoprism/common/hexcolor.dart';
 import 'api/photos.dart';
 import 'model/photoprism_model.dart';
-import 'package:path/path.dart';
 // use this for debugging animations
 // import 'package:flutter/scheduler.dart' show timeDilation;
 
@@ -123,7 +122,9 @@ class MainPage extends StatelessWidget {
                   icon: const Icon(Icons.cloud_upload),
                   tooltip: 'Upload photo',
                   onPressed: () {
-                    uploadImage();
+                    Provider.of<PhotoprismModel>(context)
+                        .photoprismUploader
+                        .uploadImage();
                   },
                 ),
                 IconButton(
@@ -157,33 +158,6 @@ class MainPage extends StatelessWidget {
             HexColor(Provider.of<PhotoprismModel>(context).applicationColor),
       );
     }
-  }
-
-  uploadImage() async {
-    List<File> files = await FilePicker.getMultiFile();
-
-    List<FileItem> filesToUpload = [];
-
-    files.forEach((f) {
-      filesToUpload.add(FileItem(
-          filename: basename(f.path),
-          savedDir: dirname(f.path),
-          fieldname: "files"));
-    });
-
-    Provider.of<PhotoprismModel>(context)
-        .showLoadingScreen("Uploading photo(s)..");
-
-    final taskId = await Provider.of<PhotoprismModel>(context).uploader.enqueue(
-        url: Provider.of<PhotoprismModel>(context).photoprismUrl +
-            "/api/v1/upload/test", //required: url to upload to
-        files: filesToUpload, // required: list of files that you want to upload
-        method: UploadMethod.POST, // HTTP method  (POST or PUT or PATCH)
-        showNotification:
-            false, // send local notification (android only) for upload status
-        tag: "manual"); // unique tag for upload taskS
-
-    print("end");
   }
 
   _selectAlbumDialog(BuildContext context) {
