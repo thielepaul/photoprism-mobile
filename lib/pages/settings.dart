@@ -65,12 +65,13 @@ class Settings extends StatelessWidget {
           },
         ),
         ListTile(
-          title: Text(
-              "Warning: Auto upload is still under development. It only works under Android at this moment. Not fully working."),
+          title: Text("Auto upload last time active"),
+          subtitle:
+              Text(photorismModel.photoprismUploader.autoUploadLastTimeActive),
         ),
         ListTile(
           title: Text(
-              "Info: Auto upload will only upload photos to import folder in photoprism. Importing has to be done manually."),
+              "Warning: Auto upload is still under development. It only works under Android at this moment. Not fully working. Auto upload will only upload photos to import folder in photoprism. Importing has to be done manually."),
         ),
       ],
     );
@@ -118,7 +119,8 @@ class Settings extends StatelessWidget {
 
   _settingsDisplayUploadFolderDialog(BuildContext context) async {
     var photorismModel = Provider.of<PhotoprismModel>(context);
-    _uploadFolderTextFieldController.text = photorismModel.photoprismUploader.autoUploadFolder;
+    _uploadFolderTextFieldController.text =
+        photorismModel.photoprismUploader.autoUploadFolder;
 
     return showDialog(
         context: context,
@@ -164,7 +166,9 @@ class Settings extends StatelessWidget {
 
   void setNewUploadFolder(context, path) async {
     Navigator.of(context).pop();
-    await Provider.of<PhotoprismModel>(context).photoprismUploader.setUploadFolder(path);
+    await Provider.of<PhotoprismModel>(context)
+        .photoprismUploader
+        .setUploadFolder(path);
   }
 
   void emptyCache() async {

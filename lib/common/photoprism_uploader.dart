@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_uploader/flutter_uploader.dart';
+import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path/path.dart';
 import 'package:background_fetch/background_fetch.dart';
@@ -14,6 +15,7 @@ import '../model/photoprism_model.dart';
 class PhotoprismUploader {
   bool autoUploadEnabled = false;
   String autoUploadFolder = "/storage/emulated/0/DCIM/Camera";
+  String autoUploadLastTimeActive = "Never";
   PhotoprismModel photoprismModel;
   Completer uploadFinishedCompleter;
   FlutterUploader uploader;
@@ -76,11 +78,24 @@ class PhotoprismUploader {
     photoprismModel.notifyListeners();
   }
 
+  void setautoUploadLastTimeActive() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    // get time
+    DateTime now = DateTime.now();
+    String currentTime = DateFormat('dd.MM.yyyy – kk:mm').format(now);
+    print(currentTime.toString());
+    prefs.setString("autoUploadLastTimeActive", currentTime.toString());
+    autoUploadLastTimeActive = currentTime.toString();
+    photoprismModel.notifyListeners();
+  }
+
   void loadPreferences() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     autoUploadEnabled = prefs.getBool("autoUploadEnabled") ?? false;
     autoUploadFolder =
         prefs.getString("uploadFolder") ?? "/storage/emulated/0/DCIM/Camera";
+    autoUploadLastTimeActive =
+        prefs.getString("autoUploadLastTimeActive") ?? "Never";
     photoprismModel.notifyListeners();
   }
 
@@ -134,6 +149,7 @@ class PhotoprismUploader {
 
       if (autoUploadEnabled) {
         if (photoprismModel.photoprismUrl != "https://demo.photoprism.org") {
+          setautoUploadLastTimeActive();
           Directory dir = Directory(autoUploadFolder);
           entries = dir.listSync(recursive: false).toList();
 
@@ -149,6 +165,7 @@ class PhotoprismUploader {
               await uploadPhoto(entriesToUpload);
             }
           }
+          Api.importPhotos(photoprismModel.photoprismUrl);
           print("All new photos uploaded.");
         } else {
           print("Auto upload disabled for demo page!");

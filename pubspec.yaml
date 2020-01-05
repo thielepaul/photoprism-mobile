@@ -36,6 +36,7 @@ dependencies:
   progress_dialog: ^1.2.0
   file_picker: ^1.4.3+2
   background_fetch: ^0.4.0
+  intl: ^0.16.0
 
 dev_dependencies:
   flutter_test:
