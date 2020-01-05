@@ -6,7 +6,10 @@ import 'package:photoprism/model/photoprism_model.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../api/albums.dart';
+import '../api/photos.dart';
 import '../common/hexcolor.dart';
+import '../model/photoprism_model.dart';
 
 class Settings extends StatelessWidget {
   final TextEditingController _urlTextFieldController = TextEditingController();
@@ -39,7 +42,8 @@ class Settings extends StatelessWidget {
           value: Provider.of<PhotoprismModel>(context).autoUploadState,
           onChanged: (bool newState) async {
             final PermissionHandler _permissionHandler = PermissionHandler();
-            var result = await _permissionHandler.requestPermissions([PermissionGroup.storage]);
+            var result = await _permissionHandler
+                .requestPermissions([PermissionGroup.storage]);
 
             if (result[PermissionGroup.storage] == PermissionStatus.granted) {
               print(newState);
@@ -146,11 +150,12 @@ class Settings extends StatelessWidget {
 
   void setNewPhotoprismUrl(context, url) async {
     Navigator.of(context).pop();
-    await Provider.of<PhotoprismModel>(context).setPhotoprismUrl(url);
-    Provider.of<PhotoprismModel>(context).loadApplicationColor();
+    PhotoprismModel pmodel = Provider.of<PhotoprismModel>(context);
+    await pmodel.setPhotoprismUrl(url);
+    pmodel.loadApplicationColor();
     emptyCache();
-    //await refreshPhotosPull();
-    //await refreshAlbumsPull();
+    await Photos.loadPhotos(pmodel, pmodel.photoprismUrl, "");
+    await Albums.loadAlbums(pmodel, pmodel.photoprismUrl);
   }
 
   void setNewUploadFolder(context, path) async {
