@@ -146,12 +146,12 @@ class PhotoprismModel extends ChangeNotifier {
   }
 
   initialize() async {
+    photoprismUploader = new PhotoprismUploader(this);
     await loadPhotoprismUrl();
     await getUploadFolder();
     loadApplicationColor();
     Photos.loadPhotosFromNetworkOrCache(this, photoprismUrl, "");
     Albums.loadAlbumsFromNetworkOrCache(this, photoprismUrl);
-    photoprismUploader = new PhotoprismUploader(this);
     initPlatformState();
     gridController.addListener(notifyListeners);
     uploader = FlutterUploader();
