@@ -31,8 +31,8 @@ class PhotoprismModel extends ChangeNotifier {
   ProgressDialog pr;
   FlutterUploader uploader;
   List<FileSystemEntity> entries;
-  bool autoUploadState = false;
-  String uploadFolder = "/storage/emulated/0/DCIM/Camera";
+  bool autoUploadEnabled = false;
+  String autoUploadFolder = "/storage/emulated/0/DCIM/Camera";
   Completer c;
 
   PhotoprismModel() {
@@ -56,8 +56,8 @@ class PhotoprismModel extends ChangeNotifier {
       // This is the fetch-event callback.
       print('[BackgroundFetch] Event received');
 
-      if (autoUploadState) {
-        Directory dir = Directory(uploadFolder);
+      if (autoUploadEnabled) {
+        Directory dir = Directory(autoUploadFolder);
         entries = dir.listSync(recursive: false).toList();
 
         SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -86,20 +86,20 @@ class PhotoprismModel extends ChangeNotifier {
 
   void getAutoUploadState() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    autoUploadState = prefs.getBool("autoUploadEnabled") ?? false;
+    autoUploadEnabled = prefs.getBool("autoUploadEnabled") ?? false;
     notifyListeners();
   }
 
   void setAutoUpload(bool newState) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setBool("autoUploadEnabled", newState);
-    autoUploadState = newState;
+    autoUploadEnabled = newState;
     notifyListeners();
   }
 
   void getUploadFolder() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    uploadFolder =
+    autoUploadFolder =
         prefs.getString("uploadFolder") ?? "/storage/emulated/0/DCIM/Camera";
     notifyListeners();
   }
@@ -107,7 +107,7 @@ class PhotoprismModel extends ChangeNotifier {
   Future<void> setUploadFolder(folder) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setString("uploadFolder", folder);
-    uploadFolder = folder;
+    autoUploadFolder = folder;
     notifyListeners();
   }
 
