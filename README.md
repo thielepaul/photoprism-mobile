@@ -7,12 +7,12 @@
 - Photos and albums will be cached so they are available even without internet connection
 - Create, rename and delete albums
 - Add photos to albums
+- Manual photo upload (Not tested)
+- Automatic photo upload (only Android (not tested), iOS will be added soon)
 
 ## Planned Features
 - Delete photos
 - Remove photos from album
-- Manual photo upload
-- Automatic photo upload
 
 ## Installation
 ### Android
