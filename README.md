@@ -1,4 +1,4 @@
-# Photoprism App for iOS and Android
+# PhotoPrism App for iOS and Android
 
 ![alt text](assets/iphone_photo.png "iPhone App Photos View")
 
