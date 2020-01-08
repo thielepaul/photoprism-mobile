@@ -20,8 +20,9 @@ class Settings extends StatelessWidget {
   Widget build(BuildContext context) {
     var photorismModel = Provider.of<PhotoprismModel>(context);
 
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.start,
+    return Container(
+        //width: double.maxFinite,
+        child: ListView(
       children: <Widget>[
         ListTile(
           title: Text("Photoprism URL"),
@@ -74,7 +75,7 @@ class Settings extends StatelessWidget {
               "Warning: Auto upload is still under development. It only works under Android at this moment. Not fully working. Auto upload will only upload photos to import folder in photoprism. Importing has to be done manually."),
         ),
       ],
-    );
+    ));
   }
 
   void getUploadFolder(context) async {
