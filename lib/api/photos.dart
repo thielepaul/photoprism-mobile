@@ -122,51 +122,53 @@ class Photos extends StatelessWidget {
     if (Photos.getPhotoList(context, albumId) == null) {
       return Text("loading", key: ValueKey("photosGridView"));
     }
-    return DragSelectGridView(
-        key: ValueKey('photosGridView'),
-        scrollController: _scrollController,
-        gridController: gridController,
-        gridDelegate: new SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 3,
-          mainAxisSpacing: 4,
-          crossAxisSpacing: 4,
-        ),
-        itemCount: Photos.getPhotoList(context, albumId).length,
-        itemBuilder: (context, index, selected) {
-          return SelectableTile(
-              key: ValueKey("PhotoTile"),
-              index: index,
-              context: context,
-              gridController: gridController,
-              selected: selected,
-              onTap: () {
-                Provider.of<PhotoprismModel>(context)
-                    .setPhotoViewScaleState(PhotoViewScaleState.initial);
-                Navigator.push(
-                    context,
-                    TransparentRoute(
-                      builder: (context) =>
-                          FullscreenPhotoGallery(index, albumId),
-                    ));
-              },
-              child: Hero(
-                tag: index.toString(),
-                createRectTween: (begin, end) {
-                  return RectTween(begin: begin, end: end);
+    return OrientationBuilder(builder: (context, orientation) {
+      return DragSelectGridView(
+          key: ValueKey('photosGridView'),
+          scrollController: _scrollController,
+          gridController: gridController,
+          gridDelegate: new SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: orientation == Orientation.portrait ? 3 : 6,
+            mainAxisSpacing: 4,
+            crossAxisSpacing: 4,
+          ),
+          itemCount: Photos.getPhotoList(context, albumId).length,
+          itemBuilder: (context, index, selected) {
+            return SelectableTile(
+                key: ValueKey("PhotoTile"),
+                index: index,
+                context: context,
+                gridController: gridController,
+                selected: selected,
+                onTap: () {
+                  Provider.of<PhotoprismModel>(context)
+                      .setPhotoViewScaleState(PhotoViewScaleState.initial);
+                  Navigator.push(
+                      context,
+                      TransparentRoute(
+                        builder: (context) =>
+                            FullscreenPhotoGallery(index, albumId),
+                      ));
                 },
-                child: CachedNetworkImage(
-                  alignment: Alignment.center,
-                  fit: BoxFit.contain,
-                  imageUrl: photoprismUrl +
-                      '/api/v1/thumbnails/' +
-                      Photos.getPhotoList(context, albumId)[index].fileHash +
-                      '/tile_224',
-                  placeholder: (context, url) => Container(
-                    color: Colors.grey,
+                child: Hero(
+                  tag: index.toString(),
+                  createRectTween: (begin, end) {
+                    return RectTween(begin: begin, end: end);
+                  },
+                  child: CachedNetworkImage(
+                    alignment: Alignment.center,
+                    fit: BoxFit.contain,
+                    imageUrl: photoprismUrl +
+                        '/api/v1/thumbnails/' +
+                        Photos.getPhotoList(context, albumId)[index].fileHash +
+                        '/tile_224',
+                    placeholder: (context, url) => Container(
+                      color: Colors.grey,
+                    ),
+                    errorWidget: (context, url, error) => Icon(Icons.error),
                   ),
-                  errorWidget: (context, url, error) => Icon(Icons.error),
-                ),
-              ));
-        });
+                ));
+          });
+    });
   }
 }

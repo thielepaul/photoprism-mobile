@@ -66,49 +66,54 @@ class Albums extends StatelessWidget {
     if (Albums.getAlbumList(context) == null) {
       return Text("loading", key: ValueKey("albumsGridView"));
     }
-    return GridView.builder(
-        key: ValueKey('albumsGridView'),
-        gridDelegate: new SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          mainAxisSpacing: 10,
-          crossAxisSpacing: 10,
-        ),
-        padding: const EdgeInsets.all(10),
-        itemCount: Albums.getAlbumList(context).length,
-        itemBuilder: (context, index) {
-          return GestureDetector(
-              onTap: () {
-                print(Albums.getAlbumList(context)[index].photoList);
-                Photos.loadPhotosFromNetworkOrCache(
-                    Provider.of<PhotoprismModel>(context),
-                    photoprismUrl,
-                    Albums.getAlbumList(context)[index].id);
-                Photos.loadPhotos(
-                    Provider.of<PhotoprismModel>(context),
-                    Provider.of<PhotoprismModel>(context).photoprismUrl,
-                    Albums.getAlbumList(context)[index].id);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => AlbumView(context,
-                          Albums.getAlbumList(context)[index], photoprismUrl)),
-                );
-              },
-              child: GridTile(
-                child: CachedNetworkImage(
-                  imageUrl: getAlbumPreviewUrl(context, index),
-                  placeholder: (context, url) => Container(color: Colors.grey),
-                  errorWidget: (context, url, error) => Icon(Icons.error),
-                ),
-                footer: GestureDetector(
-                  child: GridTileBar(
-                    backgroundColor: Colors.black45,
-                    title: _GridTitleText(
-                        Albums.getAlbumList(context)[index].name),
+    return OrientationBuilder(builder: (context, orientation) {
+      return GridView.builder(
+          key: ValueKey('albumsGridView'),
+          gridDelegate: new SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: orientation == Orientation.portrait ? 2 : 4,
+            mainAxisSpacing: 10,
+            crossAxisSpacing: 10,
+          ),
+          padding: const EdgeInsets.all(10),
+          itemCount: Albums.getAlbumList(context).length,
+          itemBuilder: (context, index) {
+            return GestureDetector(
+                onTap: () {
+                  print(Albums.getAlbumList(context)[index].photoList);
+                  Photos.loadPhotosFromNetworkOrCache(
+                      Provider.of<PhotoprismModel>(context),
+                      photoprismUrl,
+                      Albums.getAlbumList(context)[index].id);
+                  Photos.loadPhotos(
+                      Provider.of<PhotoprismModel>(context),
+                      Provider.of<PhotoprismModel>(context).photoprismUrl,
+                      Albums.getAlbumList(context)[index].id);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => AlbumView(
+                            context,
+                            Albums.getAlbumList(context)[index],
+                            photoprismUrl)),
+                  );
+                },
+                child: GridTile(
+                  child: CachedNetworkImage(
+                    imageUrl: getAlbumPreviewUrl(context, index),
+                    placeholder: (context, url) =>
+                        Container(color: Colors.grey),
+                    errorWidget: (context, url, error) => Icon(Icons.error),
                   ),
-                ),
-              ));
-        });
+                  footer: GestureDetector(
+                    child: GridTileBar(
+                      backgroundColor: Colors.black45,
+                      title: _GridTitleText(
+                          Albums.getAlbumList(context)[index].name),
+                    ),
+                  ),
+                ));
+          });
+    });
   }
 }
 
