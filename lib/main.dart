@@ -1,3 +1,4 @@
+import 'package:drag_select_grid_view/drag_select_grid_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:photoprism/api/albums.dart';
@@ -75,12 +76,18 @@ class MainPage extends StatelessWidget {
     if (model.selectedPageIndex == 0) {
       return AppBar(
         title: model.gridController.selection.selectedIndexes.length > 0
-            ? Text("Selected " +
-                model.gridController.selection.selectedIndexes.length
-                    .toString() +
-                " photos")
+            ? Text(model.gridController.selection.selectedIndexes.length
+                .toString())
             : Text(title),
         backgroundColor: HexColor(model.applicationColor),
+        leading: model.gridController.selection.selectedIndexes.length > 0
+            ? IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () {
+                  model.gridController.selection = Selection({});
+                },
+              )
+            : null,
         actions: model.gridController.selection.selectedIndexes.length > 0
             ? <Widget>[
                 IconButton(
