@@ -16,7 +16,10 @@ jobs:
       - run: flutter format --dry-run --set-exit-if-changed lib
       - run: flutter pub get
       - run: flutter test --coverage
-      - run: flutter build apk --no-shrink
+      - env:
+          KEY_JKS: ${{ secrets.KEY_JKS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: echo "$KEY_JKS" | base64 -d > key.jks && flutter build apk --no-shrink
       - uses: actions/upload-artifact@v1
         with:
           name: photoprism-apk
