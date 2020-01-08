@@ -37,7 +37,8 @@ class MainPage extends StatelessWidget {
   final PageController _pageController;
   final BuildContext context;
 
-  MainPage(this.title, this.context) : _pageController = PageController(initialPage: 0);
+  MainPage(this.title, this.context)
+      : _pageController = PageController(initialPage: 0);
 
   void _onTappedNavigationBar(int index) {
     _pageController.jumpToPage(index);
@@ -73,59 +74,44 @@ class MainPage extends StatelessWidget {
 
     if (model.selectedPageIndex == 0) {
       return AppBar(
-        title: model
-            .gridController
-            .selection
-            .selectedIndexes
-            .length > 0
+        title: model.gridController.selection.selectedIndexes.length > 0
             ? Text("Selected " +
-            model
-                .gridController
-                .selection
-                .selectedIndexes
-                .length
-                .toString() +
-            " photos")
+                model.gridController.selection.selectedIndexes.length
+                    .toString() +
+                " photos")
             : Text(title),
         backgroundColor: HexColor(model.applicationColor),
-        actions: model
-            .gridController
-            .selection
-            .selectedIndexes
-            .length > 0
+        actions: model.gridController.selection.selectedIndexes.length > 0
             ? <Widget>[
-          IconButton(
-            icon: const Icon(Icons.add),
-            tooltip: 'Add to album',
-            onPressed: () {
-              _selectAlbumDialog(context);
-            },
-          ),
-        ]
+                IconButton(
+                  icon: const Icon(Icons.add),
+                  tooltip: 'Add to album',
+                  onPressed: () {
+                    _selectAlbumDialog(context);
+                  },
+                ),
+              ]
             : <Widget>[
-          IconButton(
-            icon: const Icon(Icons.cloud_upload),
-            tooltip: 'Upload photo',
-            onPressed: () {
-              model
-                  .photoprismUploader
-                  .startManualPhotoUpload();
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            tooltip: 'Refresh photos',
-            onPressed: () {
-              refreshPhotosPull();
-            },
-          )
-        ],
+                IconButton(
+                  icon: const Icon(Icons.cloud_upload),
+                  tooltip: 'Upload photo',
+                  onPressed: () {
+                    model.photoprismUploader.startManualPhotoUpload();
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.refresh),
+                  tooltip: 'Refresh photos',
+                  onPressed: () {
+                    refreshPhotosPull();
+                  },
+                )
+              ],
       );
     } else if (model.selectedPageIndex == 1) {
       return AppBar(
         title: Text(title),
-        backgroundColor:
-        HexColor(model.applicationColor),
+        backgroundColor: HexColor(model.applicationColor),
         actions: <Widget>[
           IconButton(
             icon: const Icon(Icons.add),
@@ -162,8 +148,8 @@ class MainPage extends StatelessWidget {
                         },
                         child: Card(
                             child: ListTile(
-                                title: Text(
-                                    Albums.getAlbumList(context)[index].name))));
+                                title: Text(Albums.getAlbumList(context)[index]
+                                    .name))));
                   }),
             ),
           );
@@ -176,11 +162,7 @@ class MainPage extends StatelessWidget {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
     List<String> selectedPhotos = [];
 
-    model
-        .gridController
-        .selection
-        .selectedIndexes
-        .forEach((element) {
+    model.gridController.selection.selectedIndexes.forEach((element) {
       selectedPhotos.add(Photos.getPhotoList(context, "")[element].photoUUID);
     });
 
@@ -207,8 +189,7 @@ class MainPage extends StatelessWidget {
                 onRefresh: refreshPhotosPull,
                 color: HexColor(model.applicationColor)),
             RefreshIndicator(
-                child: Albums(
-                    photoprismUrl: model.photoprismUrl),
+                child: Albums(photoprismUrl: model.photoprismUrl),
                 onRefresh: refreshAlbumsPull,
                 color: HexColor(model.applicationColor)),
             Settings(),

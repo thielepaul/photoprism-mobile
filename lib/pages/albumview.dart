@@ -10,7 +10,8 @@ class AlbumView extends StatelessWidget {
   final Album album;
   final String _albumTitle;
   final BuildContext context;
-  final TextEditingController _albumRenameTextFieldController = TextEditingController();
+  final TextEditingController _albumRenameTextFieldController =
+      TextEditingController();
 
   AlbumView(this.context, this.album, this.photoprismUrl)
       : _albumTitle = album.name;
@@ -49,7 +50,6 @@ class AlbumView extends StatelessWidget {
                   Navigator.pop(context);
 
                   Provider.of<PhotoprismModel>(context).deleteAlbum(album.id);
-
                 },
               )
             ],
@@ -86,8 +86,8 @@ class AlbumView extends StatelessWidget {
                   // close dialog
                   Navigator.pop(context);
 
-                  Provider.of<PhotoprismModel>(context).renameAlbum(album.id, album.name, _albumRenameTextFieldController.text);
-
+                  Provider.of<PhotoprismModel>(context).renameAlbum(album.id,
+                      album.name, _albumRenameTextFieldController.text);
 
                   // go back to albums
                   //Navigator.pop(context);
