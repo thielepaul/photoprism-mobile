@@ -1,10 +1,5 @@
-import 'dart:io';
-
-import 'package:background_fetch/background_fetch.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
-import 'package:flutter_uploader/flutter_uploader.dart';
 import 'package:photoprism/api/albums.dart';
 import 'package:photoprism/pages/settings.dart';
 import 'package:provider/provider.dart';
@@ -42,8 +37,7 @@ class MainPage extends StatelessWidget {
   final PageController _pageController;
   final BuildContext context;
 
-  MainPage(this.title, this.context)
-      : _pageController = PageController(initialPage: 0);
+  MainPage(this.title, this.context) : _pageController = PageController(initialPage: 0);
 
   void _onTappedNavigationBar(int index) {
     _pageController.jumpToPage(index);
@@ -57,96 +51,87 @@ class MainPage extends StatelessWidget {
   Future<void> refreshPhotosPull() async {
     print('refreshing photos..');
 
-    await Photos.loadPhotos(Provider.of<PhotoprismModel>(context),
-        Provider.of<PhotoprismModel>(context).photoprismUrl, "");
+    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
 
-    await Photos.loadPhotosFromNetworkOrCache(
-        Provider.of<PhotoprismModel>(context),
-        Provider.of<PhotoprismModel>(context).photoprismUrl,
-        "");
+    await Photos.loadPhotos(model, model.photoprismUrl, "");
+
+    await Photos.loadPhotosFromNetworkOrCache(model, model.photoprismUrl, "");
   }
 
   Future<void> refreshAlbumsPull() async {
     print('refreshing albums..');
 
-    await Albums.loadAlbums(Provider.of<PhotoprismModel>(context),
-        Provider.of<PhotoprismModel>(context).photoprismUrl);
+    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
 
-    await Albums.loadAlbumsFromNetworkOrCache(
-        Provider.of<PhotoprismModel>(context),
-        Provider.of<PhotoprismModel>(context).photoprismUrl);
+    await Albums.loadAlbums(model, model.photoprismUrl);
+
+    await Albums.loadAlbumsFromNetworkOrCache(model, model.photoprismUrl);
   }
 
   AppBar getAppBar(context) {
-    if (Provider.of<PhotoprismModel>(context).selectedPageIndex == 0) {
+    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
+
+    if (model.selectedPageIndex == 0) {
       return AppBar(
-        title: Provider.of<PhotoprismModel>(context)
-                    .gridController
-                    .selection
-                    .selectedIndexes
-                    .length >
-                0
+        title: model
+            .gridController
+            .selection
+            .selectedIndexes
+            .length > 0
             ? Text("Selected " +
-                Provider.of<PhotoprismModel>(context)
-                    .gridController
-                    .selection
-                    .selectedIndexes
-                    .length
-                    .toString() +
-                " photos")
+            model
+                .gridController
+                .selection
+                .selectedIndexes
+                .length
+                .toString() +
+            " photos")
             : Text(title),
-        backgroundColor:
-            HexColor(Provider.of<PhotoprismModel>(context).applicationColor),
-        actions: Provider.of<PhotoprismModel>(context)
-                    .gridController
-                    .selection
-                    .selectedIndexes
-                    .length >
-                0
+        backgroundColor: HexColor(model.applicationColor),
+        actions: model
+            .gridController
+            .selection
+            .selectedIndexes
+            .length > 0
             ? <Widget>[
-                IconButton(
-                  icon: const Icon(Icons.add),
-                  tooltip: 'Add to album',
-                  onPressed: () {
-                    //Provider.of<PhotoprismModel>(context).createAlbum();
-                    _selectAlbumDialog(context);
-                    print(Provider.of<PhotoprismModel>(context)
-                        .gridController
-                        .selection
-                        .selectedIndexes);
-                  },
-                ),
-              ]
+          IconButton(
+            icon: const Icon(Icons.add),
+            tooltip: 'Add to album',
+            onPressed: () {
+              _selectAlbumDialog(context);
+            },
+          ),
+        ]
             : <Widget>[
-                IconButton(
-                  icon: const Icon(Icons.cloud_upload),
-                  tooltip: 'Upload photo',
-                  onPressed: () {
-                    Provider.of<PhotoprismModel>(context)
-                        .photoprismUploader
-                        .startManualPhotoUpload();
-                  },
-                ),
-                IconButton(
-                  icon: const Icon(Icons.refresh),
-                  tooltip: 'Refresh photos',
-                  onPressed: () {
-                    refreshPhotosPull();
-                  },
-                )
-              ],
+          IconButton(
+            icon: const Icon(Icons.cloud_upload),
+            tooltip: 'Upload photo',
+            onPressed: () {
+              model
+                  .photoprismUploader
+                  .startManualPhotoUpload();
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            tooltip: 'Refresh photos',
+            onPressed: () {
+              refreshPhotosPull();
+            },
+          )
+        ],
       );
-    } else if (Provider.of<PhotoprismModel>(context).selectedPageIndex == 1) {
+    } else if (model.selectedPageIndex == 1) {
       return AppBar(
         title: Text(title),
         backgroundColor:
-            HexColor(Provider.of<PhotoprismModel>(context).applicationColor),
+        HexColor(model.applicationColor),
         actions: <Widget>[
           IconButton(
             icon: const Icon(Icons.add),
             tooltip: 'Create album',
             onPressed: () {
-              Provider.of<PhotoprismModel>(context).createAlbum();
+              model.createAlbum();
             },
           ),
         ],
@@ -154,8 +139,7 @@ class MainPage extends StatelessWidget {
     } else {
       return AppBar(
         title: Text(title),
-        backgroundColor:
-            HexColor(Provider.of<PhotoprismModel>(context).applicationColor),
+        backgroundColor: HexColor(model.applicationColor),
       );
     }
   }
@@ -166,19 +150,22 @@ class MainPage extends StatelessWidget {
         builder: (context) {
           return AlertDialog(
             title: Text('Select album'),
-            content: ListView.builder(
-                itemCount: Albums.getAlbumList(context).length,
-                itemBuilder: (BuildContext ctxt, int index) {
-                  return GestureDetector(
-                      onTap: () {
-                        addPhotosToAlbum(
-                            Albums.getAlbumList(context)[index].id, context);
-                      },
-                      child: Card(
-                          child: ListTile(
-                              title: Text(
-                                  Albums.getAlbumList(context)[index].name))));
-                }),
+            content: Container(
+              width: double.maxFinite,
+              child: ListView.builder(
+                  itemCount: Albums.getAlbumList(context).length,
+                  itemBuilder: (BuildContext ctxt, int index) {
+                    return GestureDetector(
+                        onTap: () {
+                          addPhotosToAlbum(
+                              Albums.getAlbumList(context)[index].id, context);
+                        },
+                        child: Card(
+                            child: ListTile(
+                                title: Text(
+                                    Albums.getAlbumList(context)[index].name))));
+                  }),
+            ),
           );
         });
   }
@@ -186,9 +173,10 @@ class MainPage extends StatelessWidget {
   addPhotosToAlbum(albumId, context) async {
     Navigator.pop(context);
 
+    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
     List<String> selectedPhotos = [];
 
-    Provider.of<PhotoprismModel>(context)
+    model
         .gridController
         .selection
         .selectedIndexes
@@ -196,16 +184,15 @@ class MainPage extends StatelessWidget {
       selectedPhotos.add(Photos.getPhotoList(context, "")[element].photoUUID);
     });
 
-    Provider.of<PhotoprismModel>(context).gridController.clear();
-    await Provider.of<PhotoprismModel>(context)
-        .addPhotosToAlbum(albumId, selectedPhotos);
+    model.gridController.clear();
+    await model.addPhotosToAlbum(albumId, selectedPhotos);
   }
 
   @override
   Widget build(BuildContext context) {
-    final PhotoprismModel photorismModel =
-        Provider.of<PhotoprismModel>(context);
-    photorismModel.context = context;
+    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
+    model.context = context;
+
     return Scaffold(
       appBar: getAppBar(context),
       body: PageView(
@@ -215,17 +202,15 @@ class MainPage extends StatelessWidget {
             RefreshIndicator(
                 child: Photos(
                     context: context,
-                    photoprismUrl:
-                        Provider.of<PhotoprismModel>(context).photoprismUrl,
+                    photoprismUrl: model.photoprismUrl,
                     albumId: ""),
                 onRefresh: refreshPhotosPull,
-                color: HexColor(photorismModel.applicationColor)),
+                color: HexColor(model.applicationColor)),
             RefreshIndicator(
                 child: Albums(
-                    photoprismUrl:
-                        Provider.of<PhotoprismModel>(context).photoprismUrl),
+                    photoprismUrl: model.photoprismUrl),
                 onRefresh: refreshAlbumsPull,
-                color: HexColor(photorismModel.applicationColor)),
+                color: HexColor(model.applicationColor)),
             Settings(),
           ]),
       bottomNavigationBar: BottomNavigationBar(
@@ -243,9 +228,8 @@ class MainPage extends StatelessWidget {
             title: Text('Settings'),
           ),
         ],
-        currentIndex: Provider.of<PhotoprismModel>(context).selectedPageIndex,
-        selectedItemColor:
-            HexColor(Provider.of<PhotoprismModel>(context).applicationColor),
+        currentIndex: model.selectedPageIndex,
+        selectedItemColor: HexColor(model.applicationColor),
         onTap: _onTappedNavigationBar,
       ),
     );
