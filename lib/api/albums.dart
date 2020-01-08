@@ -53,8 +53,7 @@ class Albums extends StatelessWidget {
   String getAlbumPreviewUrl(context, index) {
     if (Albums.getAlbumList(context)[index].imageCount <= 0) {
       return "https://raw.githubusercontent.com/photoprism/photoprism-mobile/master/assets/emptyAlbum.jpg";
-    }
-    else {
+    } else {
       return photoprismUrl +
           '/api/v1/albums/' +
           Albums.getAlbumList(context)[index].id +
@@ -84,8 +83,10 @@ class Albums extends StatelessWidget {
                     Provider.of<PhotoprismModel>(context),
                     photoprismUrl,
                     Albums.getAlbumList(context)[index].id);
-                Photos.loadPhotos(Provider.of<PhotoprismModel>(context),
-                    Provider.of<PhotoprismModel>(context).photoprismUrl, Albums.getAlbumList(context)[index].id);
+                Photos.loadPhotos(
+                    Provider.of<PhotoprismModel>(context),
+                    Provider.of<PhotoprismModel>(context).photoprismUrl,
+                    Albums.getAlbumList(context)[index].id);
                 Navigator.push(
                   context,
                   MaterialPageRoute(

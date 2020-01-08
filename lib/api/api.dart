@@ -80,7 +80,8 @@ class Api {
 
   static Future<int> importPhotos(String photoprismUrl) async {
     try {
-      http.Response response = await http.post(photoprismUrl + "/api/v1/import/", body: "{}");
+      http.Response response =
+          await http.post(photoprismUrl + "/api/v1/import/", body: "{}");
       if (response.statusCode == 200) {
         return 0;
       } else {
