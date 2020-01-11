@@ -55,6 +55,8 @@ class PhotoprismAlbumManager {
 
     if (status == 0) {
       await Albums.loadAlbums(photoprismModel, photoprismModel.photoprismUrl);
+      //photoprismModel.photoprismMessage
+      //.showMessage("Album deleted successfully.");
     } else {
       // error
     }

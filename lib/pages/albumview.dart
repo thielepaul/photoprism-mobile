@@ -49,7 +49,9 @@ class AlbumView extends StatelessWidget {
                   // go back to albums
                   Navigator.pop(context);
 
-                  Provider.of<PhotoprismModel>(context).photoprismAlbumManager.deleteAlbum(album.id);
+                  Provider.of<PhotoprismModel>(context)
+                      .photoprismAlbumManager
+                      .deleteAlbum(album.id);
                 },
               )
             ],
@@ -69,25 +71,30 @@ class AlbumView extends StatelessWidget {
             content: TextField(
               key: ValueKey("photoprismUrlTextField"),
               controller: _albumRenameTextFieldController,
-              cursorColor: HexColor(photorismModel.photoprismConfig.applicationColor),
+              cursorColor:
+                  HexColor(photorismModel.photoprismConfig.applicationColor),
             ),
             actions: <Widget>[
               FlatButton(
                 child: Text('Cancel'),
-                textColor: HexColor(photorismModel.photoprismConfig.applicationColor),
+                textColor:
+                    HexColor(photorismModel.photoprismConfig.applicationColor),
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
               ),
               FlatButton(
                 child: Text('Save'),
-                textColor: HexColor(photorismModel.photoprismConfig.applicationColor),
+                textColor:
+                    HexColor(photorismModel.photoprismConfig.applicationColor),
                 onPressed: () {
                   // close dialog
                   Navigator.pop(context);
 
-                  Provider.of<PhotoprismModel>(context).photoprismAlbumManager.renameAlbum(album.id,
-                      album.name, _albumRenameTextFieldController.text);
+                  Provider.of<PhotoprismModel>(context)
+                      .photoprismAlbumManager
+                      .renameAlbum(album.id, album.name,
+                          _albumRenameTextFieldController.text);
 
                   // go back to albums
                   //Navigator.pop(context);
@@ -119,8 +126,9 @@ class AlbumView extends StatelessWidget {
             ],
           ),
         ],
-        backgroundColor:
-            HexColor(Provider.of<PhotoprismModel>(context).photoprismConfig.applicationColor),
+        backgroundColor: HexColor(Provider.of<PhotoprismModel>(context)
+            .photoprismConfig
+            .applicationColor),
       ),
       body: Photos(
           context: context, photoprismUrl: photoprismUrl, albumId: album.id),

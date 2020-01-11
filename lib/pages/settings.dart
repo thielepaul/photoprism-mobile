@@ -94,21 +94,24 @@ class Settings extends StatelessWidget {
             content: TextField(
               key: ValueKey("photoprismUrlTextField"),
               controller: _urlTextFieldController,
-              cursorColor: HexColor(photorismModel.photoprismConfig.applicationColor),
+              cursorColor:
+                  HexColor(photorismModel.photoprismConfig.applicationColor),
               decoration:
                   InputDecoration(hintText: "https://demo.photoprism.org"),
             ),
             actions: <Widget>[
               FlatButton(
                 child: Text('Cancel'),
-                textColor: HexColor(photorismModel.photoprismConfig.applicationColor),
+                textColor:
+                    HexColor(photorismModel.photoprismConfig.applicationColor),
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
               ),
               FlatButton(
                 child: Text('Save'),
-                textColor: HexColor(photorismModel.photoprismConfig.applicationColor),
+                textColor:
+                    HexColor(photorismModel.photoprismConfig.applicationColor),
                 onPressed: () {
                   setNewPhotoprismUrl(context, _urlTextFieldController.text);
                 },
@@ -130,21 +133,24 @@ class Settings extends StatelessWidget {
             title: Text('Enter upload folder path'),
             content: TextField(
               controller: _uploadFolderTextFieldController,
-              cursorColor: HexColor(photorismModel.photoprismConfig.applicationColor),
+              cursorColor:
+                  HexColor(photorismModel.photoprismConfig.applicationColor),
               decoration:
                   InputDecoration(hintText: "/storage/emulated/0/DCIM/Camera"),
             ),
             actions: <Widget>[
               FlatButton(
                 child: Text('Cancel'),
-                textColor: HexColor(photorismModel.photoprismConfig.applicationColor),
+                textColor:
+                    HexColor(photorismModel.photoprismConfig.applicationColor),
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
               ),
               FlatButton(
                 child: Text('Save'),
-                textColor: HexColor(photorismModel.photoprismConfig.applicationColor),
+                textColor:
+                    HexColor(photorismModel.photoprismConfig.applicationColor),
                 onPressed: () {
                   setNewUploadFolder(
                       context, _uploadFolderTextFieldController.text);
