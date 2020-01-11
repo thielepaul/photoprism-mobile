@@ -174,7 +174,8 @@ class MainPage extends StatelessWidget {
     });
 
     model.gridController.clear();
-    await model.photoprismAlbumManager.addPhotosToAlbum(albumId, selectedPhotos);
+    await model.photoprismAlbumManager
+        .addPhotosToAlbum(albumId, selectedPhotos);
   }
 
   @override
