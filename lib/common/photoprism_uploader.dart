@@ -119,9 +119,9 @@ class PhotoprismUploader {
       });
 
       if (files.length > 1) {
-        photoprismModel.showLoadingScreen("Uploading photos..");
+        photoprismModel.photoprismLoadingScreen.showLoadingScreen("Uploading photos..");
       } else {
-        photoprismModel.showLoadingScreen("Uploading photo..");
+        photoprismModel.photoprismLoadingScreen.showLoadingScreen("Uploading photo..");
       }
 
       await uploader.enqueue(
@@ -183,7 +183,7 @@ class PhotoprismUploader {
 
   void importPhotos() async {
     print("Importing photos");
-    photoprismModel.updateLoadingScreen("Importing photos..");
+    photoprismModel.photoprismLoadingScreen.updateLoadingScreen("Importing photos..");
     var status = await Api.importPhotos(photoprismModel.photoprismUrl);
 
     if (status == 0) {
@@ -192,7 +192,7 @@ class PhotoprismUploader {
     } else {
       // error
     }
-    photoprismModel.hideLoadingScreen();
+    photoprismModel.photoprismLoadingScreen.hideLoadingScreen();
   }
 
   Future uploadPhoto(List<FileSystemEntity> files) async {

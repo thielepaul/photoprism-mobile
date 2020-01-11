@@ -105,7 +105,7 @@ class _AnimatedSelectableTile extends AnimatedWidget {
         child: new Icon(
           Icons.check_circle,
           color:
-              HexColor(Provider.of<PhotoprismModel>(context).applicationColor),
+              HexColor(Provider.of<PhotoprismModel>(context).photoprismConfig.applicationColor),
         ),
       );
     } else if (Provider.of<PhotoprismModel>(context)
@@ -118,7 +118,7 @@ class _AnimatedSelectableTile extends AnimatedWidget {
         child: new Icon(
           Icons.radio_button_unchecked,
           color:
-              HexColor(Provider.of<PhotoprismModel>(context).applicationColor),
+              HexColor(Provider.of<PhotoprismModel>(context).photoprismConfig.applicationColor),
         ),
       );
     }
