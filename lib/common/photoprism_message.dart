@@ -8,7 +8,8 @@ class PhotoprismMessage {
   }
 
   void showMessage(String message) {
-    final snackBar = SnackBar(content: Text(message));
+    final snackBar =
+        SnackBar(content: Text(message), duration: const Duration(minutes: 5));
     photoprismModel.scaffoldKey.currentState.showSnackBar(snackBar);
   }
 }
