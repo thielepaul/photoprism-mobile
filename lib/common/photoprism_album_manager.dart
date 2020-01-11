@@ -12,7 +12,8 @@ class PhotoprismAlbumManager {
 
   void createAlbum() async {
     print("Creating new album");
-    photoprismModel.photoprismLoadingScreen.showLoadingScreen("Creating new album..");
+    photoprismModel.photoprismLoadingScreen
+        .showLoadingScreen("Creating new album..");
     var status =
         await Api.createAlbum('New album', photoprismModel.photoprismUrl);
 
@@ -28,7 +29,8 @@ class PhotoprismAlbumManager {
       String albumId, String oldAlbumName, String newAlbumName) async {
     if (oldAlbumName != newAlbumName) {
       print("Renaming album " + oldAlbumName + " to " + newAlbumName);
-      photoprismModel.photoprismLoadingScreen.showLoadingScreen("Renaming album..");
+      photoprismModel.photoprismLoadingScreen
+          .showLoadingScreen("Renaming album..");
       var status = await Api.renameAlbum(
           albumId, newAlbumName, photoprismModel.photoprismUrl);
 
@@ -47,7 +49,8 @@ class PhotoprismAlbumManager {
 
   void deleteAlbum(String albumId) async {
     print("Deleting album " + albumId);
-    photoprismModel.photoprismLoadingScreen.showLoadingScreen("Deleting album..");
+    photoprismModel.photoprismLoadingScreen
+        .showLoadingScreen("Deleting album..");
     var status = await Api.deleteAlbum(albumId, photoprismModel.photoprismUrl);
 
     if (status == 0) {
@@ -60,7 +63,8 @@ class PhotoprismAlbumManager {
 
   void addPhotosToAlbum(albumId, List<String> photoUUIDs) async {
     print("Adding photos to album " + albumId);
-    photoprismModel.photoprismLoadingScreen.showLoadingScreen("Adding photos to album..");
+    photoprismModel.photoprismLoadingScreen
+        .showLoadingScreen("Adding photos to album..");
     var status = await Api.addPhotosToAlbum(
         albumId, photoUUIDs, photoprismModel.photoprismUrl);
 

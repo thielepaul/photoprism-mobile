@@ -9,6 +9,7 @@ import 'package:photoprism/api/photos.dart';
 import 'package:photoprism/common/photoprism_album_manager.dart';
 import 'package:photoprism/common/photoprism_config.dart';
 import 'package:photoprism/common/photoprism_loading_screen.dart';
+import 'package:photoprism/common/photoprism_message.dart';
 import 'package:photoprism/common/photoprism_photo_manager.dart';
 import 'package:photoprism/common/photoprism_settings_manager.dart';
 import 'package:photoprism/common/photoprism_uploader.dart';
@@ -31,6 +32,8 @@ class PhotoprismModel extends ChangeNotifier {
   PhotoprismPhotoManager photoprismPhotoManager;
   PhotoprismAlbumManager photoprismAlbumManager;
   PhotoprismLoadingScreen photoprismLoadingScreen;
+  PhotoprismMessage photoprismMessage;
+
 
   PhotoprismModel() {
     initialize();
@@ -53,6 +56,7 @@ class PhotoprismModel extends ChangeNotifier {
     photoprismPhotoManager = new PhotoprismPhotoManager(this);
     photoprismAlbumManager = new PhotoprismAlbumManager(this);
     photoprismLoadingScreen = new PhotoprismLoadingScreen(this);
+    photoprismMessage = new PhotoprismMessage(this);
 
     await photoprismSettingsManager.loadPhotoprismUrl();
     photoprismConfig.loadApplicationColor();
