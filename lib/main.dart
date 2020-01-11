@@ -185,6 +185,7 @@ class MainPage extends StatelessWidget {
 
     return Scaffold(
       appBar: getAppBar(context),
+      key: model.scaffoldKey,
       body: PageView(
           physics: NeverScrollableScrollPhysics(),
           controller: _pageController,

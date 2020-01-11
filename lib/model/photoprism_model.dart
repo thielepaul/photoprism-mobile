@@ -25,6 +25,7 @@ class PhotoprismModel extends ChangeNotifier {
   int selectedPageIndex = 0;
   DragSelectGridViewController gridController = DragSelectGridViewController();
   PhotoViewScaleState photoViewScaleState = PhotoViewScaleState.initial;
+  final GlobalKey<ScaffoldState> scaffoldKey = new GlobalKey<ScaffoldState>();
 
   PhotoprismUploader photoprismUploader;
   PhotoprismConfig photoprismConfig;
