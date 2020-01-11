@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:photoprism/model/photoprism_model.dart';
 
 class PhotoprismMessage {
@@ -7,6 +8,8 @@ class PhotoprismMessage {
   }
 
   void showMessage(String message) {
-
+    final snackBar = SnackBar(content: Text('Test Snack Bar!'));
+    Scaffold.of(photoprismModel.photoprismLoadingScreen.context)
+        .showSnackBar(snackBar);
   }
 }
