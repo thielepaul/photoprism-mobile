@@ -5,4 +5,8 @@ class PhotoprismMessage {
   PhotoprismMessage(PhotoprismModel photoprismModel) {
     this.photoprismModel = photoprismModel;
   }
+
+  void showMessage(String message) {
+
+  }
 }

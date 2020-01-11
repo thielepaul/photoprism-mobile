@@ -34,7 +34,6 @@ class PhotoprismModel extends ChangeNotifier {
   PhotoprismLoadingScreen photoprismLoadingScreen;
   PhotoprismMessage photoprismMessage;
 
-
   PhotoprismModel() {
     initialize();
   }
