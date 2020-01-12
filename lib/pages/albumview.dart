@@ -71,22 +71,19 @@ class AlbumView extends StatelessWidget {
             content: TextField(
               key: ValueKey("photoprismUrlTextField"),
               controller: _albumRenameTextFieldController,
-              cursorColor:
-                  HexColor(photorismModel.photoprismConfig.applicationColor),
+              cursorColor: HexColor(photorismModel.applicationColor),
             ),
             actions: <Widget>[
               FlatButton(
                 child: Text('Cancel'),
-                textColor:
-                    HexColor(photorismModel.photoprismConfig.applicationColor),
+                textColor: HexColor(photorismModel.applicationColor),
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
               ),
               FlatButton(
                 child: Text('Save'),
-                textColor:
-                    HexColor(photorismModel.photoprismConfig.applicationColor),
+                textColor: HexColor(photorismModel.applicationColor),
                 onPressed: () {
                   // close dialog
                   Navigator.pop(context);
@@ -126,9 +123,8 @@ class AlbumView extends StatelessWidget {
             ],
           ),
         ],
-        backgroundColor: HexColor(Provider.of<PhotoprismModel>(context)
-            .photoprismConfig
-            .applicationColor),
+        backgroundColor:
+            HexColor(Provider.of<PhotoprismModel>(context).applicationColor),
       ),
       body: Photos(
           context: context, photoprismUrl: photoprismUrl, albumId: album.id),

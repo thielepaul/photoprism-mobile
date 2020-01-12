@@ -5,11 +5,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/services.dart' show rootBundle;
 
-class PhotoprismConfig {
+class PhotoprismRemoteConfigLoader {
   PhotoprismModel photoprismModel;
-  String applicationColor = "#424242";
 
-  PhotoprismConfig(PhotoprismModel photoprismModel) {
+  PhotoprismRemoteConfigLoader(PhotoprismModel photoprismModel) {
     this.photoprismModel = photoprismModel;
   }
 
@@ -19,7 +18,7 @@ class PhotoprismConfig {
     String applicationColor = prefs.getString("applicationColor");
     if (applicationColor != null) {
       print("loading color scheme from cache");
-      this.applicationColor = applicationColor;
+      photoprismModel.applicationColor = applicationColor;
       photoprismModel.notifyListeners();
     }
 
@@ -37,10 +36,10 @@ class PhotoprismConfig {
 
         final currentTheme = parsedThemes[themeSetting];
 
-        this.applicationColor = currentTheme["navigation"];
+        photoprismModel.applicationColor = currentTheme["navigation"];
 
         // save new color scheme to shared preferences
-        prefs.setString("applicationColor", this.applicationColor);
+        prefs.setString("applicationColor", photoprismModel.applicationColor);
         photoprismModel.notifyListeners();
       } catch (_) {
         print("Could not parse color scheme!");

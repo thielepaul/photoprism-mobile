@@ -79,7 +79,7 @@ class MainPage extends StatelessWidget {
             ? Text(model.gridController.selection.selectedIndexes.length
                 .toString())
             : Text(title),
-        backgroundColor: HexColor(model.photoprismConfig.applicationColor),
+        backgroundColor: HexColor(model.applicationColor),
         leading: model.gridController.selection.selectedIndexes.length > 0
             ? IconButton(
                 icon: const Icon(Icons.close),
@@ -118,7 +118,7 @@ class MainPage extends StatelessWidget {
     } else if (model.selectedPageIndex == 1) {
       return AppBar(
         title: Text(title),
-        backgroundColor: HexColor(model.photoprismConfig.applicationColor),
+        backgroundColor: HexColor(model.applicationColor),
         actions: <Widget>[
           IconButton(
             icon: const Icon(Icons.add),
@@ -132,7 +132,7 @@ class MainPage extends StatelessWidget {
     } else {
       return AppBar(
         title: Text(title),
-        backgroundColor: HexColor(model.photoprismConfig.applicationColor),
+        backgroundColor: HexColor(model.applicationColor),
       );
     }
   }
@@ -185,7 +185,6 @@ class MainPage extends StatelessWidget {
 
     return Scaffold(
       appBar: getAppBar(context),
-      key: model.scaffoldKey,
       body: PageView(
           physics: NeverScrollableScrollPhysics(),
           controller: _pageController,
@@ -196,11 +195,11 @@ class MainPage extends StatelessWidget {
                     photoprismUrl: model.photoprismUrl,
                     albumId: ""),
                 onRefresh: refreshPhotosPull,
-                color: HexColor(model.photoprismConfig.applicationColor)),
+                color: HexColor(model.applicationColor)),
             RefreshIndicator(
                 child: Albums(photoprismUrl: model.photoprismUrl),
                 onRefresh: refreshAlbumsPull,
-                color: HexColor(model.photoprismConfig.applicationColor)),
+                color: HexColor(model.applicationColor)),
             Settings(),
           ]),
       bottomNavigationBar: BottomNavigationBar(
@@ -219,7 +218,7 @@ class MainPage extends StatelessWidget {
           ),
         ],
         currentIndex: model.selectedPageIndex,
-        selectedItemColor: HexColor(model.photoprismConfig.applicationColor),
+        selectedItemColor: HexColor(model.applicationColor),
         onTap: _onTappedNavigationBar,
       ),
     );

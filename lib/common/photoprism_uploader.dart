@@ -13,9 +13,6 @@ import '../api/photos.dart';
 import '../model/photoprism_model.dart';
 
 class PhotoprismUploader {
-  bool autoUploadEnabled = false;
-  String autoUploadFolder = "/storage/emulated/0/DCIM/Camera";
-  String autoUploadLastTimeActive = "Never";
   PhotoprismModel photoprismModel;
   Completer uploadFinishedCompleter;
   FlutterUploader uploader;
@@ -74,7 +71,7 @@ class PhotoprismUploader {
   void setAutoUpload(bool autoUploadEnabledNew) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setBool("autoUploadEnabled", autoUploadEnabledNew);
-    autoUploadEnabled = autoUploadEnabledNew;
+    photoprismModel.autoUploadEnabled = autoUploadEnabledNew;
     photoprismModel.notifyListeners();
   }
 
@@ -85,16 +82,17 @@ class PhotoprismUploader {
     String currentTime = DateFormat('dd.MM.yyyy – kk:mm').format(now);
     print(currentTime.toString());
     prefs.setString("autoUploadLastTimeActive", currentTime.toString());
-    autoUploadLastTimeActive = currentTime.toString();
+    photoprismModel.autoUploadLastTimeActive = currentTime.toString();
     photoprismModel.notifyListeners();
   }
 
   void loadPreferences() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    autoUploadEnabled = prefs.getBool("autoUploadEnabled") ?? false;
-    autoUploadFolder =
+    photoprismModel.autoUploadEnabled =
+        prefs.getBool("autoUploadEnabled") ?? false;
+    photoprismModel.autoUploadFolder =
         prefs.getString("uploadFolder") ?? "/storage/emulated/0/DCIM/Camera";
-    autoUploadLastTimeActive =
+    photoprismModel.autoUploadLastTimeActive =
         prefs.getString("autoUploadLastTimeActive") ?? "Never";
     photoprismModel.notifyListeners();
   }
@@ -102,7 +100,7 @@ class PhotoprismUploader {
   Future<void> setUploadFolder(autoUploadFolderNew) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setString("uploadFolder", autoUploadFolderNew);
-    autoUploadFolder = autoUploadFolderNew;
+    photoprismModel.autoUploadFolder = autoUploadFolderNew;
     photoprismModel.notifyListeners();
   }
 
@@ -149,10 +147,10 @@ class PhotoprismUploader {
         () async {
       print('[BackgroundFetch] Event received');
 
-      if (autoUploadEnabled) {
+      if (photoprismModel.autoUploadEnabled) {
         if (photoprismModel.photoprismUrl != "https://demo.photoprism.org") {
           setautoUploadLastTimeActive();
-          Directory dir = Directory(autoUploadFolder);
+          Directory dir = Directory(photoprismModel.autoUploadFolder);
           entries = dir.listSync(recursive: false).toList();
 
           SharedPreferences prefs = await SharedPreferences.getInstance();

@@ -34,9 +34,9 @@ class Photos extends StatelessWidget {
       List<Photo> photoList =
           parsed.map<Photo>((json) => Photo.fromJson(json)).toList();
       if (albumId == "") {
-        model.setPhotoList(photoList);
+        model.photoprismPhotoManager.setPhotoList(photoList);
       } else {
-        model.setPhotoListOfAlbum(photoList, albumId);
+        model.photoprismAlbumManager.setPhotoListOfAlbum(photoList, albumId);
       }
       return;
     }
@@ -69,9 +69,9 @@ class Photos extends StatelessWidget {
         .addAll(parsed.map<Photo>((json) => Photo.fromJson(json)).toList());
 
     if (albumId == "") {
-      model.setPhotoList(photoList);
+      model.photoprismPhotoManager.setPhotoList(photoList);
     } else {
-      model.setPhotoListOfAlbum(photoList, albumId);
+      model.photoprismAlbumManager.setPhotoListOfAlbum(photoList, albumId);
     }
     model.isLoading = false;
   }
@@ -88,9 +88,9 @@ class Photos extends StatelessWidget {
         parsed.map<Photo>((json) => Photo.fromJson(json)).toList();
 
     if (albumId == "") {
-      model.setPhotoList(photoList);
+      model.photoprismPhotoManager.setPhotoList(photoList);
     } else {
-      model.setPhotoListOfAlbum(photoList, albumId);
+      model.photoprismAlbumManager.setPhotoListOfAlbum(photoList, albumId);
     }
   }
 

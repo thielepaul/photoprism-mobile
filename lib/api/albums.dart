@@ -24,7 +24,7 @@ class Albums extends StatelessWidget {
           json.decode(sp.getString(key)).cast<Map<String, dynamic>>();
       List<Album> albumList =
           parsed.map<Album>((json) => Album.fromJson(json)).toList();
-      model.setAlbumList(albumList);
+      model.photoprismAlbumManager.setAlbumList(albumList);
       return;
     }
     await loadAlbums(model, photoprismUrl);
@@ -38,7 +38,7 @@ class Albums extends StatelessWidget {
     List<Album> albumList =
         parsed.map<Album>((json) => Album.fromJson(json)).toList();
 
-    model.setAlbumList(albumList);
+    model.photoprismAlbumManager.setAlbumList(albumList);
   }
 
   static List<Album> getAlbumList(context) {
