@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:drag_select_grid_view/drag_select_grid_view.dart';
 import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
@@ -49,16 +47,6 @@ class PhotoprismModel extends ChangeNotifier {
     initialize();
   }
 
-  DragSelectGridViewController getGridController() {
-    try {
-      gridController.hasListeners;
-    } catch (_) {
-      gridController = DragSelectGridViewController();
-      gridController.addListener(notifyListeners);
-    }
-    return gridController;
-  }
-
   initialize() async {
     photoprismUploader = new PhotoprismUploader(this);
     photoprismRemoteConfigLoader = new PhotoprismRemoteConfigLoader(this);
@@ -73,21 +61,5 @@ class PhotoprismModel extends ChangeNotifier {
     Photos.loadPhotosFromNetworkOrCache(this, photoprismUrl, "");
     Albums.loadAlbumsFromNetworkOrCache(this, photoprismUrl);
     gridController.addListener(notifyListeners);
-  }
-
-  void setSelectedPageIndex(int index) {
-    selectedPageIndex = index;
-    notifyListeners();
-  }
-
-  Future<void> setPhotoprismUrl(url) async {
-    await photoprismSettingsManager.savePhotoprismUrlToPrefs(url);
-    this.photoprismUrl = url;
-    notifyListeners();
-  }
-
-  void setPhotoViewScaleState(PhotoViewScaleState scaleState) {
-    photoViewScaleState = scaleState;
-    notifyListeners();
   }
 }
