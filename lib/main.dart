@@ -201,15 +201,13 @@ class MainPage extends StatelessWidget {
           physics: NeverScrollableScrollPhysics(),
           controller: _pageController,
           children: <Widget>[
-            new Container(
-                child: new Center(
-                    child: RefreshIndicator(
-                        child: Photos(
-                            context: context,
-                            photoprismUrl: model.photoprismUrl,
-                            albumId: ""),
-                        onRefresh: refreshPhotosPull,
-                        color: HexColor(model.applicationColor)))),
+            RefreshIndicator(
+                child: Photos(
+                    context: context,
+                    photoprismUrl: model.photoprismUrl,
+                    albumId: ""),
+                onRefresh: refreshPhotosPull,
+                color: HexColor(model.applicationColor)),
             RefreshIndicator(
                 child: Albums(photoprismUrl: model.photoprismUrl),
                 onRefresh: refreshAlbumsPull,
