@@ -114,13 +114,6 @@ class MainPage extends StatelessWidget {
                   onPressed: () {
                     model.photoprismUploader.selectPhotoAndUpload();
                   },
-                ),
-                IconButton(
-                  icon: const Icon(Icons.refresh),
-                  tooltip: 'Refresh photos',
-                  onPressed: () {
-                    refreshPhotosPull();
-                  },
                 )
               ],
       );
@@ -208,13 +201,15 @@ class MainPage extends StatelessWidget {
           physics: NeverScrollableScrollPhysics(),
           controller: _pageController,
           children: <Widget>[
-            RefreshIndicator(
-                child: Photos(
-                    context: context,
-                    photoprismUrl: model.photoprismUrl,
-                    albumId: ""),
-                onRefresh: refreshPhotosPull,
-                color: HexColor(model.applicationColor)),
+            new Container(
+                child: new Center(
+                    child: RefreshIndicator(
+                        child: Photos(
+                            context: context,
+                            photoprismUrl: model.photoprismUrl,
+                            albumId: ""),
+                        onRefresh: refreshPhotosPull,
+                        color: HexColor(model.applicationColor)))),
             RefreshIndicator(
                 child: Albums(photoprismUrl: model.photoprismUrl),
                 onRefresh: refreshAlbumsPull,

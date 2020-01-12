@@ -129,6 +129,7 @@ class Photos extends StatelessWidget {
           key: ValueKey('photosGridView'),
           scrollController: _scrollController,
           gridController: gridController,
+          physics: AlwaysScrollableScrollPhysics(),
           gridDelegate: new SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: orientation == Orientation.portrait ? 3 : 6,
             mainAxisSpacing: 4,
