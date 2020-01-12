@@ -10,7 +10,7 @@ class PhotoprismMessage {
   void showMessage(String message) {
     Flushbar(
       message: message,
-      duration: Duration(seconds: 3),
+      duration: Duration(seconds: 2),
     )..show(photoprismModel.photoprismLoadingScreen.context);
   }
 }
