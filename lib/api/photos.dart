@@ -118,7 +118,7 @@ class Photos extends StatelessWidget {
   Widget build(BuildContext context) {
     DragSelectGridViewController gridController =
         Provider.of<PhotoprismModel>(context)
-            .photoprismSettingsManager
+            .photoprismCommonHelper
             .getGridController();
     _scrollController.addListener(_scrollListener);
     if (Photos.getPhotoList(context, albumId) == null) {
@@ -144,7 +144,7 @@ class Photos extends StatelessWidget {
                 selected: selected,
                 onTap: () {
                   Provider.of<PhotoprismModel>(context)
-                      .photoprismSettingsManager
+                      .photoprismCommonHelper
                       .setPhotoViewScaleState(PhotoViewScaleState.initial);
                   Navigator.push(
                       context,

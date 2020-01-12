@@ -8,7 +8,7 @@ import 'package:photoprism/common/photoprism_remote_config_loader.dart';
 import 'package:photoprism/common/photoprism_loading_screen.dart';
 import 'package:photoprism/common/photoprism_message.dart';
 import 'package:photoprism/common/photoprism_photo_manager.dart';
-import 'package:photoprism/common/photoprism_settings_manager.dart';
+import 'package:photoprism/common/photoprism_common_helper.dart';
 import 'package:photoprism/common/photoprism_uploader.dart';
 import 'package:photoprism/model/album.dart';
 import 'package:photoprism/model/photo.dart';
@@ -37,7 +37,7 @@ class PhotoprismModel extends ChangeNotifier {
   // helpers
   PhotoprismUploader photoprismUploader;
   PhotoprismRemoteConfigLoader photoprismRemoteConfigLoader;
-  PhotoprismSettingsManager photoprismSettingsManager;
+  PhotoprismCommonHelper photoprismCommonHelper;
   PhotoprismPhotoManager photoprismPhotoManager;
   PhotoprismAlbumManager photoprismAlbumManager;
   PhotoprismLoadingScreen photoprismLoadingScreen;
@@ -50,13 +50,13 @@ class PhotoprismModel extends ChangeNotifier {
   initialize() async {
     photoprismUploader = new PhotoprismUploader(this);
     photoprismRemoteConfigLoader = new PhotoprismRemoteConfigLoader(this);
-    photoprismSettingsManager = new PhotoprismSettingsManager(this);
+    photoprismCommonHelper = new PhotoprismCommonHelper(this);
     photoprismPhotoManager = new PhotoprismPhotoManager(this);
     photoprismAlbumManager = new PhotoprismAlbumManager(this);
     photoprismLoadingScreen = new PhotoprismLoadingScreen(this);
     photoprismMessage = new PhotoprismMessage(this);
 
-    await photoprismSettingsManager.loadPhotoprismUrl();
+    await photoprismCommonHelper.loadPhotoprismUrl();
     photoprismRemoteConfigLoader.loadApplicationColor();
     Photos.loadPhotosFromNetworkOrCache(this, photoprismUrl, "");
     Albums.loadAlbumsFromNetworkOrCache(this, photoprismUrl);

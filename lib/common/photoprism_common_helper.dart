@@ -3,9 +3,9 @@ import 'package:photo_view/photo_view.dart';
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class PhotoprismSettingsManager {
+class PhotoprismCommonHelper {
   PhotoprismModel photoprismModel;
-  PhotoprismSettingsManager(PhotoprismModel photoprismModel) {
+  PhotoprismCommonHelper(PhotoprismModel photoprismModel) {
     this.photoprismModel = photoprismModel;
   }
 
