@@ -80,10 +80,37 @@ class Api {
 
   static Future<int> importPhotos(String photoprismUrl) async {
     try {
-      http.Response response =
-          await http.post(photoprismUrl + "/api/v1/import/", body: "{}");
+      http.Response response = await http
+          .post(photoprismUrl + "/api/v1/import/upload/mobile", body: "{}");
+      print(response.body);
       if (response.statusCode == 200) {
-        return 0;
+        // TODO: Check if import is really successful
+        if (response.body == '{"message":"import completed in 0 s"}') {
+          return 3;
+        } else {
+          return 0;
+        }
+      } else {
+        return 2;
+      }
+    } catch (_) {
+      return 1;
+    }
+  }
+
+  static Future<int> importPhotoEvent(
+      String photoprismUrl, String event) async {
+    try {
+      http.Response response = await http
+          .post(photoprismUrl + "/api/v1/import/upload/" + event, body: "{}");
+      print(response.body);
+      if (response.statusCode == 200) {
+        // TODO: Check if import is really successful
+        if (response.body == '{"message":"import completed in 0 s"}') {
+          return 3;
+        } else {
+          return 0;
+        }
       } else {
         return 2;
       }

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_uploader/flutter_uploader.dart';
@@ -15,6 +16,7 @@ import '../model/photoprism_model.dart';
 class PhotoprismUploader {
   PhotoprismModel photoprismModel;
   Completer uploadFinishedCompleter;
+  Completer manualUploadFinishedCompleter;
   FlutterUploader uploader;
   List<FileSystemEntity> entries;
 
@@ -36,11 +38,9 @@ class PhotoprismUploader {
 
     uploader.result.listen((result) async {
       print("Upload finished.");
-      print(result.statusCode == 200);
       if (result.statusCode == 200) {
         if (result.tag == "manual") {
-          print("Manual upload success!");
-          importPhotos();
+          manualUploadFinishedCompleter.complete(0);
         } else {
           print("Auto upload success!");
           SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -60,11 +60,20 @@ class PhotoprismUploader {
           uploadFinishedCompleter.complete();
         }
       } else {
-        print("Upload error!");
+        if (result.tag == "manual") {
+          manualUploadFinishedCompleter.complete(2);
+        } else {
+          uploadFinishedCompleter.complete();
+        }
       }
     }, onError: (ex, stacktrace) {
-      print("Error upload!");
-      uploadFinishedCompleter.complete();
+      final exp = ex as UploadException;
+
+      if (exp.tag == "manual") {
+        manualUploadFinishedCompleter.complete(1);
+      } else {
+        uploadFinishedCompleter.complete();
+      }
     });
   }
 
@@ -104,15 +113,19 @@ class PhotoprismUploader {
     photoprismModel.notifyListeners();
   }
 
-  startManualPhotoUpload() async {
+  /// Starts image file picker, uploads photo(s) and imports them.
+  void selectPhotoAndUpload() async {
     List<File> files = await FilePicker.getMultiFile();
+
+    // list for flutter uploader
     List<FileItem> filesToUpload = [];
 
-    if (files.length > 0) {
-      files.forEach((f) {
+    // check if at least one file was selected
+    if (files != null) {
+      files.forEach((file) {
         filesToUpload.add(FileItem(
-            filename: basename(f.path),
-            savedDir: dirname(f.path),
+            filename: basename(file.path),
+            savedDir: dirname(file.path),
             fieldname: "files"));
       });
 
@@ -124,13 +137,57 @@ class PhotoprismUploader {
             .showLoadingScreen("Uploading photo..");
       }
 
-      await uploader.enqueue(
-          url: photoprismModel.photoprismUrl + "/api/v1/upload/test",
-          files: filesToUpload,
-          method: UploadMethod.POST,
-          showNotification: false,
-          tag: "manual");
+      var rng = new Random.secure();
+      String event = "";
+      for (var i = 0; i < 12; i++) {
+        event += rng.nextInt(9).toString();
+      }
+
+      print("Uploading event " + event);
+
+      int status = await uploadPhoto(filesToUpload, event);
+
+      if (status == 0) {
+        print("Manual upload successful.");
+        print("Importing photos..");
+        photoprismModel.photoprismLoadingScreen
+            .updateLoadingScreen("Importing photos..");
+        var status =
+            await Api.importPhotoEvent(photoprismModel.photoprismUrl, event);
+
+        if (status == 0) {
+          await Photos.loadPhotos(
+              photoprismModel, photoprismModel.photoprismUrl, "");
+          await photoprismModel.photoprismLoadingScreen.hideLoadingScreen();
+          photoprismModel.photoprismMessage
+              .showMessage("Uploading and importing successful.");
+        } else if (status == 3) {
+          await photoprismModel.photoprismLoadingScreen.hideLoadingScreen();
+          photoprismModel.photoprismMessage
+              .showMessage("Photo already imported or import failed.");
+        } else {
+          await photoprismModel.photoprismLoadingScreen.hideLoadingScreen();
+          photoprismModel.photoprismMessage.showMessage("Importing failed.");
+        }
+      } else {
+        print("Manual upload failed.");
+        await photoprismModel.photoprismLoadingScreen.hideLoadingScreen();
+        photoprismModel.photoprismMessage.showMessage("Manual upload failed.");
+      }
     }
+  }
+
+  Future uploadPhoto(List<FileItem> filesToUpload, String event) async {
+    manualUploadFinishedCompleter = Completer();
+
+    await uploader.enqueue(
+        url: photoprismModel.photoprismUrl + "/api/v1/upload/" + event,
+        files: filesToUpload,
+        method: UploadMethod.POST,
+        showNotification: false,
+        tag: "manual");
+
+    return manualUploadFinishedCompleter.future;
   }
 
   Future<void> initPlatformState() async {
@@ -162,7 +219,7 @@ class PhotoprismUploader {
               List<FileSystemEntity> entriesToUpload = [];
               entriesToUpload.add(entry);
               print("Uploading " + entry.path);
-              await uploadPhoto(entriesToUpload);
+              await uploadPhotoAuto(entriesToUpload);
             }
           }
           Api.importPhotos(photoprismModel.photoprismUrl);
@@ -181,22 +238,7 @@ class PhotoprismUploader {
     });
   }
 
-  void importPhotos() async {
-    print("Importing photos");
-    photoprismModel.photoprismLoadingScreen
-        .updateLoadingScreen("Importing photos..");
-    var status = await Api.importPhotos(photoprismModel.photoprismUrl);
-
-    if (status == 0) {
-      await Photos.loadPhotos(
-          photoprismModel, photoprismModel.photoprismUrl, "");
-    } else {
-      // error
-    }
-    photoprismModel.photoprismLoadingScreen.hideLoadingScreen();
-  }
-
-  Future uploadPhoto(List<FileSystemEntity> files) async {
+  Future uploadPhotoAuto(List<FileSystemEntity> files) async {
     List<FileItem> filesToUpload = [];
 
     files.forEach((f) {
@@ -207,7 +249,7 @@ class PhotoprismUploader {
     });
 
     await uploader.enqueue(
-        url: photoprismModel.photoprismUrl + "/api/v1/upload/test",
+        url: photoprismModel.photoprismUrl + "/api/v1/upload/mobile",
         files: filesToUpload,
         method: UploadMethod.POST,
         showNotification: false,

@@ -105,7 +105,7 @@ class MainPage extends StatelessWidget {
                   icon: const Icon(Icons.cloud_upload),
                   tooltip: 'Upload photo',
                   onPressed: () {
-                    model.photoprismUploader.startManualPhotoUpload();
+                    model.photoprismUploader.selectPhotoAndUpload();
                   },
                 ),
                 IconButton(
