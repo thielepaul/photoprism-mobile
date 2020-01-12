@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flushbar/flushbar.dart';
 import 'package:photoprism/model/photoprism_model.dart';
 
 class PhotoprismMessage {
@@ -8,8 +8,9 @@ class PhotoprismMessage {
   }
 
   void showMessage(String message) {
-    final snackBar =
-        SnackBar(content: Text(message), duration: const Duration(minutes: 5));
-    photoprismModel.scaffoldKey.currentState.showSnackBar(snackBar);
+    Flushbar(
+      message: message,
+      duration: Duration(seconds: 3),
+    )..show(photoprismModel.photoprismLoadingScreen.context);
   }
 }

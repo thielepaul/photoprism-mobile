@@ -19,10 +19,13 @@ class PhotoprismAlbumManager {
 
     if (status == 0) {
       await Albums.loadAlbums(photoprismModel, photoprismModel.photoprismUrl);
+      await photoprismModel.photoprismLoadingScreen.hideLoadingScreen();
+      photoprismModel.photoprismMessage
+          .showMessage("Album created successfully.");
     } else {
-      // error
+      await photoprismModel.photoprismLoadingScreen.hideLoadingScreen();
+      photoprismModel.photoprismMessage.showMessage("Creating album failed.");
     }
-    photoprismModel.photoprismLoadingScreen.hideLoadingScreen();
   }
 
   void renameAlbum(
@@ -35,15 +38,20 @@ class PhotoprismAlbumManager {
           albumId, newAlbumName, photoprismModel.photoprismUrl);
 
       if (status == 0) {
-        Albums.loadAlbums(photoprismModel, photoprismModel.photoprismUrl);
-        Photos.loadPhotos(
+        await Albums.loadAlbums(photoprismModel, photoprismModel.photoprismUrl);
+        await Photos.loadPhotos(
             photoprismModel, photoprismModel.photoprismUrl, albumId);
+        await photoprismModel.photoprismLoadingScreen.hideLoadingScreen();
+        photoprismModel.photoprismMessage
+            .showMessage("Renaming album successfully.");
       } else {
-        // error
+        await photoprismModel.photoprismLoadingScreen.hideLoadingScreen();
+        photoprismModel.photoprismMessage.showMessage("Renaming album failed.");
       }
-      photoprismModel.photoprismLoadingScreen.hideLoadingScreen();
     } else {
       print("Renaming skipped: New and old album name identical.");
+      photoprismModel.photoprismMessage
+          .showMessage("Renaming skipped: New and old album name identical.");
     }
   }
 
@@ -55,12 +63,13 @@ class PhotoprismAlbumManager {
 
     if (status == 0) {
       await Albums.loadAlbums(photoprismModel, photoprismModel.photoprismUrl);
+      await photoprismModel.photoprismLoadingScreen.hideLoadingScreen();
       photoprismModel.photoprismMessage
           .showMessage("Album deleted successfully.");
     } else {
-      // error
+      await photoprismModel.photoprismLoadingScreen.hideLoadingScreen();
+      photoprismModel.photoprismMessage.showMessage("Deleting album failed.");
     }
-    photoprismModel.photoprismLoadingScreen.hideLoadingScreen();
   }
 
   void addPhotosToAlbum(albumId, List<String> photoUUIDs) async {
@@ -72,9 +81,13 @@ class PhotoprismAlbumManager {
 
     if (status == 0) {
       await Albums.loadAlbums(photoprismModel, photoprismModel.photoprismUrl);
+      await photoprismModel.photoprismLoadingScreen.hideLoadingScreen();
+      photoprismModel.photoprismMessage
+          .showMessage("Adding photos to album successfull.");
     } else {
-      // error
+      await photoprismModel.photoprismLoadingScreen.hideLoadingScreen();
+      photoprismModel.photoprismMessage
+          .showMessage("Adding photos to album failed.");
     }
-    photoprismModel.photoprismLoadingScreen.hideLoadingScreen();
   }
 }

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:progress_dialog/progress_dialog.dart';
@@ -22,10 +24,15 @@ class PhotoprismLoadingScreen {
     pr.update(message: message);
   }
 
-  hideLoadingScreen() {
+  Future hideLoadingScreen() {
+    Completer hideLoadingScreenCompleter;
     Future.delayed(Duration(milliseconds: 500)).then((value) {
-      pr.hide().whenComplete(() {});
+      pr.hide().whenComplete(() {
+        hideLoadingScreenCompleter.complete();
+      });
     });
     photoprismModel.notifyListeners();
+    hideLoadingScreenCompleter = Completer();
+    return hideLoadingScreenCompleter.future;
   }
 }

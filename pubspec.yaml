@@ -37,6 +37,7 @@ dependencies:
   file_picker: ^1.4.3+2
   background_fetch: ^0.4.0
   intl: ^0.16.0
+  flushbar: ^1.9.1
 
 dev_dependencies:
   flutter_test:
