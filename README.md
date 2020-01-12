@@ -10,10 +10,11 @@
 - Manual photo upload (Not tested)
 - Automatic photo upload (only Android (not tested), iOS will be added soon)
 - Share photos with other apps
+- Archive photos
 
 ## Planned Features
-- Delete photos
 - Remove photos from album
+- Support for password protected photoprism instances
 
 ## Installation
 ### Android
