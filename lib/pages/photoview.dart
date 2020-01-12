@@ -301,7 +301,8 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
 
     if (response.statusCode == 200) {
       Uint8List bytes = await consolidateHttpClientResponseBytes(response);
-      await Share.file('Photoprism Photo', photos[index].fileHash + '.jpg', bytes, 'image/jpg');
+      await Share.file('Photoprism Photo', photos[index].fileHash + '.jpg',
+          bytes, 'image/jpg');
     } else {
       Provider.of<PhotoprismModel>(context)
           .photoprismMessage
