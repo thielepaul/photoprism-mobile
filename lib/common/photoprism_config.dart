@@ -28,19 +28,23 @@ class PhotoprismConfig {
       http.Response response =
           await http.get(photoprismModel.photoprismUrl + '/api/v1/settings');
 
-      final settingsJson = json.decode(response.body);
-      final themeSetting = settingsJson["theme"];
+      try {
+        final settingsJson = json.decode(response.body);
+        final themeSetting = settingsJson["theme"];
 
-      final themesJson = await rootBundle.loadString('assets/themes.json');
-      final parsedThemes = json.decode(themesJson);
+        final themesJson = await rootBundle.loadString('assets/themes.json');
+        final parsedThemes = json.decode(themesJson);
 
-      final currentTheme = parsedThemes[themeSetting];
+        final currentTheme = parsedThemes[themeSetting];
 
-      this.applicationColor = currentTheme["navigation"];
+        this.applicationColor = currentTheme["navigation"];
 
-      // save new color scheme to shared preferences
-      prefs.setString("applicationColor", this.applicationColor);
-      photoprismModel.notifyListeners();
+        // save new color scheme to shared preferences
+        prefs.setString("applicationColor", this.applicationColor);
+        photoprismModel.notifyListeners();
+      } catch (_) {
+        print("Could not parse color scheme!");
+      }
     } catch (_) {
       print("Could not get color scheme from server!");
     }
