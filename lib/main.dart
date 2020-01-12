@@ -43,7 +43,9 @@ class MainPage extends StatelessWidget {
 
   void _onTappedNavigationBar(int index) {
     _pageController.jumpToPage(index);
-    Provider.of<PhotoprismModel>(context).setSelectedPageIndex(index);
+    Provider.of<PhotoprismModel>(context)
+        .photoprismSettingsManager
+        .setSelectedPageIndex(index);
   }
 
   void emptyCache() async {

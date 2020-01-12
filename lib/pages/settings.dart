@@ -152,7 +152,7 @@ class Settings extends StatelessWidget {
   void setNewPhotoprismUrl(context, url) async {
     Navigator.of(context).pop();
     PhotoprismModel pmodel = Provider.of<PhotoprismModel>(context);
-    await pmodel.setPhotoprismUrl(url);
+    await pmodel.photoprismSettingsManager.setPhotoprismUrl(url);
     pmodel.photoprismRemoteConfigLoader.loadApplicationColor();
     emptyCache();
     await Photos.loadPhotos(pmodel, pmodel.photoprismUrl, "");

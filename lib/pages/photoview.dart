@@ -125,6 +125,7 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
           maxScale: PhotoViewComputedScale.contained * 2,
           scaleStateChangedCallback: (scaleState) {
             Provider.of<PhotoprismModel>(context)
+                .photoprismSettingsManager
                 .setPhotoViewScaleState(scaleState);
             if (scaleState == PhotoViewScaleState.zoomedOut) {
               backgroundAnimationController.reverse();
