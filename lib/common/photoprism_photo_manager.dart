@@ -1,5 +1,8 @@
 import 'dart:convert';
 
+import 'package:drag_select_grid_view/drag_select_grid_view.dart';
+import 'package:photoprism/api/api.dart';
+import 'package:photoprism/api/photos.dart';
 import 'package:photoprism/model/photo.dart';
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -21,5 +24,25 @@ class PhotoprismPhotoManager {
     photoprismModel.photoList = photoList;
     savePhotoListToSharedPrefs('photosList', photoList);
     photoprismModel.notifyListeners();
+  }
+
+  void archivePhotos(List<String> photoUUIDs) async {
+    print("Archive photos");
+    photoprismModel.photoprismLoadingScreen
+        .showLoadingScreen("Archive photos..");
+    var status =
+        await Api.archivePhotos(photoUUIDs, photoprismModel.photoprismUrl);
+
+    if (status == 0) {
+      photoprismModel.gridController.selection = Selection({});
+      await Photos.loadPhotos(
+          photoprismModel, photoprismModel.photoprismUrl, "");
+      await photoprismModel.photoprismLoadingScreen.hideLoadingScreen();
+      photoprismModel.photoprismMessage
+          .showMessage("Photos archived successfully.");
+    } else {
+      await photoprismModel.photoprismLoadingScreen.hideLoadingScreen();
+      photoprismModel.photoprismMessage.showMessage("Archiving photos failed.");
+    }
   }
 }

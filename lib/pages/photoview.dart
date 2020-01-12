@@ -280,6 +280,13 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
                       child: AppBar(
                         title: Text(""),
                         actions: <Widget>[
+                          /*IconButton(
+                            icon: const Icon(Icons.archive),
+                            tooltip: 'Archive photo',
+                            onPressed: () {
+
+                            },
+                          ),*/
                           IconButton(
                             icon: const Icon(Icons.share),
                             tooltip: 'Share photo',

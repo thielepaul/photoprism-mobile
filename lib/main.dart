@@ -93,6 +93,13 @@ class MainPage extends StatelessWidget {
         actions: model.gridController.selection.selectedIndexes.length > 0
             ? <Widget>[
                 IconButton(
+                  icon: const Icon(Icons.archive),
+                  tooltip: 'Archive photos',
+                  onPressed: () {
+                    archiveSelectedPhotos();
+                  },
+                ),
+                IconButton(
                   icon: const Icon(Icons.add),
                   tooltip: 'Add to album',
                   onPressed: () {
@@ -137,6 +144,16 @@ class MainPage extends StatelessWidget {
         backgroundColor: HexColor(model.applicationColor),
       );
     }
+  }
+
+  archiveSelectedPhotos() async {
+    List<String> selectedPhotos = [];
+    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
+
+    model.gridController.selection.selectedIndexes.forEach((element) {
+      selectedPhotos.add(Photos.getPhotoList(context, "")[element].photoUUID);
+    });
+    model.photoprismPhotoManager.archivePhotos(selectedPhotos);
   }
 
   _selectAlbumDialog(BuildContext context) {

@@ -78,6 +78,30 @@ class Api {
     }
   }
 
+  static Future<int> archivePhotos(
+      List<String> photoUUIDs, String photoprismUrl) async {
+    // wrap uuids in double quotes
+    List<String> photoUUIDsWrapped = [];
+
+    photoUUIDs.forEach((photoUUID) {
+      photoUUIDsWrapped.add('"' + photoUUID + '"');
+    });
+
+    String body = '{"photos":' + photoUUIDsWrapped.toString() + '}';
+
+    try {
+      http.Response response = await http
+          .post(photoprismUrl + '/api/v1/batch/photos/delete', body: body);
+      if (response.statusCode == 200) {
+        return 0;
+      } else {
+        return 2;
+      }
+    } catch (_) {
+      return 1;
+    }
+  }
+
   static Future<int> importPhotos(String photoprismUrl) async {
     try {
       http.Response response = await http
