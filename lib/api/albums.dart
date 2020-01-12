@@ -97,21 +97,23 @@ class Albums extends StatelessWidget {
                             photoprismUrl)),
                   );
                 },
-                child: GridTile(
-                  child: CachedNetworkImage(
-                    imageUrl: getAlbumPreviewUrl(context, index),
-                    placeholder: (context, url) =>
-                        Container(color: Colors.grey),
-                    errorWidget: (context, url, error) => Icon(Icons.error),
-                  ),
-                  footer: GestureDetector(
-                    child: GridTileBar(
-                      backgroundColor: Colors.black45,
-                      title: _GridTitleText(
-                          Albums.getAlbumList(context)[index].name),
-                    ),
-                  ),
-                ));
+                child: ClipRRect(
+                    borderRadius: new BorderRadius.circular(8.0),
+                    child: GridTile(
+                      child: CachedNetworkImage(
+                        imageUrl: getAlbumPreviewUrl(context, index),
+                        placeholder: (context, url) =>
+                            Container(color: Colors.grey),
+                        errorWidget: (context, url, error) => Icon(Icons.error),
+                      ),
+                      footer: GestureDetector(
+                        child: GridTileBar(
+                          backgroundColor: Colors.black45,
+                          title: _GridTitleText(
+                              Albums.getAlbumList(context)[index].name),
+                        ),
+                      ),
+                    )));
           });
     });
   }
