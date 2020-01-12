@@ -1,4 +1,9 @@
+import 'dart:io';
+import 'dart:typed_data';
+
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:esys_flutter_share/esys_flutter_share.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photoprism/api/photos.dart';
@@ -79,6 +84,7 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
   }
 
   Widget photoview(index) {
+    this.currentPhotoIndex = index;
     if (this.photos[index].aspectRatio >= 1) {
       if (MediaQuery.of(context).size.width <=
           MediaQuery.of(context).size.height) {
@@ -272,10 +278,35 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
                       right: 0.0,
                       child: AppBar(
                         title: Text(""),
+                        actions: <Widget>[
+                          IconButton(
+                            icon: const Icon(Icons.share),
+                            tooltip: 'Share photo',
+                            onPressed: () {
+                              sharePhoto(this.currentPhotoIndex);
+                            },
+                          )
+                        ],
                         backgroundColor: Colors.transparent,
                       ))
                   : Container(),
             ])));
+  }
+
+  sharePhoto(index) async {
+    var request = await HttpClient().getUrl(Uri.parse(
+        photoprismUrl + "/api/v1/download/" + photos[index].fileHash));
+    var response = await request.close();
+    print(response.statusCode);
+
+    if (response.statusCode == 200) {
+      Uint8List bytes = await consolidateHttpClientResponseBytes(response);
+      await Share.file('Photoprism Photo', photos[index].fileHash + '.jpg', bytes, 'image/jpg');
+    } else {
+      Provider.of<PhotoprismModel>(context)
+          .photoprismMessage
+          .showMessage("Error while sharing: No connection to server!");
+    }
   }
 }
 
