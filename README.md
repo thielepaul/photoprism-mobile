@@ -9,6 +9,7 @@
 - Add photos to albums
 - Manual photo upload (Not tested)
 - Automatic photo upload (only Android (not tested), iOS will be added soon)
+- Share photos with other apps
 
 ## Planned Features
 - Delete photos
