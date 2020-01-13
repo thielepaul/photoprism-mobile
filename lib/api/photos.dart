@@ -180,7 +180,7 @@ class Photos extends StatelessWidget {
                               .fileHash +
                           '/tile_224',
                       placeholder: (context, url) => Container(
-                        color: Colors.grey,
+                        color: Colors.grey[300],
                       ),
                       errorWidget: (context, url, error) => Icon(Icons.error),
                     ),

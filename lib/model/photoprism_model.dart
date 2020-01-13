@@ -25,7 +25,7 @@ class PhotoprismModel extends ChangeNotifier {
   // photoprism uploader
   bool autoUploadEnabled = false;
   String autoUploadFolder = "/storage/emulated/0/DCIM/Camera";
-  String autoUploadLastTimeActive = "Never";
+  String autoUploadLastTimeCheckedForPhotos = "Never";
 
   // runtime data
   bool isLoading = false;

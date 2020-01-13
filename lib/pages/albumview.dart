@@ -31,17 +31,22 @@ class AlbumView extends StatelessWidget {
         context: context,
         builder: (context) {
           return AlertDialog(
-            title: Text('Delete Album'),
-            content: Text('Are you sure you want to delete this album?'),
+            title: Text('Delete album?'),
+            content: Text(
+                'Are you sure you want to delete this album? Your photos will not be deleted.'),
             actions: <Widget>[
               FlatButton(
+                textColor: HexColor(
+                    Provider.of<PhotoprismModel>(context).applicationColor),
                 child: Text('Cancel'),
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
               ),
               FlatButton(
-                child: Text('Delete'),
+                textColor: HexColor(
+                    Provider.of<PhotoprismModel>(context).applicationColor),
+                child: Text('Delete album'),
                 onPressed: () {
                   // close dialog
                   Navigator.pop(context);
@@ -75,15 +80,17 @@ class AlbumView extends StatelessWidget {
             ),
             actions: <Widget>[
               FlatButton(
+                textColor: HexColor(
+                    Provider.of<PhotoprismModel>(context).applicationColor),
                 child: Text('Cancel'),
-                textColor: HexColor(photorismModel.applicationColor),
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
               ),
               FlatButton(
+                textColor: HexColor(
+                    Provider.of<PhotoprismModel>(context).applicationColor),
                 child: Text('Save'),
-                textColor: HexColor(photorismModel.applicationColor),
                 onPressed: () {
                   // close dialog
                   Navigator.pop(context);

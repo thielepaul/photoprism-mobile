@@ -91,7 +91,7 @@ class PhotoprismUploader {
     String currentTime = DateFormat('dd.MM.yyyy – kk:mm').format(now);
     print(currentTime.toString());
     prefs.setString("autoUploadLastTimeActive", currentTime.toString());
-    photoprismModel.autoUploadLastTimeActive = currentTime.toString();
+    photoprismModel.autoUploadLastTimeCheckedForPhotos = currentTime.toString();
     photoprismModel.notifyListeners();
   }
 
@@ -101,7 +101,7 @@ class PhotoprismUploader {
         prefs.getBool("autoUploadEnabled") ?? false;
     photoprismModel.autoUploadFolder =
         prefs.getString("uploadFolder") ?? "/storage/emulated/0/DCIM/Camera";
-    photoprismModel.autoUploadLastTimeActive =
+    photoprismModel.autoUploadLastTimeCheckedForPhotos =
         prefs.getString("autoUploadLastTimeActive") ?? "Never";
     photoprismModel.notifyListeners();
   }

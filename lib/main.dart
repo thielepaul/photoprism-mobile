@@ -22,12 +22,23 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+    final Color applicationColor =
+        HexColor(Provider.of<PhotoprismModel>(context).applicationColor);
+
     return MaterialApp(
       title: 'PhotoPrism',
-      theme: ThemeData(),
+      theme: ThemeData(
+        primaryColor: applicationColor,
+        accentColor: applicationColor,
+        textSelectionColor: applicationColor,
+        textSelectionHandleColor: applicationColor,
+        cursorColor: applicationColor,
+        inputDecorationTheme: InputDecorationTheme(
+            focusedBorder: UnderlineInputBorder(
+                borderSide: BorderSide(color: applicationColor))),
+      ),
       home: MainPage('PhotoPrism', context),
     );
   }
@@ -56,9 +67,7 @@ class MainPage extends StatelessWidget {
     print('refreshing photos..');
 
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
-
     await Photos.loadPhotos(model, model.photoprismUrl, "");
-
     await Photos.loadPhotosFromNetworkOrCache(model, model.photoprismUrl, "");
   }
 
@@ -66,9 +75,7 @@ class MainPage extends StatelessWidget {
     print('refreshing albums..');
 
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
-
     await Albums.loadAlbums(model, model.photoprismUrl);
-
     await Albums.loadAlbumsFromNetworkOrCache(model, model.photoprismUrl);
   }
 
@@ -134,7 +141,6 @@ class MainPage extends StatelessWidget {
     } else {
       return AppBar(
         title: Text(title),
-        backgroundColor: HexColor(model.applicationColor),
       );
     }
   }
@@ -206,12 +212,10 @@ class MainPage extends StatelessWidget {
                     context: context,
                     photoprismUrl: model.photoprismUrl,
                     albumId: ""),
-                onRefresh: refreshPhotosPull,
-                color: HexColor(model.applicationColor)),
+                onRefresh: refreshPhotosPull),
             RefreshIndicator(
                 child: Albums(photoprismUrl: model.photoprismUrl),
-                onRefresh: refreshAlbumsPull,
-                color: HexColor(model.applicationColor)),
+                onRefresh: refreshAlbumsPull),
             Settings(),
           ]),
       bottomNavigationBar: BottomNavigationBar(
@@ -230,7 +234,6 @@ class MainPage extends StatelessWidget {
           ),
         ],
         currentIndex: model.selectedPageIndex,
-        selectedItemColor: HexColor(model.applicationColor),
         onTap: _onTappedNavigationBar,
       ),
     );

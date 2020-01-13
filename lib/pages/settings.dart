@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:photoprism/common/hexcolor.dart';
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:provider/provider.dart';
 
 import '../api/albums.dart';
 import '../api/photos.dart';
-import '../common/hexcolor.dart';
 import '../model/photoprism_model.dart';
 
 class Settings extends StatelessWidget {
@@ -25,12 +25,22 @@ class Settings extends StatelessWidget {
         ListTile(
           title: Text("Photoprism URL"),
           subtitle: Text(photorismModel.photoprismUrl),
+          leading: Container(
+            width: 10,
+            alignment: Alignment.center,
+            child: Icon(Icons.public),
+          ),
           onTap: () {
             _settingsDisplayUrlDialog(context);
           },
         ),
         ListTile(
           title: Text("Empty cache"),
+          leading: Container(
+            width: 10,
+            alignment: Alignment.center,
+            child: Icon(Icons.delete),
+          ),
           onTap: () {
             emptyCache();
           },
@@ -57,17 +67,27 @@ class Settings extends StatelessWidget {
         ListTile(
           title: Text("Upload folder"),
           subtitle: Text(photorismModel.autoUploadFolder),
+          leading: Container(
+            width: 10,
+            alignment: Alignment.center,
+            child: Icon(Icons.folder),
+          ),
           onTap: () {
             getUploadFolder(context);
           },
         ),
         ListTile(
-          title: Text("Auto upload last time active"),
-          subtitle: Text(photorismModel.autoUploadLastTimeActive),
+          title: Text("Last time checked for photos to be uploaded"),
+          subtitle: Text(photorismModel.autoUploadLastTimeCheckedForPhotos),
+          leading: Container(
+            width: 10,
+            alignment: Alignment.center,
+            child: Icon(Icons.sync),
+          ),
         ),
         ListTile(
           title: Text(
-              "Warning: Auto upload is still under development. It only works under Android at this moment. Not fully working. Auto upload will only upload photos to import folder in photoprism. Importing has to be done manually."),
+              "Warning: Auto upload is still under development. It only works under Android at this moment. Not fully working."),
         ),
       ],
     ));
@@ -89,21 +109,22 @@ class Settings extends StatelessWidget {
             content: TextField(
               key: ValueKey("photoprismUrlTextField"),
               controller: _urlTextFieldController,
-              cursorColor: HexColor(photorismModel.applicationColor),
               decoration:
                   InputDecoration(hintText: "https://demo.photoprism.org"),
             ),
             actions: <Widget>[
               FlatButton(
+                textColor: HexColor(
+                    Provider.of<PhotoprismModel>(context).applicationColor),
                 child: Text('Cancel'),
-                textColor: HexColor(photorismModel.applicationColor),
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
               ),
               FlatButton(
+                textColor: HexColor(
+                    Provider.of<PhotoprismModel>(context).applicationColor),
                 child: Text('Save'),
-                textColor: HexColor(photorismModel.applicationColor),
                 onPressed: () {
                   setNewPhotoprismUrl(context, _urlTextFieldController.text);
                 },
@@ -124,21 +145,22 @@ class Settings extends StatelessWidget {
             title: Text('Enter upload folder path'),
             content: TextField(
               controller: _uploadFolderTextFieldController,
-              cursorColor: HexColor(photorismModel.applicationColor),
               decoration:
                   InputDecoration(hintText: "/storage/emulated/0/DCIM/Camera"),
             ),
             actions: <Widget>[
               FlatButton(
+                textColor: HexColor(
+                    Provider.of<PhotoprismModel>(context).applicationColor),
                 child: Text('Cancel'),
-                textColor: HexColor(photorismModel.applicationColor),
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
               ),
               FlatButton(
+                textColor: HexColor(
+                    Provider.of<PhotoprismModel>(context).applicationColor),
                 child: Text('Save'),
-                textColor: HexColor(photorismModel.applicationColor),
                 onPressed: () {
                   setNewUploadFolder(
                       context, _uploadFolderTextFieldController.text);
