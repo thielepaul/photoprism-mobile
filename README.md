@@ -24,7 +24,6 @@
 **Hint**: At this moment only photoprism servers without password protection are supported.
 ### Android
 - The latest .apk file can be downloaded [here](https://github.com/photoprism/photoprism-mobile/releases/download/latest/photoprism.apk).
-- **Hint**: If a version of the app is already installed, the old app must be uninstalled before installing the new one.
 
 ### iOS
 - For iOS you have to build the app from source.
