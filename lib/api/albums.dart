@@ -79,7 +79,6 @@ class Albums extends StatelessWidget {
           itemBuilder: (context, index) {
             return GestureDetector(
                 onTap: () {
-                  print(Albums.getAlbumList(context)[index].photoList);
                   Photos.loadPhotosFromNetworkOrCache(
                       Provider.of<PhotoprismModel>(context),
                       photoprismUrl,
