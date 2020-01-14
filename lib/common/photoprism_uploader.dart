@@ -24,6 +24,7 @@ class PhotoprismUploader {
     this.photoprismModel = photoprismModel;
     loadPreferences();
     initPlatformState();
+    getPhotosToUpload();
 
     uploader = FlutterUploader();
     BackgroundFetch.start().then((int status) {
@@ -188,6 +189,25 @@ class PhotoprismUploader {
         tag: "manual");
 
     return manualUploadFinishedCompleter.future;
+  }
+
+  void getPhotosToUpload() async {
+    Directory dir = Directory(photoprismModel.autoUploadFolder);
+    entries = dir.listSync(recursive: false).toList();
+
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    List<String> alreadyUploadedPhotos =
+        prefs.getStringList("alreadyUploadedPhotos") ?? List<String>();
+
+    List<String> entriesToUpload = [];
+    for (var entry in entries) {
+      if (!alreadyUploadedPhotos.contains(entry.path)) {
+        entriesToUpload.add(entry.path);
+        print("Photo to upload: " + entry.path);
+      }
+    }
+    photoprismModel.photosToUpload = entriesToUpload;
+    photoprismModel.notifyListeners();
   }
 
   Future<void> initPlatformState() async {

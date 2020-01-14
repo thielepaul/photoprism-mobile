@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import '../api/albums.dart';
 import '../api/photos.dart';
 import '../model/photoprism_model.dart';
+import 'auto_upload_queue.dart';
 
 class Settings extends StatelessWidget {
   final TextEditingController _urlTextFieldController = TextEditingController();
@@ -84,6 +85,22 @@ class Settings extends StatelessWidget {
             alignment: Alignment.center,
             child: Icon(Icons.sync),
           ),
+        ),
+        ListTile(
+          title: Text("Show upload queue"),
+          leading: Container(
+            width: 10,
+            alignment: Alignment.center,
+            child: Icon(Icons.sort),
+          ),
+          onTap: () {
+            photorismModel.photoprismUploader.getPhotosToUpload();
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (ctx) => AutoUploadQueue(photorismModel)),
+            );
+          },
         ),
         ListTile(
           title: Text(
