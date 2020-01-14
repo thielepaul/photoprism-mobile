@@ -1,7 +1,11 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:http/http.dart' as http;
 
 class Api {
-  static Future<int> createAlbum(String albumName, String photoprismUrl) async {
+  static Future<String> createAlbum(
+      String albumName, String photoprismUrl) async {
     String body = '{"AlbumName":"' + albumName + '"}';
 
     try {
@@ -9,12 +13,13 @@ class Api {
           await http.post(photoprismUrl + '/api/v1/albums', body: body);
 
       if (response.statusCode == 200) {
-        return 0;
+        var bodyjson = json.decode(response.body);
+        return bodyjson["AlbumUUID"];
       } else {
-        return 2;
+        return "-1";
       }
     } catch (_) {
-      return 1;
+      return "-1";
     }
   }
 
@@ -68,6 +73,34 @@ class Api {
       http.Response response = await http.post(
           photoprismUrl + '/api/v1/albums/' + albumId + '/photos',
           body: body);
+      if (response.statusCode == 200) {
+        return 0;
+      } else {
+        return 2;
+      }
+    } catch (_) {
+      return 1;
+    }
+  }
+
+  static Future<int> removePhotosFromAlbum(
+      String albumId, List<String> photoUUIDs, String photoprismUrl) async {
+    // wrap uuids in double quotes
+    List<String> photoUUIDsWrapped = [];
+
+    photoUUIDs.forEach((photoUUID) {
+      photoUUIDsWrapped.add('"' + photoUUID + '"');
+    });
+
+    String body = '{"photos":' + photoUUIDsWrapped.toString() + '}';
+
+    final client = http.Client();
+    print(albumId);
+    try {
+      final response = await client.send(http.Request("DELETE",
+          Uri.parse(photoprismUrl + '/api/v1/albums/' + albumId + '/photos'))
+        ..headers["Content-Type"] = "application/json"
+        ..body = body);
       if (response.statusCode == 200) {
         return 0;
       } else {

@@ -1,9 +1,9 @@
 import 'package:photoprism/model/photo.dart';
 
 class Album {
-  final String id;
-  final String name;
-  final int imageCount;
+  String id;
+  String name;
+  int imageCount;
   List<Photo> photoList;
 
   Album({this.id, this.name, this.imageCount});

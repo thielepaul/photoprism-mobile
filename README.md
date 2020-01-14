@@ -7,13 +7,13 @@
 - Photos and albums will be cached so they are available even without internet connection
 - Create, rename and delete albums
 - Add photos to albums
+- Remove photos from album
+- Archive photos
 - Manual photo upload
 - Automatic photo upload (only Android (not tested), iOS will be added soon)
 - Share photos with other apps
-- Archive photos
 
 ## Planned Features
-- Remove photos from album
 - Archived photos view
 - Support for password protected photoprism instances
 - Improve cache management

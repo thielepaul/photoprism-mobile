@@ -2,10 +2,13 @@ import 'package:drag_select_grid_view/drag_select_grid_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:photoprism/api/albums.dart';
+import 'package:photoprism/pages/album_detail_view.dart';
 import 'package:photoprism/pages/settings.dart';
 import 'package:provider/provider.dart';
 import 'package:photoprism/common/hexcolor.dart';
+import 'api/api.dart';
 import 'api/photos.dart';
+import 'model/album.dart';
 import 'model/photoprism_model.dart';
 // use this for debugging animations
 // import 'package:flutter/scheduler.dart' show timeDilation;
@@ -39,7 +42,7 @@ class MyApp extends StatelessWidget {
             focusedBorder: UnderlineInputBorder(
                 borderSide: BorderSide(color: applicationColor))),
       ),
-      home: MainPage('PhotoPrism', context),
+      home: MainPage('PhotoPrism'),
     );
   }
 }
@@ -47,10 +50,9 @@ class MyApp extends StatelessWidget {
 class MainPage extends StatelessWidget {
   final String title;
   final PageController _pageController;
-  final BuildContext context;
+  BuildContext context;
 
-  MainPage(this.title, this.context)
-      : _pageController = PageController(initialPage: 0);
+  MainPage(this.title) : _pageController = PageController(initialPage: 0);
 
   void _onTappedNavigationBar(int index) {
     _pageController.jumpToPage(index);
@@ -133,7 +135,8 @@ class MainPage extends StatelessWidget {
             icon: const Icon(Icons.add),
             tooltip: 'Create album',
             onPressed: () {
-              model.photoprismAlbumManager.createAlbum();
+              //model.photoprismAlbumManager.createAlbum();
+              createAlbum();
             },
           ),
         ],
@@ -141,6 +144,32 @@ class MainPage extends StatelessWidget {
     } else {
       return AppBar(
         title: Text(title),
+      );
+    }
+  }
+
+  void createAlbum() async {
+    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
+    var uuid = await Api.createAlbum("New album", model.photoprismUrl);
+
+    if (uuid == "-1") {
+      model.photoprismMessage.showMessage("Creating album failed.");
+    } else {
+      List<Album> albums = Albums.getAlbumList(this.context);
+
+      int length = 0;
+      if (albums != null) {
+        length = albums.length;
+      }
+
+      albums.add(Album(id: uuid, name: "New album", imageCount: 0));
+      model.photoprismAlbumManager.setAlbumList(albums);
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (ctx) =>
+                AlbumDetailView(Albums.getAlbumList(context)[length])),
       );
     }
   }
@@ -198,6 +227,7 @@ class MainPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    this.context = context;
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
     model.photoprismLoadingScreen.context = context;
 
@@ -208,10 +238,7 @@ class MainPage extends StatelessWidget {
           controller: _pageController,
           children: <Widget>[
             RefreshIndicator(
-                child: Photos(
-                    context: context,
-                    photoprismUrl: model.photoprismUrl,
-                    albumId: ""),
+                child: Photos(context: context, albumId: ""),
                 onRefresh: refreshPhotosPull),
             RefreshIndicator(
                 child: Albums(photoprismUrl: model.photoprismUrl),

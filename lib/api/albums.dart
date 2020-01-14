@@ -6,7 +6,7 @@ import 'package:photoprism/api/photos.dart';
 import 'package:photoprism/model/album.dart';
 import 'package:http/http.dart' as http;
 import 'package:photoprism/model/photoprism_model.dart';
-import 'package:photoprism/pages/albumview.dart';
+import 'package:photoprism/pages/album_detail_view.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -90,10 +90,8 @@ class Albums extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (context) => AlbumView(
-                            context,
-                            Albums.getAlbumList(context)[index],
-                            photoprismUrl)),
+                        builder: (ctx) => AlbumDetailView(
+                            Albums.getAlbumList(context)[index])),
                   );
                 },
                 child: ClipRRect(
@@ -108,6 +106,12 @@ class Albums extends StatelessWidget {
                       footer: GestureDetector(
                         child: GridTileBar(
                           backgroundColor: Colors.black45,
+                          trailing: Text(
+                            Albums.getAlbumList(context)[index]
+                                .imageCount
+                                .toString(),
+                            style: TextStyle(color: Colors.white),
+                          ),
                           title: _GridTitleText(
                               Albums.getAlbumList(context)[index].name),
                         ),

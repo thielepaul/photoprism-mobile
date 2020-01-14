@@ -17,10 +17,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 class Photos extends StatelessWidget {
   final ScrollController _scrollController;
   final BuildContext context;
-  final String photoprismUrl;
   final String albumId;
 
-  Photos({Key key, this.context, this.photoprismUrl, this.albumId})
+  Photos({Key key, this.context, this.albumId})
       : _scrollController = ScrollController();
 
   static Future loadPhotosFromNetworkOrCache(
@@ -44,10 +43,10 @@ class Photos extends StatelessWidget {
     await loadPhotos(model, photoprismUrl, albumId);
   }
 
-  static Future loadMorePhotos(
+  static Future<int> loadMorePhotos(
       PhotoprismModel model, String photoprismUrl, String albumId) async {
     if (model.isLoading) {
-      return;
+      return 0;
     }
     model.isLoading = true;
     print("loading more photos");
@@ -108,9 +107,13 @@ class Photos extends StatelessWidget {
       photoList =
           Provider.of<PhotoprismModel>(context, listen: false).photoList;
     } else {
-      photoList = Provider.of<PhotoprismModel>(context, listen: false)
-          .albums[albumId]
-          .photoList;
+      if (Provider.of<PhotoprismModel>(context, listen: false)
+              .albums[albumId] !=
+          null) {
+        photoList = Provider.of<PhotoprismModel>(context, listen: false)
+            .albums[albumId]
+            .photoList;
+      }
     }
     return photoList;
   }
@@ -130,9 +133,13 @@ class Photos extends StatelessWidget {
             .getGridController();
 
     _scrollController.addListener(_scrollListener);
+
     if (Photos.getPhotoList(context, albumId) == null) {
-      return Text("loading", key: ValueKey("photosGridView"));
+      return Text("", key: ValueKey("photosGridView"));
     }
+    //if (Photos.getPhotoList(context, albumId).length == 0) {
+    //  return IconButton(onPressed: () => {}, icon: Icon(Icons.add));
+    //}
     return OrientationBuilder(builder: (context, orientation) {
       return DraggableScrollbar.semicircle(
         heightScrollThumb: 50.0,
@@ -174,11 +181,12 @@ class Photos extends StatelessWidget {
                     child: CachedNetworkImage(
                       alignment: Alignment.center,
                       fit: BoxFit.contain,
-                      imageUrl: photoprismUrl +
-                          '/api/v1/thumbnails/' +
-                          Photos.getPhotoList(context, albumId)[index]
-                              .fileHash +
-                          '/tile_224',
+                      imageUrl:
+                          Provider.of<PhotoprismModel>(context).photoprismUrl +
+                              '/api/v1/thumbnails/' +
+                              Photos.getPhotoList(context, albumId)[index]
+                                  .fileHash +
+                              '/tile_224',
                       placeholder: (context, url) => Container(
                         color: Colors.grey[300],
                       ),
