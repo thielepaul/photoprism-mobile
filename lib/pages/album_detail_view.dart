@@ -17,7 +17,7 @@ class AlbumDetailView extends StatelessWidget {
   AlbumDetailView(this._album)
       : _renameAlbumTextFieldController = new TextEditingController();
 
-  void renameAlbum(BuildContext context) async {
+  void _renameAlbum(BuildContext context) async {
     // close rename dialog
     Navigator.pop(context);
 
@@ -49,7 +49,7 @@ class AlbumDetailView extends StatelessWidget {
     }
   }
 
-  void deleteAlbum(BuildContext context) async {
+  void _deleteAlbum(BuildContext context) async {
     // close delete dialog
     Navigator.pop(context);
 
@@ -199,7 +199,7 @@ class AlbumDetailView extends StatelessWidget {
                 child: Text('Rename album'),
                 textColor: HexColor(_model.applicationColor),
                 onPressed: () {
-                  renameAlbum(context);
+                  _renameAlbum(context);
                 },
               )
             ],
@@ -227,7 +227,7 @@ class AlbumDetailView extends StatelessWidget {
                 child: Text('Delete album'),
                 textColor: HexColor(_model.applicationColor),
                 onPressed: () {
-                  deleteAlbum(context);
+                  _deleteAlbum(context);
                 },
               )
             ],
