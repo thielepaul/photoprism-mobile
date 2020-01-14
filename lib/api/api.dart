@@ -1,7 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
+import 'package:photoprism/api/photos.dart';
+import 'package:photoprism/model/photoprism_model.dart';
 
 class Api {
   static Future<String> createAlbum(
@@ -135,22 +138,34 @@ class Api {
     }
   }
 
-  static Future<int> importPhotos(String photoprismUrl) async {
+  static Future<int> importPhotos(
+      String photoprismUrl, PhotoprismModel model, String fileHash) async {
     try {
       http.Response response = await http
           .post(photoprismUrl + "/api/v1/import/upload/mobile", body: "{}");
       print(response.body);
       if (response.statusCode == 200) {
-        // TODO: Check if import is really successful
-        if (response.body == '{"message":"import completed in 0 s"}') {
-          return 3;
-        } else {
+        print("loading photos");
+        await Photos.loadPhotos(model, photoprismUrl, "");
+        print("Finished");
+        bool found = false;
+        for (var i = 0; i < model.photoList.length; i++) {
+          if (model.photoList[i].fileHash == fileHash) {
+            found = true;
+          }
+        }
+        if (found == true) {
+          print("Photo found in PhotoPrism");
           return 0;
+        } else {
+          print("Photo could not be added to PhotoPrism");
+          return 3;
         }
       } else {
         return 2;
       }
-    } catch (_) {
+    } catch (ex) {
+      print(ex);
       return 1;
     }
   }

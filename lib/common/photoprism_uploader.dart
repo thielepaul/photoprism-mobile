@@ -1,7 +1,10 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
+import 'dart:typed_data';
 
+import 'package:crypto/crypto.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_uploader/flutter_uploader.dart';
 import 'package:intl/intl.dart';
@@ -44,27 +47,13 @@ class PhotoprismUploader {
           manualUploadFinishedCompleter.complete(0);
         } else {
           print("Auto upload success!");
-          SharedPreferences prefs = await SharedPreferences.getInstance();
-          List<String> alreadyUploadedPhotos =
-              prefs.getStringList("alreadyUploadedPhotos") ?? List<String>();
-
-          // add uploaded photos to shared pref
-          if (entries.length > 0) {
-            entries.forEach((e) {
-              if (!alreadyUploadedPhotos.contains(e.path)) {
-                alreadyUploadedPhotos.add(e.path);
-              }
-            });
-          }
-
-          prefs.setStringList("alreadyUploadedPhotos", alreadyUploadedPhotos);
-          uploadFinishedCompleter.complete();
+          uploadFinishedCompleter.complete(0);
         }
       } else {
         if (result.tag == "manual") {
           manualUploadFinishedCompleter.complete(2);
         } else {
-          uploadFinishedCompleter.complete();
+          uploadFinishedCompleter.complete(2);
         }
       }
     }, onError: (ex, stacktrace) {
@@ -73,7 +62,7 @@ class PhotoprismUploader {
       if (exp.tag == "manual") {
         manualUploadFinishedCompleter.complete(1);
       } else {
-        uploadFinishedCompleter.complete();
+        uploadFinishedCompleter.complete(1);
       }
     });
   }
@@ -205,7 +194,6 @@ class PhotoprismUploader {
       for (var entry in entries) {
         if (!alreadyUploadedPhotos.contains(entry.path)) {
           entriesToUpload.add(entry.path);
-          print("Photo to upload: " + entry.path);
         }
       }
       photoprismModel.photosToUpload = entriesToUpload;
@@ -244,11 +232,33 @@ class PhotoprismUploader {
             if (!alreadyUploadedPhotos.contains(entry.path)) {
               List<FileSystemEntity> entriesToUpload = [];
               entriesToUpload.add(entry);
+              print("########## Upload new photo ##########");
               print("Uploading " + entry.path);
               await uploadPhotoAuto(entriesToUpload);
+
+              int status = await Api.importPhotos(
+                  photoprismModel.photoprismUrl,
+                  photoprismModel,
+                  sha1.convert(await _readFileByte(entry.path)).toString());
+
+              // add uploaded photo to shared pref
+              if (status == 0) {
+                SharedPreferences prefs = await SharedPreferences.getInstance();
+                List<String> alreadyUploadedPhotos =
+                    prefs.getStringList("alreadyUploadedPhotos") ??
+                        List<String>();
+
+                if (!alreadyUploadedPhotos.contains(entry.path)) {
+                  alreadyUploadedPhotos.add(entry.path);
+                }
+                prefs.setStringList(
+                    "alreadyUploadedPhotos", alreadyUploadedPhotos);
+
+                await getPhotosToUpload();
+                print("############################################");
+              }
             }
           }
-          Api.importPhotos(photoprismModel.photoprismUrl);
           print("All new photos uploaded.");
         } else {
           print("Auto upload disabled for demo page!");
@@ -262,6 +272,20 @@ class PhotoprismUploader {
     }).catchError((e) {
       print('[BackgroundFetch] configure ERROR: $e');
     });
+  }
+
+  Future<Uint8List> _readFileByte(String filePath) async {
+    Uri myUri = Uri.parse(filePath);
+    File audioFile = new File.fromUri(myUri);
+    Uint8List bytes;
+    await audioFile.readAsBytes().then((value) {
+      bytes = Uint8List.fromList(value);
+      print('reading of bytes is completed');
+    }).catchError((onError) {
+      print('Exception Error while reading audio from path:' +
+          onError.toString());
+    });
+    return bytes;
   }
 
   Future uploadPhotoAuto(List<FileSystemEntity> files) async {

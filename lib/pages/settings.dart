@@ -4,6 +4,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:photoprism/common/hexcolor.dart';
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../api/albums.dart';
 import '../api/photos.dart';
@@ -87,6 +88,17 @@ class Settings extends StatelessWidget {
           ),
         ),
         ListTile(
+          title: Text("Delete already uploaded photos info"),
+          leading: Container(
+            width: 10,
+            alignment: Alignment.center,
+            child: Icon(Icons.delete_sweep),
+          ),
+          onTap: () {
+            deleteUploadInfo();
+          },
+        ),
+        ListTile(
           title: Text("Show upload queue"),
           leading: Container(
             width: 10,
@@ -108,6 +120,11 @@ class Settings extends StatelessWidget {
         ),
       ],
     ));
+  }
+
+  deleteUploadInfo() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setStringList("alreadyUploadedPhotos", []);
   }
 
   void getUploadFolder(context) async {
