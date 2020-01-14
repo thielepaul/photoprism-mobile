@@ -207,9 +207,9 @@ class AlbumDetailView extends StatelessWidget {
         });
   }
 
-  _showDeleteAlbumDialog(BuildContext context) async {
+  _showDeleteAlbumDialog(BuildContext albumContext) async {
     return showDialog(
-        context: context,
+        context: albumContext,
         builder: (BuildContext context) {
           return AlertDialog(
             title: Text('Delete album?'),
@@ -227,7 +227,7 @@ class AlbumDetailView extends StatelessWidget {
                 child: Text('Delete album'),
                 textColor: HexColor(_model.applicationColor),
                 onPressed: () {
-                  _deleteAlbum(context);
+                  _deleteAlbum(albumContext);
                 },
               )
             ],
