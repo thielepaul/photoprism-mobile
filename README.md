@@ -20,6 +20,9 @@
 - Improve auto uploader
 - View meta data
 
+## How to contribute
+If you like the app and the project, please give us a star on GitHub. This keeps us motivated. We are also happy about every bug and ideas for improving the app.
+
 ## Installation
 **Hint**: At this moment only photoprism servers without password protection are supported.
 ### Android
