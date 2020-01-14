@@ -192,22 +192,28 @@ class PhotoprismUploader {
   }
 
   void getPhotosToUpload() async {
-    Directory dir = Directory(photoprismModel.autoUploadFolder);
-    entries = dir.listSync(recursive: false).toList();
+    if (FileSystemEntity.typeSync(photoprismModel.autoUploadFolder) !=
+        FileSystemEntityType.notFound) {
+      Directory dir = Directory(photoprismModel.autoUploadFolder);
+      entries = dir.listSync(recursive: false).toList();
 
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    List<String> alreadyUploadedPhotos =
-        prefs.getStringList("alreadyUploadedPhotos") ?? List<String>();
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      List<String> alreadyUploadedPhotos =
+          prefs.getStringList("alreadyUploadedPhotos") ?? List<String>();
 
-    List<String> entriesToUpload = [];
-    for (var entry in entries) {
-      if (!alreadyUploadedPhotos.contains(entry.path)) {
-        entriesToUpload.add(entry.path);
-        print("Photo to upload: " + entry.path);
+      List<String> entriesToUpload = [];
+      for (var entry in entries) {
+        if (!alreadyUploadedPhotos.contains(entry.path)) {
+          entriesToUpload.add(entry.path);
+          print("Photo to upload: " + entry.path);
+        }
       }
+      photoprismModel.photosToUpload = entriesToUpload;
+      photoprismModel.notifyListeners();
+    } else {
+      photoprismModel.photosToUpload = [];
+      photoprismModel.notifyListeners();
     }
-    photoprismModel.photosToUpload = entriesToUpload;
-    photoprismModel.notifyListeners();
   }
 
   Future<void> initPlatformState() async {
