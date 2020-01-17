@@ -186,6 +186,18 @@ class PhotoprismUploader {
       Directory dir = Directory(photoprismModel.autoUploadFolder);
       entries = dir.listSync(recursive: false).toList();
 
+      // remove all but jpg files
+      List<FileSystemEntity> newEntries = [];
+      for (var entry in entries) {
+        if (entry.path.length > 3 &&
+            (entry.path.substring(entry.path.length - 4) == ".jpg" ||
+                entry.path.substring(entry.path.length - 4) == ".JPG")) {
+          newEntries.add(entry);
+          print("Adding " + entry.path);
+        }
+      }
+      entries = newEntries;
+
       SharedPreferences prefs = await SharedPreferences.getInstance();
       List<String> alreadyUploadedPhotos =
           prefs.getStringList("alreadyUploadedPhotos") ?? List<String>();
@@ -223,6 +235,18 @@ class PhotoprismUploader {
           setautoUploadLastTimeActive();
           Directory dir = Directory(photoprismModel.autoUploadFolder);
           entries = dir.listSync(recursive: false).toList();
+
+          // remove all but jpg files
+          List<FileSystemEntity> newEntries = [];
+          for (var entry in entries) {
+            if (entry.path.length > 3 &&
+                (entry.path.substring(entry.path.length - 4) == ".jpg" ||
+                    entry.path.substring(entry.path.length - 4) == ".JPG")) {
+              newEntries.add(entry);
+              print("Adding " + entry.path);
+            }
+          }
+          entries = newEntries;
 
           SharedPreferences prefs = await SharedPreferences.getInstance();
           List<String> alreadyUploadedPhotos =
@@ -276,13 +300,13 @@ class PhotoprismUploader {
 
   Future<Uint8List> _readFileByte(String filePath) async {
     Uri myUri = Uri.parse(filePath);
-    File audioFile = new File.fromUri(myUri);
+    File imageFile = new File.fromUri(myUri);
     Uint8List bytes;
-    await audioFile.readAsBytes().then((value) {
+    await imageFile.readAsBytes().then((value) {
       bytes = Uint8List.fromList(value);
       print('reading of bytes is completed');
     }).catchError((onError) {
-      print('Exception Error while reading audio from path:' +
+      print('Exception Error while reading image from path:' +
           onError.toString());
     });
     return bytes;
