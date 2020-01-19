@@ -19,14 +19,14 @@ class PhotoprismAlbumManager {
     photoprismModel.albums =
         Map.fromIterable(albumList, key: (e) => e.id, value: (e) => e);
     saveAlbumListToSharedPrefs();
-    photoprismModel.notifyListeners();
+    photoprismModel.notify();
   }
 
   void setPhotoListOfAlbum(List<Photo> photoList, String albumId) {
     print("setPhotoListOfAlbum: albumId: " + albumId);
     photoprismModel.albums[albumId].photoList = photoList;
     savePhotoListToSharedPrefs('photosList' + albumId, photoList);
-    photoprismModel.notifyListeners();
+    photoprismModel.notify();
   }
 
   Future savePhotoListToSharedPrefs(key, photoList) async {
@@ -48,17 +48,17 @@ class PhotoprismAlbumManager {
     print("Creating new album");
     photoprismModel.photoprismLoadingScreen
         .showLoadingScreen("Creating new album..");
-    var status =
+    String status =
         await Api.createAlbum('New album', photoprismModel.photoprismUrl);
 
-    if (status == 0) {
+    if (status == "-1") {
+      await photoprismModel.photoprismLoadingScreen.hideLoadingScreen();
+      photoprismModel.photoprismMessage.showMessage("Creating album failed.");
+    } else {
       await Albums.loadAlbums(photoprismModel, photoprismModel.photoprismUrl);
       await photoprismModel.photoprismLoadingScreen.hideLoadingScreen();
       photoprismModel.photoprismMessage
           .showMessage("Album created successfully.");
-    } else {
-      await photoprismModel.photoprismLoadingScreen.hideLoadingScreen();
-      photoprismModel.photoprismMessage.showMessage("Creating album failed.");
     }
   }
 

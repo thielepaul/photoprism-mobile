@@ -23,7 +23,7 @@ class PhotoprismPhotoManager {
   void setPhotoList(List<Photo> photoList) {
     photoprismModel.photoList = photoList;
     savePhotoListToSharedPrefs('photosList', photoList);
-    photoprismModel.notifyListeners();
+    photoprismModel.notify();
   }
 
   void archivePhotos(List<String> photoUUIDs) async {

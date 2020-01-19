@@ -42,7 +42,7 @@ class MyApp extends StatelessWidget {
             focusedBorder: UnderlineInputBorder(
                 borderSide: BorderSide(color: applicationColor))),
       ),
-      home: MainPage('PhotoPrism'),
+      home: MainPage('PhotoPrism', context),
     );
   }
 }
@@ -50,9 +50,10 @@ class MyApp extends StatelessWidget {
 class MainPage extends StatelessWidget {
   final String title;
   final PageController _pageController;
-  BuildContext context;
+  final BuildContext context;
 
-  MainPage(this.title) : _pageController = PageController(initialPage: 0);
+  MainPage(this.title, this.context)
+      : _pageController = PageController(initialPage: 0);
 
   void _onTappedNavigationBar(int index) {
     _pageController.jumpToPage(index);
@@ -169,7 +170,7 @@ class MainPage extends StatelessWidget {
         context,
         MaterialPageRoute(
             builder: (ctx) =>
-                AlbumDetailView(Albums.getAlbumList(context)[length])),
+                AlbumDetailView(Albums.getAlbumList(context)[length], context)),
       );
     }
   }
@@ -221,13 +222,11 @@ class MainPage extends StatelessWidget {
     });
 
     model.gridController.clear();
-    await model.photoprismAlbumManager
-        .addPhotosToAlbum(albumId, selectedPhotos);
+    model.photoprismAlbumManager.addPhotosToAlbum(albumId, selectedPhotos);
   }
 
   @override
   Widget build(BuildContext context) {
-    this.context = context;
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
     model.photoprismLoadingScreen.context = context;
 

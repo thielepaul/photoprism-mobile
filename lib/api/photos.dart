@@ -9,7 +9,7 @@ import 'package:photoprism/model/photo.dart';
 import 'package:http/http.dart' as http;
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:photoprism/pages/photoview.dart';
-import 'package:photoprism/widgets/draggable_scrollbar.dart';
+import 'package:draggable_scrollbar/draggable_scrollbar.dart';
 import 'package:photoprism/widgets/selectable_tile.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';

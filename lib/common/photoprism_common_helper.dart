@@ -25,27 +25,27 @@ class PhotoprismCommonHelper {
 
   void setSelectedPageIndex(int index) {
     photoprismModel.selectedPageIndex = index;
-    photoprismModel.notifyListeners();
+    photoprismModel.notify();
   }
 
   Future<void> setPhotoprismUrl(url) async {
     await savePhotoprismUrlToPrefs(url);
     photoprismModel.photoprismUrl = url;
-    photoprismModel.notifyListeners();
+    photoprismModel.notify();
   }
 
   void setPhotoViewScaleState(PhotoViewScaleState scaleState) {
     photoprismModel.photoViewScaleState = scaleState;
-    photoprismModel.notifyListeners();
+    photoprismModel.notify();
   }
 
   DragSelectGridViewController getGridController() {
     try {
-      photoprismModel.gridController.hasListeners;
+      photoprismModel.gridController.addListener(photoprismModel.notify);
     } catch (_) {
+      print("gridcontroller has no listeners");
       photoprismModel.gridController = DragSelectGridViewController();
-      photoprismModel.gridController
-          .addListener(photoprismModel.notifyListeners);
+      photoprismModel.gridController.addListener(photoprismModel.notify);
     }
     return photoprismModel.gridController;
   }

@@ -10,12 +10,13 @@ import 'package:photoprism/model/photoprism_model.dart';
 import 'package:provider/provider.dart';
 
 class AlbumDetailView extends StatelessWidget {
-  PhotoprismModel _model;
+  final PhotoprismModel _model;
   final Album _album;
   final TextEditingController _renameAlbumTextFieldController;
 
-  AlbumDetailView(this._album)
-      : _renameAlbumTextFieldController = new TextEditingController();
+  AlbumDetailView(this._album, context)
+      : _renameAlbumTextFieldController = new TextEditingController(),
+        _model = Provider.of<PhotoprismModel>(context);
 
   void _renameAlbum(BuildContext context) async {
     // close rename dialog
@@ -30,7 +31,7 @@ class AlbumDetailView extends StatelessWidget {
         albums[i].name = _renameAlbumTextFieldController.text;
       }
     }
-    _model.notifyListeners();
+    _model.notify();
 
     // rename remote album
     var status = await Api.renameAlbum(
@@ -44,7 +45,7 @@ class AlbumDetailView extends StatelessWidget {
           albums[i].name = oldAlbumName;
         }
       }
-      _model.notifyListeners();
+      _model.notify();
       _model.photoprismMessage.showMessage("Renaming album failed.");
     }
   }
@@ -71,7 +72,7 @@ class AlbumDetailView extends StatelessWidget {
         }
       }
       _model.photoprismAlbumManager.setAlbumList(albums);
-      _model.notifyListeners();
+      _model.notify();
     }
   }
 
@@ -113,14 +114,13 @@ class AlbumDetailView extends StatelessWidget {
       }
       currentAlbum.imageCount = currentAlbum.imageCount - selectedPhotos.length;
     }
-    _model.notifyListeners();
+    _model.notify();
     // deselect selected photos
     _model.gridController.clear();
   }
 
   @override
   Widget build(BuildContext context) {
-    this._model = Provider.of<PhotoprismModel>(context);
     int _selectedPhotosCount =
         _model.gridController.selection.selectedIndexes.length;
     return Scaffold(

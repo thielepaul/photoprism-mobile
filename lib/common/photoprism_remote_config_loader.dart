@@ -19,7 +19,7 @@ class PhotoprismRemoteConfigLoader {
     if (applicationColor != null) {
       print("loading color scheme from cache");
       photoprismModel.applicationColor = applicationColor;
-      photoprismModel.notifyListeners();
+      photoprismModel.notify();
     }
 
     // load color scheme from server
@@ -40,7 +40,7 @@ class PhotoprismRemoteConfigLoader {
 
         // save new color scheme to shared preferences
         prefs.setString("applicationColor", photoprismModel.applicationColor);
-        photoprismModel.notifyListeners();
+        photoprismModel.notify();
       } catch (_) {
         print("Could not parse color scheme!");
       }
