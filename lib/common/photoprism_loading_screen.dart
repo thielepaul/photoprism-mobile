@@ -17,7 +17,7 @@ class PhotoprismLoadingScreen {
     pr = new ProgressDialog(context);
     pr.style(message: message);
     pr.show();
-    photoprismModel.notifyListeners();
+    photoprismModel.notify();
   }
 
   updateLoadingScreen(String message) {
@@ -31,7 +31,7 @@ class PhotoprismLoadingScreen {
         hideLoadingScreenCompleter.complete();
       });
     });
-    photoprismModel.notifyListeners();
+    photoprismModel.notify();
     hideLoadingScreenCompleter = Completer();
     return hideLoadingScreenCompleter.future;
   }

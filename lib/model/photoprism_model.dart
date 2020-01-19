@@ -63,4 +63,6 @@ class PhotoprismModel extends ChangeNotifier {
     Albums.loadAlbumsFromNetworkOrCache(this, photoprismUrl);
     gridController.addListener(notifyListeners);
   }
+
+  void notify() => notifyListeners();
 }

@@ -88,11 +88,10 @@ class Albums extends StatelessWidget {
                       Provider.of<PhotoprismModel>(context).photoprismUrl,
                       Albums.getAlbumList(context)[index].id);
                   Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (ctx) => AlbumDetailView(
-                            Albums.getAlbumList(context)[index])),
-                  );
+                      context,
+                      MaterialPageRoute(
+                          builder: (ctx) => AlbumDetailView(
+                              Albums.getAlbumList(context)[index], context)));
                 },
                 child: ClipRRect(
                     borderRadius: new BorderRadius.circular(8.0),

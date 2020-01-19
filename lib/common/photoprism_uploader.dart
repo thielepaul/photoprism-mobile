@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
@@ -71,7 +70,7 @@ class PhotoprismUploader {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setBool("autoUploadEnabled", autoUploadEnabledNew);
     photoprismModel.autoUploadEnabled = autoUploadEnabledNew;
-    photoprismModel.notifyListeners();
+    photoprismModel.notify();
   }
 
   void setautoUploadLastTimeActive() async {
@@ -82,7 +81,7 @@ class PhotoprismUploader {
     print(currentTime.toString());
     prefs.setString("autoUploadLastTimeActive", currentTime.toString());
     photoprismModel.autoUploadLastTimeCheckedForPhotos = currentTime.toString();
-    photoprismModel.notifyListeners();
+    photoprismModel.notify();
   }
 
   void loadPreferences() async {
@@ -93,14 +92,14 @@ class PhotoprismUploader {
         prefs.getString("uploadFolder") ?? "/storage/emulated/0/DCIM/Camera";
     photoprismModel.autoUploadLastTimeCheckedForPhotos =
         prefs.getString("autoUploadLastTimeActive") ?? "Never";
-    photoprismModel.notifyListeners();
+    photoprismModel.notify();
   }
 
   Future<void> setUploadFolder(autoUploadFolderNew) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setString("uploadFolder", autoUploadFolderNew);
     photoprismModel.autoUploadFolder = autoUploadFolderNew;
-    photoprismModel.notifyListeners();
+    photoprismModel.notify();
   }
 
   /// Starts image file picker, uploads photo(s) and imports them.
@@ -209,10 +208,10 @@ class PhotoprismUploader {
         }
       }
       photoprismModel.photosToUpload = entriesToUpload;
-      photoprismModel.notifyListeners();
+      photoprismModel.notify();
     } else {
       photoprismModel.photosToUpload = [];
-      photoprismModel.notifyListeners();
+      photoprismModel.notify();
     }
   }
 
@@ -278,7 +277,7 @@ class PhotoprismUploader {
                 prefs.setStringList(
                     "alreadyUploadedPhotos", alreadyUploadedPhotos);
 
-                await getPhotosToUpload();
+                getPhotosToUpload();
                 print("############################################");
               }
             }

@@ -40,6 +40,9 @@ dependencies:
   flushbar: ^1.9.1
   esys_flutter_share: ^1.0.2
   crypto: ^2.1.3
+  draggable_scrollbar:
+    git:
+      url: git://github.com/Miolin/flutter-draggable-scrollbar.git
 
 dev_dependencies:
   flutter_test:
