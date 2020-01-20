@@ -62,26 +62,6 @@ class MainPage extends StatelessWidget {
         .setSelectedPageIndex(index);
   }
 
-  void emptyCache() async {
-    await DefaultCacheManager().emptyCache();
-  }
-
-  Future<void> refreshPhotosPull() async {
-    print('refreshing photos..');
-
-    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
-    await Photos.loadPhotos(model, model.photoprismUrl, "");
-    await Photos.loadPhotosFromNetworkOrCache(model, model.photoprismUrl, "");
-  }
-
-  Future<void> refreshAlbumsPull() async {
-    print('refreshing albums..');
-
-    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
-    await Albums.loadAlbums(model, model.photoprismUrl);
-    await Albums.loadAlbumsFromNetworkOrCache(model, model.photoprismUrl);
-  }
-
   AppBar getAppBar(context) {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
 
@@ -233,17 +213,13 @@ class MainPage extends StatelessWidget {
     return Scaffold(
       appBar: getAppBar(context),
       body: PageView(
-          physics: NeverScrollableScrollPhysics(),
           controller: _pageController,
           children: <Widget>[
-            RefreshIndicator(
-                child: Photos(context: context, albumId: ""),
-                onRefresh: refreshPhotosPull),
-            RefreshIndicator(
-                child: Albums(photoprismUrl: model.photoprismUrl),
-                onRefresh: refreshAlbumsPull),
+            Photos(context: context, albumId: ""),
+            Albums(context: context, photoprismUrl: model.photoprismUrl),
             Settings(),
-          ]),
+          ],
+          physics: NeverScrollableScrollPhysics()),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(

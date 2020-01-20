@@ -125,6 +125,13 @@ class Photos extends StatelessWidget {
     }
   }
 
+  Future<void> refreshPhotosPull() async {
+    print('refreshing photos..');
+    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
+    await Photos.loadPhotos(model, model.photoprismUrl, "");
+    await Photos.loadPhotosFromNetworkOrCache(model, model.photoprismUrl, "");
+  }
+
   @override
   Widget build(BuildContext context) {
     DragSelectGridViewController gridController =
@@ -140,61 +147,65 @@ class Photos extends StatelessWidget {
     //if (Photos.getPhotoList(context, albumId).length == 0) {
     //  return IconButton(onPressed: () => {}, icon: Icon(Icons.add));
     //}
-    return OrientationBuilder(builder: (context, orientation) {
-      return DraggableScrollbar.semicircle(
-        heightScrollThumb: 50.0,
-        controller: _scrollController,
-        child: DragSelectGridView(
-            key: ValueKey('photosGridView'),
-            scrollController: _scrollController,
-            gridController: gridController,
-            physics: AlwaysScrollableScrollPhysics(),
-            gridDelegate: new SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: orientation == Orientation.portrait ? 3 : 6,
-              mainAxisSpacing: 4,
-              crossAxisSpacing: 4,
-            ),
-            itemCount: Photos.getPhotoList(context, albumId).length,
-            itemBuilder: (context, index, selected) {
-              return SelectableTile(
-                  key: ValueKey("PhotoTile"),
-                  index: index,
-                  context: context,
-                  gridController: gridController,
-                  selected: selected,
-                  onTap: () {
-                    Provider.of<PhotoprismModel>(context)
-                        .photoprismCommonHelper
-                        .setPhotoViewScaleState(PhotoViewScaleState.initial);
-                    Navigator.push(
-                        context,
-                        TransparentRoute(
-                          builder: (context) =>
-                              FullscreenPhotoGallery(index, albumId),
-                        ));
-                  },
-                  child: Hero(
-                    tag: index.toString(),
-                    createRectTween: (begin, end) {
-                      return RectTween(begin: begin, end: end);
-                    },
-                    child: CachedNetworkImage(
-                      alignment: Alignment.center,
-                      fit: BoxFit.contain,
-                      imageUrl:
-                          Provider.of<PhotoprismModel>(context).photoprismUrl +
+    return RefreshIndicator(
+        child: OrientationBuilder(builder: (context, orientation) {
+          return DraggableScrollbar.semicircle(
+            heightScrollThumb: 50.0,
+            controller: _scrollController,
+            child: DragSelectGridView(
+                key: ValueKey('photosGridView'),
+                scrollController: _scrollController,
+                gridController: gridController,
+                physics: AlwaysScrollableScrollPhysics(),
+                gridDelegate: new SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: orientation == Orientation.portrait ? 3 : 6,
+                  mainAxisSpacing: 4,
+                  crossAxisSpacing: 4,
+                ),
+                itemCount: Photos.getPhotoList(context, albumId).length,
+                itemBuilder: (context, index, selected) {
+                  return SelectableTile(
+                      key: ValueKey("PhotoTile"),
+                      index: index,
+                      context: context,
+                      gridController: gridController,
+                      selected: selected,
+                      onTap: () {
+                        Provider.of<PhotoprismModel>(context)
+                            .photoprismCommonHelper
+                            .setPhotoViewScaleState(
+                                PhotoViewScaleState.initial);
+                        Navigator.push(
+                            context,
+                            TransparentRoute(
+                              builder: (context) =>
+                                  FullscreenPhotoGallery(index, albumId),
+                            ));
+                      },
+                      child: Hero(
+                        tag: index.toString(),
+                        createRectTween: (begin, end) {
+                          return RectTween(begin: begin, end: end);
+                        },
+                        child: CachedNetworkImage(
+                          alignment: Alignment.center,
+                          fit: BoxFit.contain,
+                          imageUrl: Provider.of<PhotoprismModel>(context)
+                                  .photoprismUrl +
                               '/api/v1/thumbnails/' +
                               Photos.getPhotoList(context, albumId)[index]
                                   .fileHash +
                               '/tile_224',
-                      placeholder: (context, url) => Container(
-                        color: Colors.grey[300],
-                      ),
-                      errorWidget: (context, url, error) => Icon(Icons.error),
-                    ),
-                  ));
-            }),
-      );
-    });
+                          placeholder: (context, url) => Container(
+                            color: Colors.grey[300],
+                          ),
+                          errorWidget: (context, url, error) =>
+                              Icon(Icons.error),
+                        ),
+                      ));
+                }),
+          );
+        }),
+        onRefresh: refreshPhotosPull);
   }
 }
