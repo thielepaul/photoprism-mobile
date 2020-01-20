@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:drag_select_grid_view/drag_select_grid_view.dart';
 import 'package:photoprism/api/api.dart';
-import 'package:photoprism/api/photos.dart';
+import 'package:photoprism/pages/photos_page.dart';
 import 'package:photoprism/model/photo.dart';
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';

@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
-import 'package:photoprism/api/photos.dart';
+import 'package:photoprism/pages/photos_page.dart';
 import 'package:photoprism/model/photoprism_model.dart';
 
 class Api {

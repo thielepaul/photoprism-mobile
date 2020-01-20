@@ -1,8 +1,8 @@
 import 'dart:convert';
 
-import 'package:photoprism/api/albums.dart';
+import 'package:photoprism/pages/albums_page.dart';
 import 'package:photoprism/api/api.dart';
-import 'package:photoprism/api/photos.dart';
+import 'package:photoprism/pages/photos_page.dart';
 import 'package:photoprism/model/album.dart';
 import 'package:photoprism/model/photo.dart';
 import 'package:photoprism/model/photoprism_model.dart';

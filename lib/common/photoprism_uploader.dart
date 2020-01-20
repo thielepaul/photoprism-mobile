@@ -12,7 +12,7 @@ import 'package:path/path.dart';
 import 'package:background_fetch/background_fetch.dart';
 
 import '../api/api.dart';
-import '../api/photos.dart';
+import '../pages/photos_page.dart';
 import '../model/photoprism_model.dart';
 
 class PhotoprismUploader {

@@ -6,8 +6,8 @@ import 'package:photoprism/model/photoprism_model.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../api/albums.dart';
-import '../api/photos.dart';
+import 'albums_page.dart';
+import 'photos_page.dart';
 import '../model/photoprism_model.dart';
 import 'auto_upload_queue.dart';
 

@@ -1,8 +1,8 @@
 import 'package:drag_select_grid_view/drag_select_grid_view.dart';
 import 'package:flutter/material.dart';
-import 'package:photoprism/api/albums.dart';
+import 'package:photoprism/pages/albums_page.dart';
 import 'package:photoprism/api/api.dart';
-import 'package:photoprism/api/photos.dart';
+import 'package:photoprism/pages/photos_page.dart';
 import 'package:photoprism/common/hexcolor.dart';
 import 'package:photoprism/model/album.dart';
 import 'package:photoprism/model/photo.dart';

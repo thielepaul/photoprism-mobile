@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:photoprism/api/albums.dart';
-import 'package:photoprism/pages/settings.dart';
+import 'package:photoprism/pages/albums_page.dart';
+import 'package:photoprism/pages/settings_page.dart';
 import 'package:provider/provider.dart';
 import 'package:photoprism/common/hexcolor.dart';
-import 'api/photos.dart';
+import 'pages/photos_page.dart';
 import 'model/photoprism_model.dart';
 // use this for debugging animations
 // import 'package:flutter/scheduler.dart' show timeDilation;

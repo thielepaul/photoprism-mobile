@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:photoprism/api/api.dart';
-import 'package:photoprism/api/photos.dart';
+import 'package:photoprism/pages/photos_page.dart';
 import 'package:photoprism/common/hexcolor.dart';
 import 'package:photoprism/model/album.dart';
 import 'package:http/http.dart' as http;

@@ -15,7 +15,7 @@ import 'package:photoprism/widgets/selectable_tile.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'albums.dart';
+import 'albums_page.dart';
 
 class PhotosPage extends StatelessWidget {
   final ScrollController _scrollController;
