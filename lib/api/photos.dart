@@ -202,47 +202,51 @@ class Photos extends StatelessWidget {
     //  return IconButton(onPressed: () => {}, icon: Icon(Icons.add));
     //}
     return Scaffold(
-        appBar: AppBar(
-          title: model.gridController.selection.selectedIndexes.length > 0
-              ? Text(model.gridController.selection.selectedIndexes.length
-                  .toString())
-              : Text("PhotoPrism"),
-          backgroundColor: HexColor(model.applicationColor),
-          leading: model.gridController.selection.selectedIndexes.length > 0
-              ? IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: () {
-                    model.gridController.selection = Selection({});
-                  },
-                )
-              : null,
-          actions: model.gridController.selection.selectedIndexes.length > 0
-              ? <Widget>[
-                  IconButton(
-                    icon: const Icon(Icons.archive),
-                    tooltip: 'Archive photos',
-                    onPressed: () {
-                      archiveSelectedPhotos();
-                    },
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.add),
-                    tooltip: 'Add to album',
-                    onPressed: () {
-                      _selectAlbumDialog(context);
-                    },
-                  ),
-                ]
-              : <Widget>[
-                  IconButton(
-                    icon: const Icon(Icons.cloud_upload),
-                    tooltip: 'Upload photo',
-                    onPressed: () {
-                      model.photoprismUploader.selectPhotoAndUpload();
-                    },
-                  )
-                ],
-        ),
+        appBar: albumId == ""
+            ? AppBar(
+                title: model.gridController.selection.selectedIndexes.length > 0
+                    ? Text(model.gridController.selection.selectedIndexes.length
+                        .toString())
+                    : Text("PhotoPrism"),
+                backgroundColor: HexColor(model.applicationColor),
+                leading:
+                    model.gridController.selection.selectedIndexes.length > 0
+                        ? IconButton(
+                            icon: const Icon(Icons.close),
+                            onPressed: () {
+                              model.gridController.selection = Selection({});
+                            },
+                          )
+                        : null,
+                actions:
+                    model.gridController.selection.selectedIndexes.length > 0
+                        ? <Widget>[
+                            IconButton(
+                              icon: const Icon(Icons.archive),
+                              tooltip: 'Archive photos',
+                              onPressed: () {
+                                archiveSelectedPhotos();
+                              },
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.add),
+                              tooltip: 'Add to album',
+                              onPressed: () {
+                                _selectAlbumDialog(context);
+                              },
+                            ),
+                          ]
+                        : <Widget>[
+                            IconButton(
+                              icon: const Icon(Icons.cloud_upload),
+                              tooltip: 'Upload photo',
+                              onPressed: () {
+                                model.photoprismUploader.selectPhotoAndUpload();
+                              },
+                            )
+                          ],
+              )
+            : null,
         body: RefreshIndicator(
             child: OrientationBuilder(builder: (context, orientation) {
               return DraggableScrollbar.semicircle(
