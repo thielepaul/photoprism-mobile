@@ -55,7 +55,8 @@ class PhotoprismAlbumManager {
       await photoprismModel.photoprismLoadingScreen.hideLoadingScreen();
       photoprismModel.photoprismMessage.showMessage("Creating album failed.");
     } else {
-      await AlbumsPage.loadAlbums(photoprismModel, photoprismModel.photoprismUrl);
+      await AlbumsPage.loadAlbums(
+          photoprismModel, photoprismModel.photoprismUrl);
       await photoprismModel.photoprismLoadingScreen.hideLoadingScreen();
       photoprismModel.photoprismMessage
           .showMessage("Album created successfully.");
@@ -72,7 +73,8 @@ class PhotoprismAlbumManager {
           albumId, newAlbumName, photoprismModel.photoprismUrl);
 
       if (status == 0) {
-        await AlbumsPage.loadAlbums(photoprismModel, photoprismModel.photoprismUrl);
+        await AlbumsPage.loadAlbums(
+            photoprismModel, photoprismModel.photoprismUrl);
         await PhotosPage.loadPhotos(
             photoprismModel, photoprismModel.photoprismUrl, albumId);
         await photoprismModel.photoprismLoadingScreen.hideLoadingScreen();
@@ -96,7 +98,8 @@ class PhotoprismAlbumManager {
     var status = await Api.deleteAlbum(albumId, photoprismModel.photoprismUrl);
 
     if (status == 0) {
-      await AlbumsPage.loadAlbums(photoprismModel, photoprismModel.photoprismUrl);
+      await AlbumsPage.loadAlbums(
+          photoprismModel, photoprismModel.photoprismUrl);
       await photoprismModel.photoprismLoadingScreen.hideLoadingScreen();
       photoprismModel.photoprismMessage
           .showMessage("Album deleted successfully.");
@@ -114,7 +117,8 @@ class PhotoprismAlbumManager {
         albumId, photoUUIDs, photoprismModel.photoprismUrl);
 
     if (status == 0) {
-      await AlbumsPage.loadAlbums(photoprismModel, photoprismModel.photoprismUrl);
+      await AlbumsPage.loadAlbums(
+          photoprismModel, photoprismModel.photoprismUrl);
       await photoprismModel.photoprismLoadingScreen.hideLoadingScreen();
       photoprismModel.photoprismMessage
           .showMessage("Adding photos to album successfull.");
