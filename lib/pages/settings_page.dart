@@ -18,7 +18,7 @@ class SettingsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var photorismModel = Provider.of<PhotoprismModel>(context);
+    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
 
     return Scaffold(
         appBar: AppBar(
@@ -30,7 +30,7 @@ class SettingsPage extends StatelessWidget {
           children: <Widget>[
             ListTile(
               title: Text("Photoprism URL"),
-              subtitle: Text(photorismModel.photoprismUrl),
+              subtitle: Text(model.photoprismUrl),
               leading: Container(
                 width: 10,
                 alignment: Alignment.center,
@@ -54,7 +54,7 @@ class SettingsPage extends StatelessWidget {
             SwitchListTile(
               title: Text("Auto Upload"),
               secondary: const Icon(Icons.cloud_upload),
-              value: Provider.of<PhotoprismModel>(context).autoUploadEnabled,
+              value: model.autoUploadEnabled,
               onChanged: (bool newState) async {
                 final PermissionHandler _permissionHandler =
                     PermissionHandler();
@@ -64,9 +64,7 @@ class SettingsPage extends StatelessWidget {
                 if (result[PermissionGroup.storage] ==
                     PermissionStatus.granted) {
                   print(newState);
-                  Provider.of<PhotoprismModel>(context)
-                      .photoprismUploader
-                      .setAutoUpload(newState);
+                  model.photoprismUploader.setAutoUpload(newState);
                 } else {
                   print("Not authorized.");
                 }
@@ -74,7 +72,7 @@ class SettingsPage extends StatelessWidget {
             ),
             ListTile(
               title: Text("Upload folder"),
-              subtitle: Text(photorismModel.autoUploadFolder),
+              subtitle: Text(model.autoUploadFolder),
               leading: Container(
                 width: 10,
                 alignment: Alignment.center,
@@ -86,7 +84,7 @@ class SettingsPage extends StatelessWidget {
             ),
             ListTile(
               title: Text("Last time checked for photos to be uploaded"),
-              subtitle: Text(photorismModel.autoUploadLastTimeCheckedForPhotos),
+              subtitle: Text(model.autoUploadLastTimeCheckedForPhotos),
               leading: Container(
                 width: 10,
                 alignment: Alignment.center,
@@ -112,11 +110,10 @@ class SettingsPage extends StatelessWidget {
                 child: Icon(Icons.sort),
               ),
               onTap: () {
-                photorismModel.photoprismUploader.getPhotosToUpload();
+                model.photoprismUploader.getPhotosToUpload();
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
-                      builder: (ctx) => AutoUploadQueue(photorismModel)),
+                  MaterialPageRoute(builder: (ctx) => AutoUploadQueue(model)),
                 );
               },
             ),
@@ -128,7 +125,7 @@ class SettingsPage extends StatelessWidget {
         )));
   }
 
-  deleteUploadInfo() async {
+  void deleteUploadInfo() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setStringList("alreadyUploadedPhotos", []);
   }
@@ -138,8 +135,8 @@ class SettingsPage extends StatelessWidget {
   }
 
   _settingsDisplayUrlDialog(BuildContext context) async {
-    var photorismModel = Provider.of<PhotoprismModel>(context);
-    _urlTextFieldController.text = photorismModel.photoprismUrl;
+    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
+    _urlTextFieldController.text = model.photoprismUrl;
 
     return showDialog(
         context: context,
@@ -154,16 +151,14 @@ class SettingsPage extends StatelessWidget {
             ),
             actions: <Widget>[
               FlatButton(
-                textColor: HexColor(
-                    Provider.of<PhotoprismModel>(context).applicationColor),
+                textColor: HexColor(model.applicationColor),
                 child: Text('Cancel'),
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
               ),
               FlatButton(
-                textColor: HexColor(
-                    Provider.of<PhotoprismModel>(context).applicationColor),
+                textColor: HexColor(model.applicationColor),
                 child: Text('Save'),
                 onPressed: () {
                   setNewPhotoprismUrl(context, _urlTextFieldController.text);
@@ -175,8 +170,8 @@ class SettingsPage extends StatelessWidget {
   }
 
   _settingsDisplayUploadFolderDialog(BuildContext context) async {
-    var photorismModel = Provider.of<PhotoprismModel>(context);
-    _uploadFolderTextFieldController.text = photorismModel.autoUploadFolder;
+    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
+    _uploadFolderTextFieldController.text = model.autoUploadFolder;
 
     return showDialog(
         context: context,
@@ -190,16 +185,14 @@ class SettingsPage extends StatelessWidget {
             ),
             actions: <Widget>[
               FlatButton(
-                textColor: HexColor(
-                    Provider.of<PhotoprismModel>(context).applicationColor),
+                textColor: HexColor(model.applicationColor),
                 child: Text('Cancel'),
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
               ),
               FlatButton(
-                textColor: HexColor(
-                    Provider.of<PhotoprismModel>(context).applicationColor),
+                textColor: HexColor(model.applicationColor),
                 child: Text('Save'),
                 onPressed: () {
                   setNewUploadFolder(
@@ -212,20 +205,19 @@ class SettingsPage extends StatelessWidget {
   }
 
   void setNewPhotoprismUrl(context, url) async {
+    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
     Navigator.of(context).pop();
-    PhotoprismModel pmodel = Provider.of<PhotoprismModel>(context);
-    await pmodel.photoprismCommonHelper.setPhotoprismUrl(url);
-    pmodel.photoprismRemoteConfigLoader.loadApplicationColor();
+    await model.photoprismCommonHelper.setPhotoprismUrl(url);
+    model.photoprismRemoteConfigLoader.loadApplicationColor();
     emptyCache();
-    await PhotosPage.loadPhotos(pmodel, pmodel.photoprismUrl, "");
-    await AlbumsPage.loadAlbums(pmodel, pmodel.photoprismUrl);
+    await PhotosPage.loadPhotos(model, model.photoprismUrl, "");
+    await AlbumsPage.loadAlbums(model, model.photoprismUrl);
   }
 
   void setNewUploadFolder(context, path) async {
+    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
     Navigator.of(context).pop();
-    await Provider.of<PhotoprismModel>(context)
-        .photoprismUploader
-        .setUploadFolder(path);
+    await model.photoprismUploader.setUploadFolder(path);
   }
 
   void emptyCache() async {
