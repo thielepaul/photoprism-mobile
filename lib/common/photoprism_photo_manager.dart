@@ -35,7 +35,7 @@ class PhotoprismPhotoManager {
 
     if (status == 0) {
       photoprismModel.gridController.selection = Selection({});
-      await Photos.loadPhotos(
+      await PhotosPage.loadPhotos(
           photoprismModel, photoprismModel.photoprismUrl, "");
       await photoprismModel.photoprismLoadingScreen.hideLoadingScreen();
       photoprismModel.photoprismMessage

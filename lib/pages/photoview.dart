@@ -251,7 +251,7 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
   @override
   Widget build(BuildContext context) {
     photoprismUrl = Provider.of<PhotoprismModel>(context).photoprismUrl;
-    photos = Photos.getPhotoList(context, widget.albumId);
+    photos = PhotosPage.getPhotoList(context, widget.albumId);
     currentPhotoIndex = widget.currentPhotoIndex;
 
     return WillPopScope(

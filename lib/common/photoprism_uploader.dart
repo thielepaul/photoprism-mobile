@@ -145,7 +145,7 @@ class PhotoprismUploader {
             await Api.importPhotoEvent(photoprismModel.photoprismUrl, event);
 
         if (status == 0) {
-          await Photos.loadPhotos(
+          await PhotosPage.loadPhotos(
               photoprismModel, photoprismModel.photoprismUrl, "");
           await photoprismModel.photoprismLoadingScreen.hideLoadingScreen();
           photoprismModel.photoprismMessage

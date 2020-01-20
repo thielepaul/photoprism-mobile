@@ -12,11 +12,8 @@ import 'package:photoprism/pages/album_detail_view.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class Albums extends StatelessWidget {
-  final String photoprismUrl;
-  final BuildContext context;
-
-  const Albums({Key key, this.context, this.photoprismUrl}) : super(key: key);
+class AlbumsPage extends StatelessWidget {
+  const AlbumsPage({Key key}) : super(key: key);
 
   static Future loadAlbumsFromNetworkOrCache(
       PhotoprismModel model, String photoprismUrl) async {
@@ -54,31 +51,32 @@ class Albums extends StatelessWidget {
   }
 
   String getAlbumPreviewUrl(context, index) {
-    if (Albums.getAlbumList(context)[index].imageCount <= 0) {
+    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
+    if (AlbumsPage.getAlbumList(context)[index].imageCount <= 0) {
       return "https://raw.githubusercontent.com/photoprism/photoprism-mobile/master/assets/emptyAlbum.jpg";
     } else {
-      return photoprismUrl +
+      return model.photoprismUrl +
           '/api/v1/albums/' +
-          Albums.getAlbumList(context)[index].id +
+          AlbumsPage.getAlbumList(context)[index].id +
           '/thumbnail/tile_500';
     }
   }
 
-  Future<void> refreshAlbumsPull() async {
+  Future<void> refreshAlbumsPull(BuildContext context) async {
     print('refreshing albums..');
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
-    await Albums.loadAlbums(model, model.photoprismUrl);
-    await Albums.loadAlbumsFromNetworkOrCache(model, model.photoprismUrl);
+    await AlbumsPage.loadAlbums(model, model.photoprismUrl);
+    await AlbumsPage.loadAlbumsFromNetworkOrCache(model, model.photoprismUrl);
   }
 
-  void createAlbum() async {
+  void createAlbum(BuildContext context) async {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
     var uuid = await Api.createAlbum("New album", model.photoprismUrl);
 
     if (uuid == "-1") {
       model.photoprismMessage.showMessage("Creating album failed.");
     } else {
-      List<Album> albums = Albums.getAlbumList(this.context);
+      List<Album> albums = AlbumsPage.getAlbumList(context);
 
       int length = 0;
       if (albums != null) {
@@ -91,8 +89,8 @@ class Albums extends StatelessWidget {
       Navigator.push(
         context,
         MaterialPageRoute(
-            builder: (ctx) =>
-                AlbumDetailView(Albums.getAlbumList(context)[length], context)),
+            builder: (ctx) => AlbumDetailView(
+                AlbumsPage.getAlbumList(context)[length], context)),
       );
     }
   }
@@ -100,7 +98,7 @@ class Albums extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
-    if (Albums.getAlbumList(context) == null) {
+    if (AlbumsPage.getAlbumList(context) == null) {
       return Text("loading", key: ValueKey("albumsGridView"));
     }
     return Scaffold(
@@ -113,68 +111,68 @@ class Albums extends StatelessWidget {
               tooltip: 'Create album',
               onPressed: () {
                 //model.photoprismAlbumManager.createAlbum();
-                createAlbum();
+                createAlbum(context);
               },
             ),
           ],
         ),
         body: RefreshIndicator(
             child: OrientationBuilder(builder: (context, orientation) {
-              return GridView.builder(
-                  key: ValueKey('albumsGridView'),
-                  gridDelegate: new SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: orientation == Orientation.portrait ? 2 : 4,
-                    mainAxisSpacing: 10,
-                    crossAxisSpacing: 10,
-                  ),
-                  padding: const EdgeInsets.all(10),
-                  itemCount: Albums.getAlbumList(context).length,
-                  itemBuilder: (context, index) {
-                    return GestureDetector(
-                        onTap: () {
-                          Photos.loadPhotosFromNetworkOrCache(
-                              Provider.of<PhotoprismModel>(context),
-                              photoprismUrl,
-                              Albums.getAlbumList(context)[index].id);
-                          Photos.loadPhotos(
-                              Provider.of<PhotoprismModel>(context),
-                              Provider.of<PhotoprismModel>(context)
-                                  .photoprismUrl,
-                              Albums.getAlbumList(context)[index].id);
-                          Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (ctx) => AlbumDetailView(
-                                      Albums.getAlbumList(context)[index],
-                                      context)));
-                        },
-                        child: ClipRRect(
-                            borderRadius: new BorderRadius.circular(8.0),
-                            child: GridTile(
-                              child: CachedNetworkImage(
-                                imageUrl: getAlbumPreviewUrl(context, index),
-                                placeholder: (context, url) =>
-                                    Container(color: Colors.grey),
-                                errorWidget: (context, url, error) =>
-                                    Icon(Icons.error),
+          return GridView.builder(
+              key: ValueKey('albumsGridView'),
+              gridDelegate: new SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: orientation == Orientation.portrait ? 2 : 4,
+                mainAxisSpacing: 10,
+                crossAxisSpacing: 10,
+              ),
+              padding: const EdgeInsets.all(10),
+              itemCount: AlbumsPage.getAlbumList(context).length,
+              itemBuilder: (context, index) {
+                return GestureDetector(
+                    onTap: () {
+                      PhotosPage.loadPhotosFromNetworkOrCache(
+                          Provider.of<PhotoprismModel>(context),
+                          model.photoprismUrl,
+                          AlbumsPage.getAlbumList(context)[index].id);
+                      PhotosPage.loadPhotos(
+                          Provider.of<PhotoprismModel>(context),
+                          Provider.of<PhotoprismModel>(context).photoprismUrl,
+                          AlbumsPage.getAlbumList(context)[index].id);
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (ctx) => AlbumDetailView(
+                                  AlbumsPage.getAlbumList(context)[index],
+                                  context)));
+                    },
+                    child: ClipRRect(
+                        borderRadius: new BorderRadius.circular(8.0),
+                        child: GridTile(
+                          child: CachedNetworkImage(
+                            imageUrl: getAlbumPreviewUrl(context, index),
+                            placeholder: (context, url) =>
+                                Container(color: Colors.grey),
+                            errorWidget: (context, url, error) =>
+                                Icon(Icons.error),
+                          ),
+                          footer: GestureDetector(
+                            child: GridTileBar(
+                              backgroundColor: Colors.black45,
+                              trailing: Text(
+                                AlbumsPage.getAlbumList(context)[index]
+                                    .imageCount
+                                    .toString(),
+                                style: TextStyle(color: Colors.white),
                               ),
-                              footer: GestureDetector(
-                                child: GridTileBar(
-                                  backgroundColor: Colors.black45,
-                                  trailing: Text(
-                                    Albums.getAlbumList(context)[index]
-                                        .imageCount
-                                        .toString(),
-                                    style: TextStyle(color: Colors.white),
-                                  ),
-                                  title: _GridTitleText(
-                                      Albums.getAlbumList(context)[index].name),
-                                ),
-                              ),
-                            )));
-                  });
-            }),
-            onRefresh: refreshAlbumsPull));
+                              title: _GridTitleText(
+                                  AlbumsPage.getAlbumList(context)[index].name),
+                            ),
+                          ),
+                        )));
+              });
+        }), onRefresh: () {
+          refreshAlbumsPull(context);
+        }));
   }
 }
 

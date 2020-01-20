@@ -17,13 +17,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'albums.dart';
 
-class Photos extends StatelessWidget {
+class PhotosPage extends StatelessWidget {
   final ScrollController _scrollController;
-  final BuildContext context;
   final String albumId;
 
-  Photos({Key key, this.context, this.albumId})
-      : _scrollController = ScrollController();
+  PhotosPage({Key key, this.albumId}) : _scrollController = ScrollController();
 
   static Future loadPhotosFromNetworkOrCache(
       PhotoprismModel model, String photoprismUrl, String albumId) async {
@@ -128,19 +126,21 @@ class Photos extends StatelessWidget {
     }
   }
 
-  Future<void> refreshPhotosPull() async {
+  Future<void> refreshPhotosPull(BuildContext context) async {
     print('refreshing photos..');
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
-    await Photos.loadPhotos(model, model.photoprismUrl, "");
-    await Photos.loadPhotosFromNetworkOrCache(model, model.photoprismUrl, "");
+    await PhotosPage.loadPhotos(model, model.photoprismUrl, "");
+    await PhotosPage.loadPhotosFromNetworkOrCache(
+        model, model.photoprismUrl, "");
   }
 
-  archiveSelectedPhotos() async {
+  archiveSelectedPhotos(BuildContext context) async {
     List<String> selectedPhotos = [];
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
 
     model.gridController.selection.selectedIndexes.forEach((element) {
-      selectedPhotos.add(Photos.getPhotoList(context, "")[element].photoUUID);
+      selectedPhotos
+          .add(PhotosPage.getPhotoList(context, "")[element].photoUUID);
     });
     model.photoprismPhotoManager.archivePhotos(selectedPhotos);
   }
@@ -154,17 +154,19 @@ class Photos extends StatelessWidget {
             content: Container(
               width: double.maxFinite,
               child: ListView.builder(
-                  itemCount: Albums.getAlbumList(context).length,
+                  itemCount: AlbumsPage.getAlbumList(context).length,
                   itemBuilder: (BuildContext ctxt, int index) {
                     return GestureDetector(
                         onTap: () {
                           addPhotosToAlbum(
-                              Albums.getAlbumList(context)[index].id, context);
+                              AlbumsPage.getAlbumList(context)[index].id,
+                              context);
                         },
                         child: Card(
                             child: ListTile(
-                                title: Text(Albums.getAlbumList(context)[index]
-                                    .name))));
+                                title: Text(
+                                    AlbumsPage.getAlbumList(context)[index]
+                                        .name))));
                   }),
             ),
           );
@@ -178,7 +180,8 @@ class Photos extends StatelessWidget {
     List<String> selectedPhotos = [];
 
     model.gridController.selection.selectedIndexes.forEach((element) {
-      selectedPhotos.add(Photos.getPhotoList(context, "")[element].photoUUID);
+      selectedPhotos
+          .add(PhotosPage.getPhotoList(context, "")[element].photoUUID);
     });
 
     model.gridController.clear();
@@ -195,7 +198,7 @@ class Photos extends StatelessWidget {
 
     _scrollController.addListener(_scrollListener);
 
-    if (Photos.getPhotoList(context, albumId) == null) {
+    if (PhotosPage.getPhotoList(context, albumId) == null) {
       return Text("", key: ValueKey("photosGridView"));
     }
     //if (Photos.getPhotoList(context, albumId).length == 0) {
@@ -225,7 +228,7 @@ class Photos extends StatelessWidget {
                               icon: const Icon(Icons.archive),
                               tooltip: 'Archive photos',
                               onPressed: () {
-                                archiveSelectedPhotos();
+                                archiveSelectedPhotos(context);
                               },
                             ),
                             IconButton(
@@ -249,64 +252,64 @@ class Photos extends StatelessWidget {
             : null,
         body: RefreshIndicator(
             child: OrientationBuilder(builder: (context, orientation) {
-              return DraggableScrollbar.semicircle(
-                heightScrollThumb: 50.0,
-                controller: _scrollController,
-                child: DragSelectGridView(
-                    key: ValueKey('photosGridView'),
-                    scrollController: _scrollController,
-                    gridController: gridController,
-                    physics: AlwaysScrollableScrollPhysics(),
-                    gridDelegate: new SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount:
-                          orientation == Orientation.portrait ? 3 : 6,
-                      mainAxisSpacing: 4,
-                      crossAxisSpacing: 4,
-                    ),
-                    itemCount: Photos.getPhotoList(context, albumId).length,
-                    itemBuilder: (context, index, selected) {
-                      return SelectableTile(
-                          key: ValueKey("PhotoTile"),
-                          index: index,
-                          context: context,
-                          gridController: gridController,
-                          selected: selected,
-                          onTap: () {
-                            Provider.of<PhotoprismModel>(context)
-                                .photoprismCommonHelper
-                                .setPhotoViewScaleState(
-                                    PhotoViewScaleState.initial);
-                            Navigator.push(
-                                context,
-                                TransparentRoute(
-                                  builder: (context) =>
-                                      FullscreenPhotoGallery(index, albumId),
-                                ));
-                          },
-                          child: Hero(
-                            tag: index.toString(),
-                            createRectTween: (begin, end) {
-                              return RectTween(begin: begin, end: end);
-                            },
-                            child: CachedNetworkImage(
-                              alignment: Alignment.center,
-                              fit: BoxFit.contain,
-                              imageUrl: Provider.of<PhotoprismModel>(context)
-                                      .photoprismUrl +
-                                  '/api/v1/thumbnails/' +
-                                  Photos.getPhotoList(context, albumId)[index]
-                                      .fileHash +
-                                  '/tile_224',
-                              placeholder: (context, url) => Container(
-                                color: Colors.grey[300],
-                              ),
-                              errorWidget: (context, url, error) =>
-                                  Icon(Icons.error),
-                            ),
-                          ));
-                    }),
-              );
-            }),
-            onRefresh: refreshPhotosPull));
+          return DraggableScrollbar.semicircle(
+            heightScrollThumb: 50.0,
+            controller: _scrollController,
+            child: DragSelectGridView(
+                key: ValueKey('photosGridView'),
+                scrollController: _scrollController,
+                gridController: gridController,
+                physics: AlwaysScrollableScrollPhysics(),
+                gridDelegate: new SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: orientation == Orientation.portrait ? 3 : 6,
+                  mainAxisSpacing: 4,
+                  crossAxisSpacing: 4,
+                ),
+                itemCount: PhotosPage.getPhotoList(context, albumId).length,
+                itemBuilder: (context, index, selected) {
+                  return SelectableTile(
+                      key: ValueKey("PhotoTile"),
+                      index: index,
+                      context: context,
+                      gridController: gridController,
+                      selected: selected,
+                      onTap: () {
+                        Provider.of<PhotoprismModel>(context)
+                            .photoprismCommonHelper
+                            .setPhotoViewScaleState(
+                                PhotoViewScaleState.initial);
+                        Navigator.push(
+                            context,
+                            TransparentRoute(
+                              builder: (context) =>
+                                  FullscreenPhotoGallery(index, albumId),
+                            ));
+                      },
+                      child: Hero(
+                        tag: index.toString(),
+                        createRectTween: (begin, end) {
+                          return RectTween(begin: begin, end: end);
+                        },
+                        child: CachedNetworkImage(
+                          alignment: Alignment.center,
+                          fit: BoxFit.contain,
+                          imageUrl: Provider.of<PhotoprismModel>(context)
+                                  .photoprismUrl +
+                              '/api/v1/thumbnails/' +
+                              PhotosPage.getPhotoList(context, albumId)[index]
+                                  .fileHash +
+                              '/tile_224',
+                          placeholder: (context, url) => Container(
+                            color: Colors.grey[300],
+                          ),
+                          errorWidget: (context, url, error) =>
+                              Icon(Icons.error),
+                        ),
+                      ));
+                }),
+          );
+        }), onRefresh: () {
+          refreshPhotosPull(context);
+        }));
   }
 }

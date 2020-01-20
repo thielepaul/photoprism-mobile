@@ -22,7 +22,7 @@ class AlbumDetailView extends StatelessWidget {
     // close rename dialog
     Navigator.pop(context);
 
-    List<Album> albums = Albums.getAlbumList(context);
+    List<Album> albums = AlbumsPage.getAlbumList(context);
     String oldAlbumName = _album.name;
 
     // rename album name in local album list
@@ -65,7 +65,7 @@ class AlbumDetailView extends StatelessWidget {
       Navigator.pop(context);
 
       // remove local album from album list
-      List<Album> albums = Albums.getAlbumList(context);
+      List<Album> albums = AlbumsPage.getAlbumList(context);
       for (var i = 0; i < albums.length; i++) {
         if (albums[i].id == _album.id) {
           albums.removeAt(i);
@@ -81,7 +81,7 @@ class AlbumDetailView extends StatelessWidget {
     List<String> selectedPhotos = [];
     _model.gridController.selection.selectedIndexes.forEach((element) {
       selectedPhotos
-          .add(Photos.getPhotoList(context, _album.id)[element].photoUUID);
+          .add(PhotosPage.getPhotoList(context, _album.id)[element].photoUUID);
     });
 
     // remove remote photos from album
@@ -94,7 +94,7 @@ class AlbumDetailView extends StatelessWidget {
           .showMessage("Removing photos from album failed.");
     } else {
       // create new photo list for current album without removed photos
-      List<Photo> photosOfAlbum = Photos.getPhotoList(context, _album.id);
+      List<Photo> photosOfAlbum = PhotosPage.getPhotoList(context, _album.id);
       List<Photo> photosOfAlbumNew = [];
       for (var i = 0; i < photosOfAlbum.length; i++) {
         if (!selectedPhotos.contains(photosOfAlbum[i].photoUUID)) {
@@ -105,7 +105,7 @@ class AlbumDetailView extends StatelessWidget {
           .setPhotoListOfAlbum(photosOfAlbumNew, _album.id);
 
       // update image count of local album
-      List<Album> albums = Albums.getAlbumList(context);
+      List<Album> albums = AlbumsPage.getAlbumList(context);
       Album currentAlbum;
       for (var i = 0; i < albums.length; i++) {
         if (albums[i].id == _album.id) {
@@ -173,7 +173,7 @@ class AlbumDetailView extends StatelessWidget {
                 ),
               ],
       ),
-      body: Photos(context: context, albumId: _album.id),
+      body: PhotosPage(albumId: _album.id),
     );
   }
 

@@ -144,7 +144,7 @@ class Api {
       print(response.body);
       if (response.statusCode == 200) {
         print("loading photos");
-        await Photos.loadPhotos(model, photoprismUrl, "");
+        await PhotosPage.loadPhotos(model, photoprismUrl, "");
         print("Finished");
         bool found = false;
         for (var i = 0; i < model.photoList.length; i++) {

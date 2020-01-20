@@ -59,8 +59,8 @@ class PhotoprismModel extends ChangeNotifier {
 
     await photoprismCommonHelper.loadPhotoprismUrl();
     photoprismRemoteConfigLoader.loadApplicationColor();
-    Photos.loadPhotosFromNetworkOrCache(this, photoprismUrl, "");
-    Albums.loadAlbumsFromNetworkOrCache(this, photoprismUrl);
+    PhotosPage.loadPhotosFromNetworkOrCache(this, photoprismUrl, "");
+    AlbumsPage.loadAlbumsFromNetworkOrCache(this, photoprismUrl);
     gridController.addListener(notifyListeners);
   }
 

@@ -11,7 +11,7 @@ import '../api/photos.dart';
 import '../model/photoprism_model.dart';
 import 'auto_upload_queue.dart';
 
-class Settings extends StatelessWidget {
+class SettingsPage extends StatelessWidget {
   final TextEditingController _urlTextFieldController = TextEditingController();
   final TextEditingController _uploadFolderTextFieldController =
       TextEditingController();
@@ -217,8 +217,8 @@ class Settings extends StatelessWidget {
     await pmodel.photoprismCommonHelper.setPhotoprismUrl(url);
     pmodel.photoprismRemoteConfigLoader.loadApplicationColor();
     emptyCache();
-    await Photos.loadPhotos(pmodel, pmodel.photoprismUrl, "");
-    await Albums.loadAlbums(pmodel, pmodel.photoprismUrl);
+    await PhotosPage.loadPhotos(pmodel, pmodel.photoprismUrl, "");
+    await AlbumsPage.loadAlbums(pmodel, pmodel.photoprismUrl);
   }
 
   void setNewUploadFolder(context, path) async {

@@ -56,9 +56,9 @@ class MainPage extends StatelessWidget {
       body: PageView(
           controller: _pageController,
           children: <Widget>[
-            Photos(context: context, albumId: ""),
-            Albums(context: context, photoprismUrl: model.photoprismUrl),
-            Settings(),
+            PhotosPage(albumId: ""),
+            AlbumsPage(),
+            SettingsPage(),
           ],
           physics: NeverScrollableScrollPhysics()),
       bottomNavigationBar: BottomNavigationBar(
