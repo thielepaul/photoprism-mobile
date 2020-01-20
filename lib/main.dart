@@ -1,6 +1,5 @@
 import 'package:drag_select_grid_view/drag_select_grid_view.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:photoprism/api/albums.dart';
 import 'package:photoprism/pages/album_detail_view.dart';
 import 'package:photoprism/pages/settings.dart';
