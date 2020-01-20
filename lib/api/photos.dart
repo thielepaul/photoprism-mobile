@@ -126,12 +126,13 @@ class PhotosPage extends StatelessWidget {
     }
   }
 
-  Future<void> refreshPhotosPull(BuildContext context) async {
+  Future<int> refreshPhotosPull(BuildContext context) async {
     print('refreshing photos..');
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
     await PhotosPage.loadPhotos(model, model.photoprismUrl, "");
     await PhotosPage.loadPhotosFromNetworkOrCache(
         model, model.photoprismUrl, "");
+    return 0;
   }
 
   archiveSelectedPhotos(BuildContext context) async {
@@ -308,8 +309,8 @@ class PhotosPage extends StatelessWidget {
                       ));
                 }),
           );
-        }), onRefresh: () {
-          refreshPhotosPull(context);
+        }), onRefresh: () async {
+          return await refreshPhotosPull(context);
         }));
   }
 }

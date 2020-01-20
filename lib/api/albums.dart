@@ -62,11 +62,12 @@ class AlbumsPage extends StatelessWidget {
     }
   }
 
-  Future<void> refreshAlbumsPull(BuildContext context) async {
+  Future<int> refreshAlbumsPull(BuildContext context) async {
     print('refreshing albums..');
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
     await AlbumsPage.loadAlbums(model, model.photoprismUrl);
     await AlbumsPage.loadAlbumsFromNetworkOrCache(model, model.photoprismUrl);
+    return 0;
   }
 
   void createAlbum(BuildContext context) async {
@@ -170,8 +171,8 @@ class AlbumsPage extends StatelessWidget {
                           ),
                         )));
               });
-        }), onRefresh: () {
-          refreshAlbumsPull(context);
+        }), onRefresh: () async {
+          return await refreshAlbumsPull(context);
         }));
   }
 }
