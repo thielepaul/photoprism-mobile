@@ -20,106 +20,112 @@ class Settings extends StatelessWidget {
   Widget build(BuildContext context) {
     var photorismModel = Provider.of<PhotoprismModel>(context);
 
-    return Container(
-        //width: double.maxFinite,
-        child: ListView(
-      children: <Widget>[
-        ListTile(
-          title: Text("Photoprism URL"),
-          subtitle: Text(photorismModel.photoprismUrl),
-          leading: Container(
-            width: 10,
-            alignment: Alignment.center,
-            child: Icon(Icons.public),
-          ),
-          onTap: () {
-            _settingsDisplayUrlDialog(context);
-          },
+    return Scaffold(
+        appBar: AppBar(
+          title: Text("PhotoPrism"),
         ),
-        ListTile(
-          title: Text("Empty cache"),
-          leading: Container(
-            width: 10,
-            alignment: Alignment.center,
-            child: Icon(Icons.delete),
-          ),
-          onTap: () {
-            emptyCache();
-          },
-        ),
-        SwitchListTile(
-          title: Text("Auto Upload"),
-          secondary: const Icon(Icons.cloud_upload),
-          value: Provider.of<PhotoprismModel>(context).autoUploadEnabled,
-          onChanged: (bool newState) async {
-            final PermissionHandler _permissionHandler = PermissionHandler();
-            var result = await _permissionHandler
-                .requestPermissions([PermissionGroup.storage]);
+        body: Container(
+            //width: double.maxFinite,
+            child: ListView(
+          children: <Widget>[
+            ListTile(
+              title: Text("Photoprism URL"),
+              subtitle: Text(photorismModel.photoprismUrl),
+              leading: Container(
+                width: 10,
+                alignment: Alignment.center,
+                child: Icon(Icons.public),
+              ),
+              onTap: () {
+                _settingsDisplayUrlDialog(context);
+              },
+            ),
+            ListTile(
+              title: Text("Empty cache"),
+              leading: Container(
+                width: 10,
+                alignment: Alignment.center,
+                child: Icon(Icons.delete),
+              ),
+              onTap: () {
+                emptyCache();
+              },
+            ),
+            SwitchListTile(
+              title: Text("Auto Upload"),
+              secondary: const Icon(Icons.cloud_upload),
+              value: Provider.of<PhotoprismModel>(context).autoUploadEnabled,
+              onChanged: (bool newState) async {
+                final PermissionHandler _permissionHandler =
+                    PermissionHandler();
+                var result = await _permissionHandler
+                    .requestPermissions([PermissionGroup.storage]);
 
-            if (result[PermissionGroup.storage] == PermissionStatus.granted) {
-              print(newState);
-              Provider.of<PhotoprismModel>(context)
-                  .photoprismUploader
-                  .setAutoUpload(newState);
-            } else {
-              print("Not authorized.");
-            }
-          },
-        ),
-        ListTile(
-          title: Text("Upload folder"),
-          subtitle: Text(photorismModel.autoUploadFolder),
-          leading: Container(
-            width: 10,
-            alignment: Alignment.center,
-            child: Icon(Icons.folder),
-          ),
-          onTap: () {
-            getUploadFolder(context);
-          },
-        ),
-        ListTile(
-          title: Text("Last time checked for photos to be uploaded"),
-          subtitle: Text(photorismModel.autoUploadLastTimeCheckedForPhotos),
-          leading: Container(
-            width: 10,
-            alignment: Alignment.center,
-            child: Icon(Icons.sync),
-          ),
-        ),
-        ListTile(
-          title: Text("Delete already uploaded photos info"),
-          leading: Container(
-            width: 10,
-            alignment: Alignment.center,
-            child: Icon(Icons.delete_sweep),
-          ),
-          onTap: () {
-            deleteUploadInfo();
-          },
-        ),
-        ListTile(
-          title: Text("Show upload queue"),
-          leading: Container(
-            width: 10,
-            alignment: Alignment.center,
-            child: Icon(Icons.sort),
-          ),
-          onTap: () {
-            photorismModel.photoprismUploader.getPhotosToUpload();
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (ctx) => AutoUploadQueue(photorismModel)),
-            );
-          },
-        ),
-        ListTile(
-          title: Text(
-              "Warning: Auto upload is still under development. It only works under Android at this moment. Not fully working."),
-        ),
-      ],
-    ));
+                if (result[PermissionGroup.storage] ==
+                    PermissionStatus.granted) {
+                  print(newState);
+                  Provider.of<PhotoprismModel>(context)
+                      .photoprismUploader
+                      .setAutoUpload(newState);
+                } else {
+                  print("Not authorized.");
+                }
+              },
+            ),
+            ListTile(
+              title: Text("Upload folder"),
+              subtitle: Text(photorismModel.autoUploadFolder),
+              leading: Container(
+                width: 10,
+                alignment: Alignment.center,
+                child: Icon(Icons.folder),
+              ),
+              onTap: () {
+                getUploadFolder(context);
+              },
+            ),
+            ListTile(
+              title: Text("Last time checked for photos to be uploaded"),
+              subtitle: Text(photorismModel.autoUploadLastTimeCheckedForPhotos),
+              leading: Container(
+                width: 10,
+                alignment: Alignment.center,
+                child: Icon(Icons.sync),
+              ),
+            ),
+            ListTile(
+              title: Text("Delete already uploaded photos info"),
+              leading: Container(
+                width: 10,
+                alignment: Alignment.center,
+                child: Icon(Icons.delete_sweep),
+              ),
+              onTap: () {
+                deleteUploadInfo();
+              },
+            ),
+            ListTile(
+              title: Text("Show upload queue"),
+              leading: Container(
+                width: 10,
+                alignment: Alignment.center,
+                child: Icon(Icons.sort),
+              ),
+              onTap: () {
+                photorismModel.photoprismUploader.getPhotosToUpload();
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (ctx) => AutoUploadQueue(photorismModel)),
+                );
+              },
+            ),
+            ListTile(
+              title: Text(
+                  "Warning: Auto upload is still under development. It only works under Android at this moment. Not fully working."),
+            ),
+          ],
+        )));
   }
 
   deleteUploadInfo() async {

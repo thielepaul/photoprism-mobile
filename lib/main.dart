@@ -1,13 +1,9 @@
-import 'package:drag_select_grid_view/drag_select_grid_view.dart';
 import 'package:flutter/material.dart';
 import 'package:photoprism/api/albums.dart';
-import 'package:photoprism/pages/album_detail_view.dart';
 import 'package:photoprism/pages/settings.dart';
 import 'package:provider/provider.dart';
 import 'package:photoprism/common/hexcolor.dart';
-import 'api/api.dart';
 import 'api/photos.dart';
-import 'model/album.dart';
 import 'model/photoprism_model.dart';
 // use this for debugging animations
 // import 'package:flutter/scheduler.dart' show timeDilation;
@@ -55,153 +51,9 @@ class MainPage extends StatelessWidget {
       : _pageController = PageController(initialPage: 0);
 
   void _onTappedNavigationBar(int index) {
+    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
     _pageController.jumpToPage(index);
-    Provider.of<PhotoprismModel>(context)
-        .photoprismCommonHelper
-        .setSelectedPageIndex(index);
-  }
-
-  AppBar getAppBar(context) {
-    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
-
-    if (model.selectedPageIndex == 0) {
-      return AppBar(
-        title: model.gridController.selection.selectedIndexes.length > 0
-            ? Text(model.gridController.selection.selectedIndexes.length
-                .toString())
-            : Text(title),
-        backgroundColor: HexColor(model.applicationColor),
-        leading: model.gridController.selection.selectedIndexes.length > 0
-            ? IconButton(
-                icon: const Icon(Icons.close),
-                onPressed: () {
-                  model.gridController.selection = Selection({});
-                },
-              )
-            : null,
-        actions: model.gridController.selection.selectedIndexes.length > 0
-            ? <Widget>[
-                IconButton(
-                  icon: const Icon(Icons.archive),
-                  tooltip: 'Archive photos',
-                  onPressed: () {
-                    archiveSelectedPhotos();
-                  },
-                ),
-                IconButton(
-                  icon: const Icon(Icons.add),
-                  tooltip: 'Add to album',
-                  onPressed: () {
-                    _selectAlbumDialog(context);
-                  },
-                ),
-              ]
-            : <Widget>[
-                IconButton(
-                  icon: const Icon(Icons.cloud_upload),
-                  tooltip: 'Upload photo',
-                  onPressed: () {
-                    model.photoprismUploader.selectPhotoAndUpload();
-                  },
-                )
-              ],
-      );
-    } else if (model.selectedPageIndex == 1) {
-      return AppBar(
-        title: Text(title),
-        backgroundColor: HexColor(model.applicationColor),
-        actions: <Widget>[
-          IconButton(
-            icon: const Icon(Icons.add),
-            tooltip: 'Create album',
-            onPressed: () {
-              //model.photoprismAlbumManager.createAlbum();
-              createAlbum();
-            },
-          ),
-        ],
-      );
-    } else {
-      return AppBar(
-        title: Text(title),
-      );
-    }
-  }
-
-  void createAlbum() async {
-    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
-    var uuid = await Api.createAlbum("New album", model.photoprismUrl);
-
-    if (uuid == "-1") {
-      model.photoprismMessage.showMessage("Creating album failed.");
-    } else {
-      List<Album> albums = Albums.getAlbumList(this.context);
-
-      int length = 0;
-      if (albums != null) {
-        length = albums.length;
-      }
-
-      albums.add(Album(id: uuid, name: "New album", imageCount: 0));
-      model.photoprismAlbumManager.setAlbumList(albums);
-
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-            builder: (ctx) =>
-                AlbumDetailView(Albums.getAlbumList(context)[length], context)),
-      );
-    }
-  }
-
-  archiveSelectedPhotos() async {
-    List<String> selectedPhotos = [];
-    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
-
-    model.gridController.selection.selectedIndexes.forEach((element) {
-      selectedPhotos.add(Photos.getPhotoList(context, "")[element].photoUUID);
-    });
-    model.photoprismPhotoManager.archivePhotos(selectedPhotos);
-  }
-
-  _selectAlbumDialog(BuildContext context) {
-    showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            title: Text('Select album'),
-            content: Container(
-              width: double.maxFinite,
-              child: ListView.builder(
-                  itemCount: Albums.getAlbumList(context).length,
-                  itemBuilder: (BuildContext ctxt, int index) {
-                    return GestureDetector(
-                        onTap: () {
-                          addPhotosToAlbum(
-                              Albums.getAlbumList(context)[index].id, context);
-                        },
-                        child: Card(
-                            child: ListTile(
-                                title: Text(Albums.getAlbumList(context)[index]
-                                    .name))));
-                  }),
-            ),
-          );
-        });
-  }
-
-  addPhotosToAlbum(albumId, context) async {
-    Navigator.pop(context);
-
-    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
-    List<String> selectedPhotos = [];
-
-    model.gridController.selection.selectedIndexes.forEach((element) {
-      selectedPhotos.add(Photos.getPhotoList(context, "")[element].photoUUID);
-    });
-
-    model.gridController.clear();
-    model.photoprismAlbumManager.addPhotosToAlbum(albumId, selectedPhotos);
+    model.photoprismCommonHelper.setSelectedPageIndex(index);
   }
 
   @override
@@ -210,7 +62,6 @@ class MainPage extends StatelessWidget {
     model.photoprismLoadingScreen.context = context;
 
     return Scaffold(
-      appBar: getAppBar(context),
       body: PageView(
           controller: _pageController,
           children: <Widget>[
