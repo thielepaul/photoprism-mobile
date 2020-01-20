@@ -20,7 +20,7 @@ void main() {
     await tester.pumpWidget(
       ChangeNotifierProvider(
         create: (context) => PhotoprismModel(),
-        child: MyApp(),
+        child: PhotoprismApp(),
       ),
     );
     expect(find.byKey(ValueKey("photosGridView")), findsOneWidget);
@@ -45,7 +45,7 @@ void main() {
     await tester.pumpWidget(
       ChangeNotifierProvider(
         create: (context) => PhotoprismModel(),
-        child: MyApp(),
+        child: PhotoprismApp(),
       ),
     );
     await tester.tap(find.byIcon(Icons.settings));
@@ -87,7 +87,7 @@ void main() {
     await tester.pumpWidget(
       ChangeNotifierProvider(
         create: (context) => PhotoprismModel(),
-        child: MyApp(),
+        child: PhotoprismApp(),
       ),
     );
     await tester.tap(find.byIcon(Icons.photo_album));
@@ -111,7 +111,7 @@ void main() {
     await tester.pumpWidget(
       ChangeNotifierProvider(
         create: (context) => PhotoprismModel(),
-        child: MyApp(),
+        child: PhotoprismApp(),
       ),
     );
     await tester.pump();

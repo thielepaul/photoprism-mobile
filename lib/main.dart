@@ -14,12 +14,12 @@ void main() {
   runApp(
     ChangeNotifierProvider(
       create: (context) => PhotoprismModel(),
-      child: MyApp(),
+      child: PhotoprismApp(),
     ),
   );
 }
 
-class MyApp extends StatelessWidget {
+class PhotoprismApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final Color applicationColor =
@@ -37,24 +37,15 @@ class MyApp extends StatelessWidget {
             focusedBorder: UnderlineInputBorder(
                 borderSide: BorderSide(color: applicationColor))),
       ),
-      home: MainPage('PhotoPrism', context),
+      home: MainPage(),
     );
   }
 }
 
 class MainPage extends StatelessWidget {
-  final String title;
   final PageController _pageController;
-  final BuildContext context;
 
-  MainPage(this.title, this.context)
-      : _pageController = PageController(initialPage: 0);
-
-  void _onTappedNavigationBar(int index) {
-    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
-    _pageController.jumpToPage(index);
-    model.photoprismCommonHelper.setSelectedPageIndex(index);
-  }
+  MainPage() : _pageController = PageController(initialPage: 0);
 
   @override
   Widget build(BuildContext context) {
@@ -86,7 +77,10 @@ class MainPage extends StatelessWidget {
           ),
         ],
         currentIndex: model.selectedPageIndex,
-        onTap: _onTappedNavigationBar,
+        onTap: (index) {
+          _pageController.jumpToPage(index);
+          model.photoprismCommonHelper.setSelectedPageIndex(index);
+        },
       ),
     );
   }
