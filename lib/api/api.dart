@@ -138,7 +138,7 @@ class Api {
 
     try {
       http.Response response = await http.post(
-          model.photoprismUrl + '/api/v1/batch/photos/delete',
+          model.photoprismUrl + '/api/v1/batch/photos/archive',
           body: body,
           headers: model.photoprismHttpBasicAuth.getAuthHeader());
       if (response.statusCode == 200) {
