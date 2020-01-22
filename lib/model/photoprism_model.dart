@@ -1,6 +1,7 @@
 import 'package:drag_select_grid_view/drag_select_grid_view.dart';
 import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
+import 'package:photoprism/common/photoprism_http_basic_auth.dart';
 import 'package:photoprism/pages/albums_page.dart';
 import 'package:photoprism/pages/photos_page.dart';
 import 'package:photoprism/common/photoprism_album_manager.dart';
@@ -43,6 +44,7 @@ class PhotoprismModel extends ChangeNotifier {
   PhotoprismAlbumManager photoprismAlbumManager;
   PhotoprismLoadingScreen photoprismLoadingScreen;
   PhotoprismMessage photoprismMessage;
+  PhotoprismHttpBasicAuth photoprismHttpBasicAuth;
 
   PhotoprismModel() {
     initialize();
@@ -56,6 +58,7 @@ class PhotoprismModel extends ChangeNotifier {
     photoprismAlbumManager = new PhotoprismAlbumManager(this);
     photoprismLoadingScreen = new PhotoprismLoadingScreen(this);
     photoprismMessage = new PhotoprismMessage(this);
+    photoprismHttpBasicAuth = new PhotoprismHttpBasicAuth(this);
 
     await photoprismCommonHelper.loadPhotoprismUrl();
     photoprismRemoteConfigLoader.loadApplicationColor();
