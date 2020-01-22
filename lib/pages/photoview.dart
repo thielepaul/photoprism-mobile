@@ -311,8 +311,8 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
 
   sharePhoto(index, BuildContext context) async {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
-    http.Response response = await http.get(Uri.parse(
-        photoprismUrl + "/api/v1/download/" + photos[index].fileHash),
+    http.Response response = await http.get(
+        Uri.parse(photoprismUrl + "/api/v1/download/" + photos[index].fileHash),
         headers: model.photoprismHttpBasicAuth.getAuthHeader());
     print(response.statusCode);
 
