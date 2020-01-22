@@ -31,8 +31,10 @@ class AlbumsPage extends StatelessWidget {
   }
 
   static Future loadAlbums(PhotoprismModel model, String photoprismUrl) async {
-    http.Response response =
-        await http.get(photoprismUrl + '/api/v1/albums?count=1000');
+    await model.photoprismHttpBasicAuth.initialized;
+    http.Response response = await http.get(
+        photoprismUrl + '/api/v1/albums?count=1000',
+        headers: model.photoprismHttpBasicAuth.getAuthHeader());
     final parsed = json.decode(response.body).cast<Map<String, dynamic>>();
 
     List<Album> albumList =
@@ -72,7 +74,7 @@ class AlbumsPage extends StatelessWidget {
 
   void createAlbum(BuildContext context) async {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
-    var uuid = await Api.createAlbum("New album", model.photoprismUrl);
+    var uuid = await Api.createAlbum("New album", model);
 
     if (uuid == "-1") {
       model.photoprismMessage.showMessage("Creating album failed.");
@@ -150,6 +152,8 @@ class AlbumsPage extends StatelessWidget {
                         borderRadius: new BorderRadius.circular(8.0),
                         child: GridTile(
                           child: CachedNetworkImage(
+                            httpHeaders:
+                                model.photoprismHttpBasicAuth.getAuthHeader(),
                             imageUrl: getAlbumPreviewUrl(context, index),
                             placeholder: (context, url) =>
                                 Container(color: Colors.grey),

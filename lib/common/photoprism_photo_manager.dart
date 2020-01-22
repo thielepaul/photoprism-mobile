@@ -30,8 +30,7 @@ class PhotoprismPhotoManager {
     print("Archive photos");
     photoprismModel.photoprismLoadingScreen
         .showLoadingScreen("Archive photos..");
-    var status =
-        await Api.archivePhotos(photoUUIDs, photoprismModel.photoprismUrl);
+    var status = await Api.archivePhotos(photoUUIDs, photoprismModel);
 
     if (status == 0) {
       photoprismModel.gridController.selection = Selection({});

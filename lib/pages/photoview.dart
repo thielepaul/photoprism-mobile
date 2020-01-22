@@ -116,10 +116,15 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
         animation: animation,
         child: PhotoView(
           // filterQuality: FilterQuality.medium,
-          imageProvider: CachedNetworkImageProvider(photoprismUrl +
-              "/api/v1/thumbnails/" +
-              photos[index].fileHash +
-              "/fit_1920"),
+          imageProvider: CachedNetworkImageProvider(
+            photoprismUrl +
+                "/api/v1/thumbnails/" +
+                photos[index].fileHash +
+                "/fit_1920",
+            headers: Provider.of<PhotoprismModel>(context)
+                .photoprismHttpBasicAuth
+                .getAuthHeader(),
+          ),
           initialScale: PhotoViewComputedScale.contained,
           minScale: PhotoViewComputedScale.contained,
           maxScale: PhotoViewComputedScale.contained * 2,
@@ -148,6 +153,9 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
                   return RectTween(begin: begin, end: end);
                 },
                 child: CachedNetworkImage(
+                  httpHeaders: Provider.of<PhotoprismModel>(context)
+                      .photoprismHttpBasicAuth
+                      .getAuthHeader(),
                   width: MediaQuery.of(context).size.height *
                       this.photos[index].aspectRatio,
                   height: MediaQuery.of(context).size.width /

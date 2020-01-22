@@ -3,6 +3,7 @@ import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:photoprism/common/hexcolor.dart';
 import 'package:photoprism/model/photoprism_model.dart';
+import 'package:photoprism/widgets/http_auth_dialog.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -39,6 +40,19 @@ class SettingsPage extends StatelessWidget {
               onTap: () {
                 _settingsDisplayUrlDialog(context);
               },
+            ),
+            ListTile(
+              title: Text("HTTP Basic authentication"),
+              leading: Container(
+                width: 10,
+                alignment: Alignment.center,
+                child: Icon(Icons.vpn_key),
+              ),
+              onTap: () => showDialog(
+                  context: context,
+                  builder: (context) => HttpAuthDialog(
+                        context: context,
+                      )),
             ),
             ListTile(
               title: Text("Empty cache"),
@@ -220,7 +234,7 @@ class SettingsPage extends StatelessWidget {
     await model.photoprismUploader.setUploadFolder(path);
   }
 
-  void emptyCache() async {
+  static void emptyCache() async {
     await DefaultCacheManager().emptyCache();
   }
 }
