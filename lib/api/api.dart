@@ -6,12 +6,14 @@ import 'package:photoprism/model/photoprism_model.dart';
 
 class Api {
   static Future<String> createAlbum(
-      String albumName, String photoprismUrl) async {
+      String albumName, PhotoprismModel model) async {
     String body = '{"AlbumName":"' + albumName + '"}';
 
     try {
-      http.Response response =
-          await http.post(photoprismUrl + '/api/v1/albums', body: body);
+      http.Response response = await http.post(
+          model.photoprismUrl + '/api/v1/albums',
+          body: body,
+          headers: model.photoprismHttpBasicAuth.getAuthHeader());
 
       if (response.statusCode == 200) {
         var bodyjson = json.decode(response.body);
@@ -25,12 +27,14 @@ class Api {
   }
 
   static Future<int> renameAlbum(
-      String albumId, String newAlbumName, String photoprismUrl) async {
+      String albumId, String newAlbumName, PhotoprismModel model) async {
     String body = '{"AlbumName":"' + newAlbumName + '"}';
 
     try {
-      http.Response response = await http
-          .put(photoprismUrl + '/api/v1/albums/' + albumId, body: body);
+      http.Response response = await http.put(
+          model.photoprismUrl + '/api/v1/albums/' + albumId,
+          body: body,
+          headers: model.photoprismHttpBasicAuth.getAuthHeader());
 
       if (response.statusCode == 200) {
         return 0;
@@ -42,12 +46,14 @@ class Api {
     }
   }
 
-  static Future<int> deleteAlbum(String albumId, String photoprismUrl) async {
+  static Future<int> deleteAlbum(String albumId, PhotoprismModel model) async {
     String body = '{"albums":["' + albumId + '"]}';
 
     try {
-      http.Response response = await http
-          .post(photoprismUrl + '/api/v1/batch/albums/delete', body: body);
+      http.Response response = await http.post(
+          model.photoprismUrl + '/api/v1/batch/albums/delete',
+          body: body,
+          headers: model.photoprismHttpBasicAuth.getAuthHeader());
 
       if (response.statusCode == 200) {
         return 0;
@@ -60,7 +66,7 @@ class Api {
   }
 
   static Future<int> addPhotosToAlbum(
-      String albumId, List<String> photoUUIDs, String photoprismUrl) async {
+      String albumId, List<String> photoUUIDs, PhotoprismModel model) async {
     // wrap uuids in double quotes
     List<String> photoUUIDsWrapped = [];
 
@@ -72,8 +78,9 @@ class Api {
 
     try {
       http.Response response = await http.post(
-          photoprismUrl + '/api/v1/albums/' + albumId + '/photos',
-          body: body);
+          model.photoprismUrl + '/api/v1/albums/' + albumId + '/photos',
+          body: body,
+          headers: model.photoprismHttpBasicAuth.getAuthHeader());
       if (response.statusCode == 200) {
         return 0;
       } else {
@@ -85,7 +92,7 @@ class Api {
   }
 
   static Future<int> removePhotosFromAlbum(
-      String albumId, List<String> photoUUIDs, String photoprismUrl) async {
+      String albumId, List<String> photoUUIDs, PhotoprismModel model) async {
     // wrap uuids in double quotes
     List<String> photoUUIDsWrapped = [];
 
@@ -98,10 +105,16 @@ class Api {
     final client = http.Client();
     print(albumId);
     try {
-      final response = await client.send(http.Request("DELETE",
-          Uri.parse(photoprismUrl + '/api/v1/albums/' + albumId + '/photos'))
-        ..headers["Content-Type"] = "application/json"
-        ..body = body);
+      final request = http.Request(
+          "DELETE",
+          Uri.parse(
+              model.photoprismUrl + '/api/v1/albums/' + albumId + '/photos'));
+      request.headers["Content-Type"] = "application/json";
+      request.body = body;
+      model.photoprismHttpBasicAuth.getAuthHeader().forEach((k, v) {
+        request.headers[k] = v;
+      });
+      final response = await client.send(request);
       if (response.statusCode == 200) {
         return 0;
       } else {
@@ -113,7 +126,7 @@ class Api {
   }
 
   static Future<int> archivePhotos(
-      List<String> photoUUIDs, String photoprismUrl) async {
+      List<String> photoUUIDs, PhotoprismModel model) async {
     // wrap uuids in double quotes
     List<String> photoUUIDsWrapped = [];
 
@@ -124,8 +137,10 @@ class Api {
     String body = '{"photos":' + photoUUIDsWrapped.toString() + '}';
 
     try {
-      http.Response response = await http
-          .post(photoprismUrl + '/api/v1/batch/photos/delete', body: body);
+      http.Response response = await http.post(
+          model.photoprismUrl + '/api/v1/batch/photos/delete',
+          body: body,
+          headers: model.photoprismHttpBasicAuth.getAuthHeader());
       if (response.statusCode == 200) {
         return 0;
       } else {
@@ -139,8 +154,10 @@ class Api {
   static Future<int> importPhotos(
       String photoprismUrl, PhotoprismModel model, String fileHash) async {
     try {
-      http.Response response = await http
-          .post(photoprismUrl + "/api/v1/import/upload/mobile", body: "{}");
+      http.Response response = await http.post(
+          photoprismUrl + "/api/v1/import/upload/mobile",
+          body: "{}",
+          headers: model.photoprismHttpBasicAuth.getAuthHeader());
       print(response.body);
       if (response.statusCode == 200) {
         print("loading photos");
@@ -169,10 +186,12 @@ class Api {
   }
 
   static Future<int> importPhotoEvent(
-      String photoprismUrl, String event) async {
+      PhotoprismModel model, String event) async {
     try {
-      http.Response response = await http
-          .post(photoprismUrl + "/api/v1/import/upload/" + event, body: "{}");
+      http.Response response = await http.post(
+          model.photoprismUrl + "/api/v1/import/upload/" + event,
+          body: "{}",
+          headers: model.photoprismHttpBasicAuth.getAuthHeader());
       print(response.body);
       if (response.statusCode == 200) {
         // TODO: Check if import is really successful

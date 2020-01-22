@@ -234,7 +234,7 @@ class SettingsPage extends StatelessWidget {
     await model.photoprismUploader.setUploadFolder(path);
   }
 
-  void emptyCache() async {
+  static void emptyCache() async {
     await DefaultCacheManager().emptyCache();
   }
 }

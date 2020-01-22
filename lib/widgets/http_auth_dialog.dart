@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:photoprism/common/hexcolor.dart';
 import 'package:photoprism/model/photoprism_model.dart';
+import 'package:photoprism/pages/albums_page.dart';
+import 'package:photoprism/pages/photos_page.dart';
+import 'package:photoprism/pages/settings_page.dart';
 import 'package:provider/provider.dart';
 
 class HttpAuthDialog extends StatefulWidget {
@@ -32,6 +35,10 @@ class _HttpAuthDialogState extends State<HttpAuthDialog> {
       model.photoprismHttpBasicAuth.setUser(_httpBasicUserController.text);
       model.photoprismHttpBasicAuth
           .setPassword(_httpBasicPasswordController.text);
+      model.photoprismRemoteConfigLoader.loadApplicationColor();
+      SettingsPage.emptyCache();
+      PhotosPage.loadPhotos(model, model.photoprismUrl, "");
+      AlbumsPage.loadAlbums(model, model.photoprismUrl);
       Navigator.of(context).pop();
     }
 

@@ -35,7 +35,7 @@ class AlbumDetailView extends StatelessWidget {
 
     // rename remote album
     var status = await Api.renameAlbum(
-        _album.id, _renameAlbumTextFieldController.text, _model.photoprismUrl);
+        _album.id, _renameAlbumTextFieldController.text, _model);
 
     // check renaming success
     // if renaming failed, local album name will be renamed to original name
@@ -55,7 +55,7 @@ class AlbumDetailView extends StatelessWidget {
     Navigator.pop(context);
 
     // delete remote album
-    var status = await Api.deleteAlbum(_album.id, _model.photoprismUrl);
+    var status = await Api.deleteAlbum(_album.id, _model);
 
     // check if successful
     if (status != 0) {
@@ -85,8 +85,8 @@ class AlbumDetailView extends StatelessWidget {
     });
 
     // remove remote photos from album
-    var status = await Api.removePhotosFromAlbum(
-        _album.id, selectedPhotos, _model.photoprismUrl);
+    var status =
+        await Api.removePhotosFromAlbum(_album.id, selectedPhotos, _model);
 
     // check if successful
     if (status != 0) {

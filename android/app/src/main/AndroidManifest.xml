@@ -11,7 +11,9 @@
         android:name="io.flutter.app.FlutterApplication"
         android:label="PhotoPrism"
         android:icon="@mipmap/launcher_icon"
-        android:usesCleartextTraffic="true">
+        android:usesCleartextTraffic="true"
+        android:allowBackup="false"
+        android:fullBackupContent="false">
         <activity
             android:name=".MainActivity"
             android:launchMode="singleTop"

@@ -64,7 +64,8 @@ class PhotosPage extends StatelessWidget {
     if (albumId != "") {
       url += "&album=" + albumId;
     }
-    http.Response response = await http.get(url);
+    http.Response response = await http.get(url,
+        headers: model.photoprismHttpBasicAuth.getAuthHeader());
     final parsed = json.decode(response.body).cast<Map<String, dynamic>>();
     photoList
         .addAll(parsed.map<Photo>((json) => Photo.fromJson(json)).toList());
@@ -84,7 +85,9 @@ class PhotosPage extends StatelessWidget {
     if (albumId != "") {
       url += "&album=" + albumId;
     }
-    http.Response response = await http.get(url);
+    await model.photoprismHttpBasicAuth.initialized;
+    http.Response response = await http.get(url,
+        headers: model.photoprismHttpBasicAuth.getAuthHeader());
     final parsed = json.decode(response.body).cast<Map<String, dynamic>>();
     List<Photo> photoList =
         parsed.map<Photo>((json) => Photo.fromJson(json)).toList();
@@ -292,6 +295,8 @@ class PhotosPage extends StatelessWidget {
                           return RectTween(begin: begin, end: end);
                         },
                         child: CachedNetworkImage(
+                          httpHeaders:
+                              model.photoprismHttpBasicAuth.getAuthHeader(),
                           alignment: Alignment.center,
                           fit: BoxFit.contain,
                           imageUrl: Provider.of<PhotoprismModel>(context)

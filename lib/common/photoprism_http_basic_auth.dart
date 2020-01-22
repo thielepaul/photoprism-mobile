@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -8,10 +10,11 @@ class PhotoprismHttpBasicAuth {
   bool enabled = false;
   String user = "";
   String password = "";
+  Future initialized;
 
   PhotoprismHttpBasicAuth(this.model)
       : secureStorage = new FlutterSecureStorage() {
-    initialize();
+    initialized = initialize();
   }
 
   Future initialize() async {
@@ -51,5 +54,15 @@ class PhotoprismHttpBasicAuth {
     password = passwordNew;
     model.notify();
     await secureStorage.write(key: "httpBasicPassword", value: password);
+  }
+
+  Map<String, String> getAuthHeader() {
+    if (enabled) {
+      return {
+        "Authorization":
+            "Basic " + utf8.fuse(base64).encode(user + ":" + password)
+      };
+    }
+    return {};
   }
 }

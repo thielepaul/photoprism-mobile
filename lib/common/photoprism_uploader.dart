@@ -141,8 +141,7 @@ class PhotoprismUploader {
         print("Importing photos..");
         photoprismModel.photoprismLoadingScreen
             .updateLoadingScreen("Importing photos..");
-        var status =
-            await Api.importPhotoEvent(photoprismModel.photoprismUrl, event);
+        var status = await Api.importPhotoEvent(photoprismModel, event);
 
         if (status == 0) {
           await PhotosPage.loadPhotos(
@@ -174,7 +173,8 @@ class PhotoprismUploader {
         files: filesToUpload,
         method: UploadMethod.POST,
         showNotification: false,
-        tag: "manual");
+        tag: "manual",
+        headers: photoprismModel.photoprismHttpBasicAuth.getAuthHeader());
 
     return manualUploadFinishedCompleter.future;
   }
@@ -326,7 +326,8 @@ class PhotoprismUploader {
         files: filesToUpload,
         method: UploadMethod.POST,
         showNotification: false,
-        tag: "upload 1");
+        tag: "upload 1",
+        headers: photoprismModel.photoprismHttpBasicAuth.getAuthHeader());
     print("Waiting uploadPhoto()");
     uploadFinishedCompleter = Completer();
     return uploadFinishedCompleter.future;
