@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:cached_network_image/cached_network_image.dart';
@@ -9,6 +8,7 @@ import 'package:photo_view/photo_view.dart';
 import 'package:photoprism/pages/photos_page.dart';
 import 'package:photoprism/model/photo.dart';
 import 'package:provider/provider.dart';
+import 'package:http/http.dart' as http;
 
 import '../model/photoprism_model.dart';
 
@@ -299,7 +299,7 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
                             icon: const Icon(Icons.share),
                             tooltip: 'Share photo',
                             onPressed: () {
-                              sharePhoto(this.currentPhotoIndex);
+                              sharePhoto(this.currentPhotoIndex, context);
                             },
                           )
                         ],
@@ -309,16 +309,16 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
             ])));
   }
 
-  sharePhoto(index) async {
-    var request = await HttpClient().getUrl(Uri.parse(
-        photoprismUrl + "/api/v1/download/" + photos[index].fileHash));
-    var response = await request.close();
+  sharePhoto(index, BuildContext context) async {
+    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
+    http.Response response = await http.get(Uri.parse(
+        photoprismUrl + "/api/v1/download/" + photos[index].fileHash),
+        headers: model.photoprismHttpBasicAuth.getAuthHeader());
     print(response.statusCode);
 
     if (response.statusCode == 200) {
-      Uint8List bytes = await consolidateHttpClientResponseBytes(response);
       await Share.file('Photoprism Photo', photos[index].fileHash + '.jpg',
-          bytes, 'image/jpg');
+          response.bodyBytes, 'image/jpg');
     } else {
       Provider.of<PhotoprismModel>(context)
           .photoprismMessage
