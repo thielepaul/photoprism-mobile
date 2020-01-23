@@ -20,11 +20,11 @@ jobs:
       - env:
           KEY_JKS: ${{ secrets.KEY_JKS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-        run: echo "$KEY_JKS" | base64 -d > key.jks && flutter build apk --no-shrink
+        run: echo "$KEY_JKS" | base64 -d > key.jks && flutter build apk --flavor prod --no-shrink
       - uses: actions/upload-artifact@v1
         with:
           name: photoprism-apk
-          path: build/app/outputs/apk/release/
+          path: build/app/outputs/apk/prod/release/
 
   release:
     needs: build
@@ -34,7 +34,7 @@ jobs:
       - uses: actions/download-artifact@v1
         with:
           name: photoprism-apk
-      - run: mv photoprism-apk/app-release.apk photoprism.apk
+      - run: mv photoprism-apk/app-prod-release.apk photoprism.apk
       - uses: marvinpinto/action-automatic-releases@latest
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
