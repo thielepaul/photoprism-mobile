@@ -1,9 +1,9 @@
 import 'package:drag_select_grid_view/drag_select_grid_view.dart';
 import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
+import 'package:photoprism/api/api.dart';
 import 'package:photoprism/common/photoprism_http_basic_auth.dart';
 import 'package:photoprism/pages/albums_page.dart';
-import 'package:photoprism/pages/photos_page.dart';
 import 'package:photoprism/common/photoprism_album_manager.dart';
 import 'package:photoprism/common/photoprism_remote_config_loader.dart';
 import 'package:photoprism/common/photoprism_loading_screen.dart';
@@ -61,8 +61,10 @@ class PhotoprismModel extends ChangeNotifier {
     photoprismHttpBasicAuth = new PhotoprismHttpBasicAuth(this);
 
     await photoprismCommonHelper.loadPhotoprismUrl();
+    await photoprismHttpBasicAuth.initialized;
     photoprismRemoteConfigLoader.loadApplicationColor();
-    PhotosPage.loadPhotosFromNetworkOrCache(this, photoprismUrl, "");
+    // PhotosPage.loadPhotosFromNetworkOrCache(this, photoprismUrl, "");
+    Api.loadMomentsTime(this);
     AlbumsPage.loadAlbumsFromNetworkOrCache(this, photoprismUrl);
     gridController.addListener(notifyListeners);
   }

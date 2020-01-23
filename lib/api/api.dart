@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import 'package:photoprism/model/moments_time.dart';
 import 'package:photoprism/pages/photos_page.dart';
 import 'package:photoprism/model/photoprism_model.dart';
 
@@ -206,5 +207,15 @@ class Api {
     } catch (_) {
       return 1;
     }
+  }
+
+  static Future<void> loadMomentsTime(PhotoprismModel model) async {
+    http.Response response = await http.get(
+        model.photoprismUrl + '/api/v1/moments/time',
+        headers: model.photoprismHttpBasicAuth.getAuthHeader());
+    final parsed = json.decode(response.body).cast<Map<String, dynamic>>();
+    final List<MomentsTime> momentsTime =
+        parsed.map<MomentsTime>((json) => MomentsTime.fromJson(json)).toList();
+    model.photoprismPhotoManager.setMomentsTime(momentsTime);
   }
 }

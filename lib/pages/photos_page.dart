@@ -1,16 +1,17 @@
 import 'dart:convert';
 
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:drag_select_grid_view/drag_select_grid_view.dart';
 import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photoprism/common/hexcolor.dart';
 import 'package:photoprism/common/transparent_route.dart';
+import 'package:photoprism/model/moments_time.dart';
 import 'package:photoprism/model/photo.dart';
 import 'package:http/http.dart' as http;
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:photoprism/pages/photoview.dart';
 import 'package:draggable_scrollbar/draggable_scrollbar.dart';
+import 'package:photoprism/widgets/lazy_tile.dart';
 import 'package:photoprism/widgets/selectable_tile.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -131,10 +132,10 @@ class PhotosPage extends StatelessWidget {
 
   Future<int> refreshPhotosPull(BuildContext context) async {
     print('refreshing photos..');
-    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
-    await PhotosPage.loadPhotos(model, model.photoprismUrl, "");
-    await PhotosPage.loadPhotosFromNetworkOrCache(
-        model, model.photoprismUrl, "");
+    // final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
+    // await PhotosPage.loadPhotos(model, model.photoprismUrl, "");
+    // await PhotosPage.loadPhotosFromNetworkOrCache(
+    //     model, model.photoprismUrl, "");
     return 0;
   }
 
@@ -192,6 +193,18 @@ class PhotosPage extends StatelessWidget {
     model.photoprismAlbumManager.addPhotosToAlbum(albumId, selectedPhotos);
   }
 
+  Text getMonthFromOffset(offset, PhotoprismModel model) {
+    double currentPhoto =
+        model.photoprismPhotoManager.photosCount * offset / 10000;
+    for (MomentsTime m in model.photoprismPhotoManager.cummulativeMonthCount) {
+      if (m.count > currentPhoto) {
+        return Text("${m.month}/${m.year}");
+      }
+    }
+
+    return Text("");
+  }
+
   @override
   Widget build(BuildContext context) {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
@@ -202,9 +215,17 @@ class PhotosPage extends StatelessWidget {
 
     _scrollController.addListener(_scrollListener);
 
-    if (PhotosPage.getPhotoList(context, albumId) == null) {
+    if (model.photoprismPhotoManager.momentsTime == null) {
       return Text("", key: ValueKey("photosGridView"));
     }
+
+    int tileCount;
+    if (albumId == "") {
+      tileCount = model.photoprismPhotoManager.photosCount;
+    } else {
+      tileCount = model.albums[albumId].imageCount;
+    }
+
     //if (Photos.getPhotoList(context, albumId).length == 0) {
     //  return IconButton(onPressed: () => {}, icon: Icon(Icons.add));
     //}
@@ -257,6 +278,9 @@ class PhotosPage extends StatelessWidget {
         body: RefreshIndicator(
             child: OrientationBuilder(builder: (context, orientation) {
           return DraggableScrollbar.semicircle(
+            labelTextBuilder: albumId == ""
+                ? (double offset) => getMonthFromOffset(offset, model)
+                : null,
             heightScrollThumb: 50.0,
             controller: _scrollController,
             child: DragSelectGridView(
@@ -269,7 +293,7 @@ class PhotosPage extends StatelessWidget {
                   mainAxisSpacing: 4,
                   crossAxisSpacing: 4,
                 ),
-                itemCount: PhotosPage.getPhotoList(context, albumId).length,
+                itemCount: tileCount,
                 itemBuilder: (context, index, selected) {
                   return SelectableTile(
                       key: ValueKey("PhotoTile"),
@@ -294,22 +318,10 @@ class PhotosPage extends StatelessWidget {
                         createRectTween: (begin, end) {
                           return RectTween(begin: begin, end: end);
                         },
-                        child: CachedNetworkImage(
-                          httpHeaders:
-                              model.photoprismHttpBasicAuth.getAuthHeader(),
-                          alignment: Alignment.center,
-                          fit: BoxFit.contain,
-                          imageUrl: Provider.of<PhotoprismModel>(context)
-                                  .photoprismUrl +
-                              '/api/v1/thumbnails/' +
-                              PhotosPage.getPhotoList(context, albumId)[index]
-                                  .fileHash +
-                              '/tile_224',
-                          placeholder: (context, url) => Container(
-                            color: Colors.grey[300],
-                          ),
-                          errorWidget: (context, url, error) =>
-                              Icon(Icons.error),
+                        child: LazyTile(
+                          index: index,
+                          albumId: albumId,
+                          context: context,
                         ),
                       ));
                 }),
