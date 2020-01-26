@@ -225,33 +225,39 @@ class PhotosPage extends StatelessWidget {
                             },
                           )
                         : null,
-                actions:
-                    model.gridController.selection.selectedIndexes.length > 0
-                        ? <Widget>[
-                            IconButton(
-                              icon: const Icon(Icons.archive),
-                              tooltip: 'Archive photos',
-                              onPressed: () {
-                                archiveSelectedPhotos(context);
-                              },
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.add),
-                              tooltip: 'Add to album',
-                              onPressed: () {
-                                _selectAlbumDialog(context);
-                              },
-                            ),
-                          ]
-                        : <Widget>[
-                            IconButton(
-                              icon: const Icon(Icons.cloud_upload),
-                              tooltip: 'Upload photo',
-                              onPressed: () {
-                                model.photoprismUploader.selectPhotoAndUpload();
-                              },
+                actions: model.gridController.selection.selectedIndexes.length >
+                        0
+                    ? <Widget>[
+                        IconButton(
+                          icon: const Icon(Icons.archive),
+                          tooltip: 'Archive photos',
+                          onPressed: () {
+                            archiveSelectedPhotos(context);
+                          },
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.add),
+                          tooltip: 'Add to album',
+                          onPressed: () {
+                            _selectAlbumDialog(context);
+                          },
+                        ),
+                      ]
+                    : <Widget>[
+                        PopupMenuButton<int>(
+                          itemBuilder: (BuildContext context) => [
+                            PopupMenuItem(
+                              value: 0,
+                              child: Text('Upload photo'),
                             )
                           ],
+                          onSelected: (choice) {
+                            if (choice == 0) {
+                              model.photoprismUploader.selectPhotoAndUpload();
+                            }
+                          },
+                        ),
+                      ],
               )
             : null,
         body: RefreshIndicator(
