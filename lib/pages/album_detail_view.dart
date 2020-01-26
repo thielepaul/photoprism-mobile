@@ -128,6 +128,7 @@ class AlbumDetailView extends StatelessWidget {
         title: _selectedPhotosCount > 0
             ? Text(_selectedPhotosCount.toString())
             : Text(_album.name),
+        centerTitle: _selectedPhotosCount > 0 ? false : null,
         leading: _selectedPhotosCount > 0
             ? IconButton(
                 icon: const Icon(Icons.close),
