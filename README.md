@@ -12,6 +12,7 @@
 - Manual photo upload
 - Automatic photo upload (only Android (not tested), iOS will be added soon): Automatic photo upload supports only .jpg files at this moment
 - Share photos with other apps
+- Use PhotoPrism instances behind HTTP Basic Authentication
 
 ## Planned features
 - Archived photos view
