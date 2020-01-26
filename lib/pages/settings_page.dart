@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:photoprism/common/album_manager.dart';
 import 'package:photoprism/common/hexcolor.dart';
+import 'package:photoprism/common/photo_manager.dart';
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:photoprism/widgets/http_auth_dialog.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'albums_page.dart';
-import 'photos_page.dart';
 import '../model/photoprism_model.dart';
 import 'auto_upload_queue.dart';
 
@@ -224,8 +224,8 @@ class SettingsPage extends StatelessWidget {
     await model.photoprismCommonHelper.setPhotoprismUrl(url);
     model.photoprismRemoteConfigLoader.loadApplicationColor();
     emptyCache();
-    await PhotosPage.loadPhotos(model, model.photoprismUrl, "");
-    await AlbumsPage.loadAlbums(model, model.photoprismUrl);
+    await PhotoManager.resetPhotos(context, "");
+    await AlbumManager.resetAlbums(context);
   }
 
   void setNewUploadFolder(context, path) async {

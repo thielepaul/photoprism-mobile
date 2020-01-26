@@ -1,22 +1,18 @@
-import 'dart:convert';
-
 import 'package:drag_select_grid_view/drag_select_grid_view.dart';
 import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
+import 'package:photoprism/api/api.dart';
+import 'package:photoprism/common/album_manager.dart';
 import 'package:photoprism/common/hexcolor.dart';
+import 'package:photoprism/common/photo_manager.dart';
 import 'package:photoprism/common/transparent_route.dart';
 import 'package:photoprism/model/moments_time.dart';
-import 'package:photoprism/model/photo.dart';
-import 'package:http/http.dart' as http;
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:photoprism/pages/photoview.dart';
 import 'package:draggable_scrollbar/draggable_scrollbar.dart';
 import 'package:photoprism/widgets/lazy_tile.dart';
 import 'package:photoprism/widgets/selectable_tile.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
-import 'albums_page.dart';
 
 class PhotosPage extends StatelessWidget {
   final ScrollController _scrollController;
@@ -24,104 +20,26 @@ class PhotosPage extends StatelessWidget {
 
   PhotosPage({Key key, this.albumId}) : _scrollController = ScrollController();
 
-  static Future loadPhotosFromNetworkOrCache(
-      PhotoprismModel model, String photoprismUrl, String albumId) async {
-    print("loadPhotosFromNetworkOrCache: AlbumID:" + albumId);
-    var key = 'photosList';
-    key += albumId;
-    SharedPreferences sp = await SharedPreferences.getInstance();
-    if (sp.containsKey(key)) {
-      final parsed =
-          json.decode(sp.getString(key)).cast<Map<String, dynamic>>();
-      List<Photo> photoList =
-          parsed.map<Photo>((json) => Photo.fromJson(json)).toList();
-      if (albumId == "") {
-        model.photoprismPhotoManager.setPhotoList(photoList);
-      } else {
-        model.photoprismAlbumManager.setPhotoListOfAlbum(photoList, albumId);
-      }
-      return;
-    }
-    await loadPhotos(model, photoprismUrl, albumId);
-  }
-
-  static Future<int> loadMorePhotos(
-      PhotoprismModel model, String photoprismUrl, String albumId) async {
-    if (model.isLoading) {
-      return 0;
-    }
-    model.isLoading = true;
-    print("loading more photos");
-    List<Photo> photoList;
-    if (albumId == "") {
-      photoList = model.photoList;
-    } else {
-      photoList = model.albums[albumId].photoList;
-    }
-
-    var url = photoprismUrl +
-        '/api/v1/photos?count=1000&offset=' +
-        photoList.length.toString();
-    if (albumId != "") {
-      url += "&album=" + albumId;
-    }
-    http.Response response = await http.get(url,
-        headers: model.photoprismHttpBasicAuth.getAuthHeader());
-    final parsed = json.decode(response.body).cast<Map<String, dynamic>>();
-    photoList
-        .addAll(parsed.map<Photo>((json) => Photo.fromJson(json)).toList());
-
-    if (albumId == "") {
-      model.photoprismPhotoManager.setPhotoList(photoList);
-    } else {
-      model.photoprismAlbumManager.setPhotoListOfAlbum(photoList, albumId);
-    }
-    model.isLoading = false;
-    return (parsed.map<Photo>((json) => Photo.fromJson(json)).toList().length);
-  }
-
-  static Future loadPhotos(
-      PhotoprismModel model, String photoprismUrl, String albumId) async {
-    var url = photoprismUrl + '/api/v1/photos?count=1000';
-    if (albumId != "") {
-      url += "&album=" + albumId;
-    }
-    await model.photoprismHttpBasicAuth.initialized;
-    http.Response response = await http.get(url,
-        headers: model.photoprismHttpBasicAuth.getAuthHeader());
-    final parsed = json.decode(response.body).cast<Map<String, dynamic>>();
-    List<Photo> photoList =
-        parsed.map<Photo>((json) => Photo.fromJson(json)).toList();
-
-    if (albumId == "") {
-      model.photoprismPhotoManager.setPhotoList(photoList);
-    } else {
-      model.photoprismAlbumManager.setPhotoListOfAlbum(photoList, albumId);
-    }
-    print("Loading more photos");
-    int morePhotosCount = await loadMorePhotos(model, photoprismUrl, albumId);
-    while (morePhotosCount > 0) {
-      print("Loading more photos");
-      morePhotosCount = await loadMorePhotos(model, photoprismUrl, albumId);
-    }
-  }
-
-  static List<Photo> getPhotoList(context, String albumId) {
-    List<Photo> photoList;
-    if (albumId == "") {
-      photoList =
-          Provider.of<PhotoprismModel>(context, listen: false).photoList;
-    } else {
-      if (Provider.of<PhotoprismModel>(context, listen: false)
-              .albums[albumId] !=
-          null) {
-        photoList = Provider.of<PhotoprismModel>(context, listen: false)
-            .albums[albumId]
-            .photoList;
-      }
-    }
-    return photoList;
-  }
+  // static Future loadPhotosFromNetworkOrCache(
+  //     PhotoprismModel model, String photoprismUrl, String albumId) async {
+  //   print("loadPhotosFromNetworkOrCache: AlbumID:" + albumId);
+  //   var key = 'photosList';
+  //   key += albumId;
+  //   SharedPreferences sp = await SharedPreferences.getInstance();
+  //   if (sp.containsKey(key)) {
+  //     final parsed =
+  //         json.decode(sp.getString(key)).cast<Map<String, dynamic>>();
+  //     List<Photo> photoList =
+  //         parsed.map<Photo>((json) => Photo.fromJson(json)).toList();
+  //     if (albumId == "") {
+  //       model.photoprismPhotoManager.setPhotoList(photoList);
+  //     } else {
+  //       model.photoprismAlbumManager.setPhotoListOfAlbum(photoList, albumId);
+  //     }
+  //     return;
+  //   }
+  //   await loadPhotos(model, photoprismUrl, albumId);
+  // }
 
   void _scrollListener() async {
     if (_scrollController.position.extentAfter < 500) {
@@ -145,12 +63,14 @@ class PhotosPage extends StatelessWidget {
 
     model.gridController.selection.selectedIndexes.forEach((element) {
       selectedPhotos
-          .add(PhotosPage.getPhotoList(context, "")[element].photoUUID);
+          .add(PhotoManager.getPhotos(context, "")[element].photoUUID);
     });
-    model.photoprismPhotoManager.archivePhotos(selectedPhotos);
+    PhotoManager.archivePhotos(context, selectedPhotos, albumId);
   }
 
   _selectAlbumDialog(BuildContext context) {
+    PhotoprismModel model = Provider.of<PhotoprismModel>(context);
+
     showDialog(
         context: context,
         builder: (context) {
@@ -159,19 +79,15 @@ class PhotosPage extends StatelessWidget {
             content: Container(
               width: double.maxFinite,
               child: ListView.builder(
-                  itemCount: AlbumsPage.getAlbumList(context).length,
+                  itemCount: model.albums.length,
                   itemBuilder: (BuildContext ctxt, int index) {
                     return GestureDetector(
                         onTap: () {
-                          addPhotosToAlbum(
-                              AlbumsPage.getAlbumList(context)[index].id,
-                              context);
+                          addPhotosToAlbum(model.albums[index].id, context);
                         },
                         child: Card(
                             child: ListTile(
-                                title: Text(
-                                    AlbumsPage.getAlbumList(context)[index]
-                                        .name))));
+                                title: Text(model.albums[index].name))));
                   }),
             ),
           );
@@ -186,18 +102,20 @@ class PhotosPage extends StatelessWidget {
 
     model.gridController.selection.selectedIndexes.forEach((element) {
       selectedPhotos
-          .add(PhotosPage.getPhotoList(context, "")[element].photoUUID);
+          .add(PhotoManager.getPhotos(context, "")[element].photoUUID);
     });
 
     model.gridController.clear();
-    model.photoprismAlbumManager.addPhotosToAlbum(albumId, selectedPhotos);
+    AlbumManager.addPhotosToAlbum(context, albumId, selectedPhotos);
   }
 
-  Text getMonthFromOffset(offset, PhotoprismModel model) {
-    double currentPhoto =
-        model.photoprismPhotoManager.photosCount * offset / 10000;
-    for (MomentsTime m in model.photoprismPhotoManager.cummulativeMonthCount) {
-      if (m.count > currentPhoto) {
+  Text getMonthFromOffset(BuildContext context, double offset) {
+    double currentPhoto = PhotoManager.getPhotosCount(context, albumId) *
+        _scrollController.offset /
+        (_scrollController.position.maxScrollExtent -
+            _scrollController.position.minScrollExtent);
+    for (MomentsTime m in PhotoManager.getCummulativeMonthCount(context)) {
+      if (m.count >= currentPhoto) {
         return Text("${m.month}/${m.year}");
       }
     }
@@ -215,16 +133,12 @@ class PhotosPage extends StatelessWidget {
 
     _scrollController.addListener(_scrollListener);
 
-    if (model.photoprismPhotoManager.momentsTime == null) {
+    if (model.momentsTime.length == 0) {
+      Api.loadMomentsTime(context);
       return Text("", key: ValueKey("photosGridView"));
     }
 
-    int tileCount;
-    if (albumId == "") {
-      tileCount = model.photoprismPhotoManager.photosCount;
-    } else {
-      tileCount = model.albums[albumId].imageCount;
-    }
+    int tileCount = PhotoManager.getPhotosCount(context, albumId);
 
     //if (Photos.getPhotoList(context, albumId).length == 0) {
     //  return IconButton(onPressed: () => {}, icon: Icon(Icons.add));
@@ -269,7 +183,8 @@ class PhotosPage extends StatelessWidget {
                               icon: const Icon(Icons.cloud_upload),
                               tooltip: 'Upload photo',
                               onPressed: () {
-                                model.photoprismUploader.selectPhotoAndUpload();
+                                model.photoprismUploader
+                                    .selectPhotoAndUpload(context);
                               },
                             )
                           ],
@@ -279,7 +194,7 @@ class PhotosPage extends StatelessWidget {
             child: OrientationBuilder(builder: (context, orientation) {
           return DraggableScrollbar.semicircle(
             labelTextBuilder: albumId == ""
-                ? (double offset) => getMonthFromOffset(offset, model)
+                ? (double offset) => getMonthFromOffset(context, offset)
                 : null,
             heightScrollThumb: 50.0,
             controller: _scrollController,
@@ -321,7 +236,6 @@ class PhotosPage extends StatelessWidget {
                         child: LazyTile(
                           index: index,
                           albumId: albumId,
-                          context: context,
                         ),
                       ));
                 }),

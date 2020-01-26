@@ -1,9 +1,12 @@
 import 'dart:convert';
 
+import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
+import 'package:photoprism/common/photo_manager.dart';
 import 'package:photoprism/model/moments_time.dart';
-import 'package:photoprism/pages/photos_page.dart';
+import 'package:photoprism/model/photo.dart';
 import 'package:photoprism/model/photoprism_model.dart';
+import 'package:provider/provider.dart';
 
 class Api {
   static Future<String> createAlbum(
@@ -162,14 +165,15 @@ class Api {
       print(response.body);
       if (response.statusCode == 200) {
         print("loading photos");
-        await PhotosPage.loadPhotos(model, photoprismUrl, "");
+        // TODO: does this make sense with lazy loading
+        // await PhotosPage.loadPhotos(model, photoprismUrl, "");
         print("Finished");
         bool found = false;
-        for (var i = 0; i < model.photoList.length; i++) {
-          if (model.photoList[i].fileHash == fileHash) {
+        model.photos.forEach((_, Photo photo) {
+          if (photo.fileHash == fileHash) {
             found = true;
           }
-        }
+        });
         if (found == true) {
           print("Photo found in PhotoPrism");
           return 0;
@@ -209,13 +213,33 @@ class Api {
     }
   }
 
-  static Future<void> loadMomentsTime(PhotoprismModel model) async {
+  static Future<void> loadMomentsTime(BuildContext context) async {
+    PhotoprismModel model = Provider.of<PhotoprismModel>(context);
     http.Response response = await http.get(
         model.photoprismUrl + '/api/v1/moments/time',
         headers: model.photoprismHttpBasicAuth.getAuthHeader());
     final parsed = json.decode(response.body).cast<Map<String, dynamic>>();
     final List<MomentsTime> momentsTime =
         parsed.map<MomentsTime>((json) => MomentsTime.fromJson(json)).toList();
-    model.photoprismPhotoManager.setMomentsTime(momentsTime);
+    PhotoManager.saveAndSetMomentsTime(context, momentsTime);
+  }
+
+  static Future<Map<int, Photo>> loadPhotos(
+      BuildContext context, String albumId, int offset) async {
+    PhotoprismModel model = Provider.of<PhotoprismModel>(context);
+
+    http.Response response = await http.get(
+        model.photoprismUrl +
+            '/api/v1/photos' +
+            '?count=100' +
+            '&offset=' +
+            offset.toString() +
+            '&album=' +
+            albumId,
+        headers: model.photoprismHttpBasicAuth.getAuthHeader());
+    final parsed = json.decode(response.body).cast<Map<String, dynamic>>();
+    return Map.fromIterables(
+        List<int>.generate(parsed.length, (i) => i + offset),
+        parsed.map<Photo>((json) => Photo.fromJson(json)).toList());
   }
 }

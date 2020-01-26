@@ -3,7 +3,7 @@ import 'package:esys_flutter_share/esys_flutter_share.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
-import 'package:photoprism/pages/photos_page.dart';
+import 'package:photoprism/common/photo_manager.dart';
 import 'package:photoprism/model/photo.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
@@ -24,7 +24,7 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
   PageController pageController;
   int currentPhotoIndex;
   String photoprismUrl;
-  List<Photo> photos;
+  Map<int, Photo> photos;
   bool photoViewIsScrolling = false;
   bool showAppBar = true;
   Key globalKeyPhotoView = GlobalKey();
@@ -257,7 +257,7 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
   @override
   Widget build(BuildContext context) {
     photoprismUrl = Provider.of<PhotoprismModel>(context).photoprismUrl;
-    photos = PhotosPage.getPhotoList(context, widget.albumId);
+    photos = PhotoManager.getPhotos(context, widget.albumId);
     currentPhotoIndex = widget.currentPhotoIndex;
 
     return WillPopScope(

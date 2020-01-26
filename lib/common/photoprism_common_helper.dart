@@ -1,3 +1,5 @@
+// import 'dart:convert';
+
 import 'package:drag_select_grid_view/drag_select_grid_view.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photoprism/model/photoprism_model.dart';
@@ -7,6 +9,13 @@ class PhotoprismCommonHelper {
   PhotoprismModel photoprismModel;
   PhotoprismCommonHelper(PhotoprismModel photoprismModel) {
     this.photoprismModel = photoprismModel;
+  }
+
+  static Future saveAsJsonToSharedPrefs(String key, data) async {
+    print("saveToSharedPrefs: key: " + key);
+    // TODO: persist data
+    // SharedPreferences sp = await SharedPreferences.getInstance();
+    // sp.setString(key, json.encode(data));
   }
 
   loadPhotoprismUrl() async {

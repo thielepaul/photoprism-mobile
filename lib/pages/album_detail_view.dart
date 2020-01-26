@@ -1,11 +1,11 @@
 import 'package:drag_select_grid_view/drag_select_grid_view.dart';
 import 'package:flutter/material.dart';
-import 'package:photoprism/pages/albums_page.dart';
+import 'package:photoprism/common/album_manager.dart';
+import 'package:photoprism/common/photo_manager.dart';
 import 'package:photoprism/api/api.dart';
 import 'package:photoprism/pages/photos_page.dart';
 import 'package:photoprism/common/hexcolor.dart';
 import 'package:photoprism/model/album.dart';
-import 'package:photoprism/model/photo.dart';
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:provider/provider.dart';
 
@@ -22,17 +22,6 @@ class AlbumDetailView extends StatelessWidget {
     // close rename dialog
     Navigator.pop(context);
 
-    List<Album> albums = AlbumsPage.getAlbumList(context);
-    String oldAlbumName = _album.name;
-
-    // rename album name in local album list
-    for (var i = 0; i < albums.length; i++) {
-      if (albums[i].id == _album.id) {
-        albums[i].name = _renameAlbumTextFieldController.text;
-      }
-    }
-    _model.notify();
-
     // rename remote album
     var status = await Api.renameAlbum(
         _album.id, _renameAlbumTextFieldController.text, _model);
@@ -40,11 +29,6 @@ class AlbumDetailView extends StatelessWidget {
     // check renaming success
     // if renaming failed, local album name will be renamed to original name
     if (status != 0) {
-      for (var i = 0; i < albums.length; i++) {
-        if (albums[i].id == _album.id) {
-          albums[i].name = oldAlbumName;
-        }
-      }
       _model.notify();
       _model.photoprismMessage.showMessage("Renaming album failed.");
     }
@@ -63,16 +47,7 @@ class AlbumDetailView extends StatelessWidget {
     } else {
       // go back to albums view
       Navigator.pop(context);
-
-      // remove local album from album list
-      List<Album> albums = AlbumsPage.getAlbumList(context);
-      for (var i = 0; i < albums.length; i++) {
-        if (albums[i].id == _album.id) {
-          albums.removeAt(i);
-        }
-      }
-      _model.photoprismAlbumManager.setAlbumList(albums);
-      _model.notify();
+      await AlbumManager.resetAlbums(context);
     }
   }
 
@@ -81,7 +56,7 @@ class AlbumDetailView extends StatelessWidget {
     List<String> selectedPhotos = [];
     _model.gridController.selection.selectedIndexes.forEach((element) {
       selectedPhotos
-          .add(PhotosPage.getPhotoList(context, _album.id)[element].photoUUID);
+          .add(PhotoManager.getPhotos(context, _album.id)[element].photoUUID);
     });
 
     // remove remote photos from album
@@ -93,26 +68,7 @@ class AlbumDetailView extends StatelessWidget {
       _model.photoprismMessage
           .showMessage("Removing photos from album failed.");
     } else {
-      // create new photo list for current album without removed photos
-      List<Photo> photosOfAlbum = PhotosPage.getPhotoList(context, _album.id);
-      List<Photo> photosOfAlbumNew = [];
-      for (var i = 0; i < photosOfAlbum.length; i++) {
-        if (!selectedPhotos.contains(photosOfAlbum[i].photoUUID)) {
-          photosOfAlbumNew.add(photosOfAlbum[i]);
-        }
-      }
-      _model.photoprismAlbumManager
-          .setPhotoListOfAlbum(photosOfAlbumNew, _album.id);
-
-      // update image count of local album
-      List<Album> albums = AlbumsPage.getAlbumList(context);
-      Album currentAlbum;
-      for (var i = 0; i < albums.length; i++) {
-        if (albums[i].id == _album.id) {
-          currentAlbum = albums[i];
-        }
-      }
-      currentAlbum.imageCount = currentAlbum.imageCount - selectedPhotos.length;
+      PhotoManager.resetPhotos(context, _album.id);
     }
     _model.notify();
     // deselect selected photos

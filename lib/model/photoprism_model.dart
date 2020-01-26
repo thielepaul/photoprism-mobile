@@ -1,24 +1,25 @@
 import 'package:drag_select_grid_view/drag_select_grid_view.dart';
 import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
-import 'package:photoprism/api/api.dart';
 import 'package:photoprism/common/photoprism_http_basic_auth.dart';
-import 'package:photoprism/pages/albums_page.dart';
-import 'package:photoprism/common/photoprism_album_manager.dart';
 import 'package:photoprism/common/photoprism_remote_config_loader.dart';
 import 'package:photoprism/common/photoprism_loading_screen.dart';
 import 'package:photoprism/common/photoprism_message.dart';
-import 'package:photoprism/common/photoprism_photo_manager.dart';
 import 'package:photoprism/common/photoprism_common_helper.dart';
 import 'package:photoprism/common/photoprism_uploader.dart';
 import 'package:photoprism/model/album.dart';
 import 'package:photoprism/model/photo.dart';
+import 'package:synchronized/synchronized.dart';
+
+import 'moments_time.dart';
 
 class PhotoprismModel extends ChangeNotifier {
   // general
   String photoprismUrl = "https://demo.photoprism.org";
-  List<Photo> photoList;
-  Map<String, Album> albums;
+  List<MomentsTime> momentsTime = [];
+  Map<int, Photo> photos = {};
+  Map<String, Album> albums = {};
+  Lock photoLoadingLock = Lock();
 
   // theming
   String applicationColor = "#424242";
@@ -40,8 +41,6 @@ class PhotoprismModel extends ChangeNotifier {
   PhotoprismUploader photoprismUploader;
   PhotoprismRemoteConfigLoader photoprismRemoteConfigLoader;
   PhotoprismCommonHelper photoprismCommonHelper;
-  PhotoprismPhotoManager photoprismPhotoManager;
-  PhotoprismAlbumManager photoprismAlbumManager;
   PhotoprismLoadingScreen photoprismLoadingScreen;
   PhotoprismMessage photoprismMessage;
   PhotoprismHttpBasicAuth photoprismHttpBasicAuth;
@@ -54,8 +53,6 @@ class PhotoprismModel extends ChangeNotifier {
     photoprismUploader = new PhotoprismUploader(this);
     photoprismRemoteConfigLoader = new PhotoprismRemoteConfigLoader(this);
     photoprismCommonHelper = new PhotoprismCommonHelper(this);
-    photoprismPhotoManager = new PhotoprismPhotoManager(this);
-    photoprismAlbumManager = new PhotoprismAlbumManager(this);
     photoprismLoadingScreen = new PhotoprismLoadingScreen(this);
     photoprismMessage = new PhotoprismMessage(this);
     photoprismHttpBasicAuth = new PhotoprismHttpBasicAuth(this);
@@ -63,10 +60,26 @@ class PhotoprismModel extends ChangeNotifier {
     await photoprismCommonHelper.loadPhotoprismUrl();
     await photoprismHttpBasicAuth.initialized;
     photoprismRemoteConfigLoader.loadApplicationColor();
+    // TODO: load if necessary
     // PhotosPage.loadPhotosFromNetworkOrCache(this, photoprismUrl, "");
-    Api.loadMomentsTime(this);
-    AlbumsPage.loadAlbumsFromNetworkOrCache(this, photoprismUrl);
+    // Api.loadMomentsTime(this);
+    // AlbumsPage.loadAlbumsFromNetworkOrCache(this, photoprismUrl);
     gridController.addListener(notifyListeners);
+  }
+
+  setMomentsTime(List<MomentsTime> newValue) {
+    momentsTime = newValue;
+    notifyListeners();
+  }
+
+  setPhotos(Map<int, Photo> newValue) {
+    photos = newValue;
+    notifyListeners();
+  }
+
+  setAlbums(Map<String, Album> newValue) {
+    albums = newValue;
+    notifyListeners();
   }
 
   void notify() => notifyListeners();

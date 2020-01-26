@@ -5,14 +5,15 @@ import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_uploader/flutter_uploader.dart';
 import 'package:intl/intl.dart';
+import 'package:photoprism/common/photo_manager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path/path.dart';
 import 'package:background_fetch/background_fetch.dart';
 
 import '../api/api.dart';
-import '../pages/photos_page.dart';
 import '../model/photoprism_model.dart';
 
 class PhotoprismUploader {
@@ -103,7 +104,7 @@ class PhotoprismUploader {
   }
 
   /// Starts image file picker, uploads photo(s) and imports them.
-  void selectPhotoAndUpload() async {
+  void selectPhotoAndUpload(BuildContext context) async {
     List<File> files = await FilePicker.getMultiFile();
 
     // list for flutter uploader
@@ -144,8 +145,7 @@ class PhotoprismUploader {
         var status = await Api.importPhotoEvent(photoprismModel, event);
 
         if (status == 0) {
-          await PhotosPage.loadPhotos(
-              photoprismModel, photoprismModel.photoprismUrl, "");
+          await PhotoManager.resetPhotos(context, "");
           await photoprismModel.photoprismLoadingScreen.hideLoadingScreen();
           photoprismModel.photoprismMessage
               .showMessage("Uploading and importing successful.");

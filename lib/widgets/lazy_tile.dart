@@ -1,36 +1,29 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:photoprism/common/photo_manager.dart';
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:provider/provider.dart';
 
 class LazyTile extends StatefulWidget {
   final int index;
   final String albumId;
-  final BuildContext context;
 
-  LazyTile({Key key, this.index, this.albumId, this.context}) : super(key: key);
+  LazyTile({Key key, this.index, this.albumId}) : super(key: key);
 
-  _LazyTileState createState() => _LazyTileState(context);
+  _LazyTileState createState() => _LazyTileState();
 }
 
 class _LazyTileState extends State<LazyTile> {
-  PhotoprismModel model;
-  BuildContext context;
   bool isLoading = false;
   bool disposed = false;
 
-  _LazyTileState(BuildContext context) {
-    model = Provider.of<PhotoprismModel>(context);
-  }
-
-  Future<void> loadImageUrl() async {
+  Future<void> loadImageUrl(BuildContext context) async {
     if (isLoading) {
       return;
     }
     isLoading = true;
-    await model.photoprismPhotoManager
-        .loadPhoto(widget.index, widget.albumId, model);
+    await PhotoManager.loadPhoto(context, widget.index, widget.albumId);
     if (disposed) {
       return;
     }
@@ -39,30 +32,21 @@ class _LazyTileState extends State<LazyTile> {
     });
   }
 
-  String getImageUrl() {
-    String filehash;
-    if (widget.albumId == "") {
-      if (model.photoprismPhotoManager.photos[widget.index] == null) {
-        return null;
-      }
-      filehash = model.photoprismPhotoManager.photos[widget.index].fileHash;
-    } else {
-      if (model.photoprismPhotoManager.albumPhotos[widget.albumId] == null ||
-          model.photoprismPhotoManager.albumPhotos[widget.albumId]
-                  [widget.index] ==
-              null) {
-        return null;
-      }
-      filehash = model.photoprismPhotoManager
-          .albumPhotos[widget.albumId][widget.index].fileHash;
+  String getImageUrl(BuildContext context) {
+    if (PhotoManager.getPhotos(context, widget.albumId)[widget.index] == null) {
+      return null;
     }
+    PhotoprismModel model = Provider.of<PhotoprismModel>(context);
+    String filehash =
+        PhotoManager.getPhotos(context, widget.albumId)[widget.index].fileHash;
     return model.photoprismUrl + '/api/v1/thumbnails/' + filehash + '/tile_224';
   }
 
-  Widget displayImageIfUrlLoaded() {
-    String imageUrl = getImageUrl();
+  Widget displayImageIfUrlLoaded(BuildContext context) {
+    PhotoprismModel model = Provider.of<PhotoprismModel>(context);
+    String imageUrl = getImageUrl(context);
     if (imageUrl == null) {
-      loadImageUrl();
+      loadImageUrl(context);
       return Container(
         color: Colors.grey[300],
       );
@@ -87,6 +71,6 @@ class _LazyTileState extends State<LazyTile> {
 
   @override
   Widget build(BuildContext context) {
-    return displayImageIfUrlLoaded();
+    return displayImageIfUrlLoaded(context);
   }
 }
