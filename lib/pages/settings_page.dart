@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:photoprism/common/hexcolor.dart';
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:photoprism/widgets/http_auth_dialog.dart';
 import 'package:provider/provider.dart';

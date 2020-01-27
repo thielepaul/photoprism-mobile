@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:photoprism/common/hexcolor.dart';
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:photoprism/pages/albums_page.dart';
 import 'package:photoprism/pages/photos_page.dart';
