@@ -191,14 +191,12 @@ class AlbumDetailView extends StatelessWidget {
             actions: <Widget>[
               FlatButton(
                 child: Text('Cancel'),
-                textColor: HexColor(_model.applicationColor),
                 onPressed: () {
                   Navigator.pop(context);
                 },
               ),
               FlatButton(
                 child: Text('Rename album'),
-                textColor: HexColor(_model.applicationColor),
                 onPressed: () {
                   _renameAlbum(context);
                 },
@@ -219,14 +217,12 @@ class AlbumDetailView extends StatelessWidget {
             actions: <Widget>[
               FlatButton(
                 child: Text('Cancel'),
-                textColor: HexColor(_model.applicationColor),
                 onPressed: () {
                   Navigator.pop(context);
                 },
               ),
               FlatButton(
                 child: Text('Delete album'),
-                textColor: HexColor(_model.applicationColor),
                 onPressed: () {
                   _deleteAlbum(albumContext);
                 },

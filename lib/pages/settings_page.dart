@@ -165,14 +165,12 @@ class SettingsPage extends StatelessWidget {
             ),
             actions: <Widget>[
               FlatButton(
-                textColor: HexColor(model.applicationColor),
                 child: Text('Cancel'),
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
               ),
               FlatButton(
-                textColor: HexColor(model.applicationColor),
                 child: Text('Save'),
                 onPressed: () {
                   setNewPhotoprismUrl(context, _urlTextFieldController.text);
@@ -199,14 +197,12 @@ class SettingsPage extends StatelessWidget {
             ),
             actions: <Widget>[
               FlatButton(
-                textColor: HexColor(model.applicationColor),
                 child: Text('Cancel'),
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
               ),
               FlatButton(
-                textColor: HexColor(model.applicationColor),
                 child: Text('Save'),
                 onPressed: () {
                   setNewUploadFolder(

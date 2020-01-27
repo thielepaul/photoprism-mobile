@@ -82,14 +82,12 @@ class _HttpAuthDialogState extends State<HttpAuthDialog> {
       )),
       actions: <Widget>[
         FlatButton(
-          textColor: HexColor(model.applicationColor),
           child: Text('Cancel'),
           onPressed: () {
             Navigator.of(context).pop();
           },
         ),
         FlatButton(
-          textColor: HexColor(model.applicationColor),
           child: Text('Save'),
           onPressed: () => saveAndPop(),
         )

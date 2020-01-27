@@ -30,6 +30,9 @@ class PhotoprismApp extends StatelessWidget {
       theme: ThemeData(
         primaryColor: applicationColor,
         accentColor: applicationColor,
+        colorScheme: ColorScheme.light(
+          primary: applicationColor,
+        ),
         textSelectionColor: applicationColor,
         textSelectionHandleColor: applicationColor,
         cursorColor: applicationColor,
