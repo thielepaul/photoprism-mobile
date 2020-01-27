@@ -175,14 +175,13 @@ class PhotosPage extends StatelessWidget {
           return ListView.builder(
               itemCount: AlbumsPage.getAlbumList(context).length,
               itemBuilder: (BuildContext ctxt, int index) {
-                return GestureDetector(
-                    onTap: () {
-                      addPhotosToAlbum(
-                          AlbumsPage.getAlbumList(context)[index].id, context);
-                    },
-                    child: ListTile(
-                      title: Text(AlbumsPage.getAlbumList(context)[index].name),
-                    ));
+                return ListTile(
+                  title: Text(AlbumsPage.getAlbumList(context)[index].name),
+                  onTap: () {
+                    addPhotosToAlbum(
+                        AlbumsPage.getAlbumList(context)[index].id, context);
+                  },
+                );
               });
         });
   }
