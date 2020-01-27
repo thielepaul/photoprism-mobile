@@ -4,6 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:drag_select_grid_view/drag_select_grid_view.dart';
 import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
+import 'package:photoprism/api/api.dart';
 import 'package:photoprism/common/hexcolor.dart';
 import 'package:photoprism/common/transparent_route.dart';
 import 'package:photoprism/model/photo.dart';
@@ -139,14 +140,32 @@ class PhotosPage extends StatelessWidget {
   }
 
   archiveSelectedPhotos(BuildContext context) async {
-    List<String> selectedPhotos = [];
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
+    List<String> selectedPhotos = [];
 
     model.gridController.selection.selectedIndexes.forEach((element) {
       selectedPhotos
           .add(PhotosPage.getPhotoList(context, "")[element].photoUUID);
     });
-    model.photoprismPhotoManager.archivePhotos(selectedPhotos);
+
+    var status = await Api.archivePhotos(selectedPhotos, model);
+
+    if (status == 0) {
+      List<Photo> photos = PhotosPage.getPhotoList(context, "");
+      List<Photo> photosNew = [];
+
+      for (var i = 0; i < photos.length; i++) {
+        if (!selectedPhotos.contains(photos[i].photoUUID)) {
+          photosNew.add(photos[i]);
+        }
+      }
+
+      model.photoprismPhotoManager.setPhotoList(photosNew);
+      model.notify();
+      model.gridController.selection = Selection({});
+    } else {
+      model.photoprismMessage.showMessage("Archiving photos failed.");
+    }
   }
 
   _selectAlbumDialog(BuildContext context) {
