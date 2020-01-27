@@ -249,7 +249,6 @@ class PhotosPage extends StatelessWidget {
                           icon: const Icon(Icons.add),
                           tooltip: 'Add to album',
                           onPressed: () {
-                            //_selectAlbumDialog(context);
                             _selectAlbumBottomSheet(context);
                           },
                         ),
