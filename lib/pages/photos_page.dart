@@ -168,31 +168,22 @@ class PhotosPage extends StatelessWidget {
     }
   }
 
-  _selectAlbumDialog(BuildContext context) {
-    showDialog(
+  void _selectAlbumBottomSheet(context) {
+    showModalBottomSheet(
         context: context,
-        builder: (context) {
-          return AlertDialog(
-            title: Text('Select album'),
-            content: Container(
-              width: double.maxFinite,
-              child: ListView.builder(
-                  itemCount: AlbumsPage.getAlbumList(context).length,
-                  itemBuilder: (BuildContext ctxt, int index) {
-                    return GestureDetector(
-                        onTap: () {
-                          addPhotosToAlbum(
-                              AlbumsPage.getAlbumList(context)[index].id,
-                              context);
-                        },
-                        child: Card(
-                            child: ListTile(
-                                title: Text(
-                                    AlbumsPage.getAlbumList(context)[index]
-                                        .name))));
-                  }),
-            ),
-          );
+        builder: (BuildContext bc) {
+          return ListView.builder(
+              itemCount: AlbumsPage.getAlbumList(context).length,
+              itemBuilder: (BuildContext ctxt, int index) {
+                return GestureDetector(
+                    onTap: () {
+                      addPhotosToAlbum(
+                          AlbumsPage.getAlbumList(context)[index].id, context);
+                    },
+                    child: ListTile(
+                      title: Text(AlbumsPage.getAlbumList(context)[index].name),
+                    ));
+              });
         });
   }
 
@@ -258,7 +249,8 @@ class PhotosPage extends StatelessWidget {
                           icon: const Icon(Icons.add),
                           tooltip: 'Add to album',
                           onPressed: () {
-                            _selectAlbumDialog(context);
+                            //_selectAlbumDialog(context);
+                            _selectAlbumBottomSheet(context);
                           },
                         ),
                       ]
