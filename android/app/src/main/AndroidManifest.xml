@@ -10,7 +10,7 @@
         tools:replace="android:label"
         android:name="io.flutter.app.FlutterApplication"
         android:label="PhotoPrism"
-        android:icon="@mipmap/launcher_icon"
+        android:icon="@mipmap/ic_launcher"
         android:usesCleartextTraffic="true"
         android:allowBackup="false"
         android:fullBackupContent="false">
