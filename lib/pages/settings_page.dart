@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:photoprism/common/album_manager.dart';
-import 'package:photoprism/common/hexcolor.dart';
 import 'package:photoprism/common/photo_manager.dart';
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:photoprism/widgets/http_auth_dialog.dart';
@@ -165,14 +164,12 @@ class SettingsPage extends StatelessWidget {
             ),
             actions: <Widget>[
               FlatButton(
-                textColor: HexColor(model.applicationColor),
                 child: Text('Cancel'),
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
               ),
               FlatButton(
-                textColor: HexColor(model.applicationColor),
                 child: Text('Save'),
                 onPressed: () {
                   setNewPhotoprismUrl(context, _urlTextFieldController.text);
@@ -199,14 +196,12 @@ class SettingsPage extends StatelessWidget {
             ),
             actions: <Widget>[
               FlatButton(
-                textColor: HexColor(model.applicationColor),
                 child: Text('Cancel'),
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
               ),
               FlatButton(
-                textColor: HexColor(model.applicationColor),
                 child: Text('Save'),
                 onPressed: () {
                   setNewUploadFolder(

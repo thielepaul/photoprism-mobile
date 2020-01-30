@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:photoprism/common/album_manager.dart';
-import 'package:photoprism/common/hexcolor.dart';
 import 'package:photoprism/common/photo_manager.dart';
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:photoprism/pages/settings_page.dart';
@@ -82,14 +81,12 @@ class _HttpAuthDialogState extends State<HttpAuthDialog> {
       )),
       actions: <Widget>[
         FlatButton(
-          textColor: HexColor(model.applicationColor),
           child: Text('Cancel'),
           onPressed: () {
             Navigator.of(context).pop();
           },
         ),
         FlatButton(
-          textColor: HexColor(model.applicationColor),
           child: Text('Save'),
           onPressed: () => saveAndPop(),
         )

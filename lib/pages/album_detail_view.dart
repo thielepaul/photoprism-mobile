@@ -4,7 +4,6 @@ import 'package:photoprism/common/album_manager.dart';
 import 'package:photoprism/common/photo_manager.dart';
 import 'package:photoprism/api/api.dart';
 import 'package:photoprism/pages/photos_page.dart';
-import 'package:photoprism/common/hexcolor.dart';
 import 'package:photoprism/model/album.dart';
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:provider/provider.dart';
@@ -84,6 +83,7 @@ class AlbumDetailView extends StatelessWidget {
         title: _selectedPhotosCount > 0
             ? Text(_selectedPhotosCount.toString())
             : Text(_album.name),
+        centerTitle: _selectedPhotosCount > 0 ? false : null,
         leading: _selectedPhotosCount > 0
             ? IconButton(
                 icon: const Icon(Icons.close),
@@ -146,14 +146,12 @@ class AlbumDetailView extends StatelessWidget {
             actions: <Widget>[
               FlatButton(
                 child: Text('Cancel'),
-                textColor: HexColor(_model.applicationColor),
                 onPressed: () {
                   Navigator.pop(context);
                 },
               ),
               FlatButton(
                 child: Text('Rename album'),
-                textColor: HexColor(_model.applicationColor),
                 onPressed: () {
                   _renameAlbum(context);
                 },
@@ -174,14 +172,12 @@ class AlbumDetailView extends StatelessWidget {
             actions: <Widget>[
               FlatButton(
                 child: Text('Cancel'),
-                textColor: HexColor(_model.applicationColor),
                 onPressed: () {
                   Navigator.pop(context);
                 },
               ),
               FlatButton(
                 child: Text('Delete album'),
-                textColor: HexColor(_model.applicationColor),
                 onPressed: () {
                   _deleteAlbum(albumContext);
                 },

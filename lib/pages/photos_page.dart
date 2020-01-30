@@ -58,39 +58,33 @@ class PhotosPage extends StatelessWidget {
   }
 
   archiveSelectedPhotos(BuildContext context) async {
-    List<String> selectedPhotos = [];
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
+    List<String> selectedPhotos = [];
 
     model.gridController.selection.selectedIndexes.forEach((element) {
       selectedPhotos
           .add(PhotoManager.getPhotos(context, "")[element].photoUUID);
     });
+
     PhotoManager.archivePhotos(context, selectedPhotos, albumId);
   }
 
-  _selectAlbumDialog(BuildContext context) {
+  void _selectAlbumBottomSheet(context) {
     PhotoprismModel model = Provider.of<PhotoprismModel>(context);
 
-    showDialog(
+    showModalBottomSheet(
         context: context,
-        builder: (context) {
-          return AlertDialog(
-            title: Text('Select album'),
-            content: Container(
-              width: double.maxFinite,
-              child: ListView.builder(
-                  itemCount: model.albums.length,
-                  itemBuilder: (BuildContext ctxt, int index) {
-                    return GestureDetector(
-                        onTap: () {
-                          addPhotosToAlbum(model.albums[index].id, context);
-                        },
-                        child: Card(
-                            child: ListTile(
-                                title: Text(model.albums[index].name))));
-                  }),
-            ),
-          );
+        builder: (BuildContext bc) {
+          return ListView.builder(
+              itemCount: model.albums.length,
+              itemBuilder: (BuildContext ctxt, int index) {
+                return ListTile(
+                  title: Text(model.albums[index].name),
+                  onTap: () {
+                    addPhotosToAlbum(model.albums[index].id, context);
+                  },
+                );
+              });
         });
   }
 
@@ -174,19 +168,25 @@ class PhotosPage extends StatelessWidget {
                               icon: const Icon(Icons.add),
                               tooltip: 'Add to album',
                               onPressed: () {
-                                _selectAlbumDialog(context);
+                                _selectAlbumBottomSheet(context);
                               },
                             ),
                           ]
                         : <Widget>[
-                            IconButton(
-                              icon: const Icon(Icons.cloud_upload),
-                              tooltip: 'Upload photo',
-                              onPressed: () {
-                                model.photoprismUploader
-                                    .selectPhotoAndUpload(context);
+                            PopupMenuButton<int>(
+                              itemBuilder: (BuildContext context) => [
+                                PopupMenuItem(
+                                  value: 0,
+                                  child: Text('Upload photo'),
+                                )
+                              ],
+                              onSelected: (choice) {
+                                if (choice == 0) {
+                                  model.photoprismUploader
+                                      .selectPhotoAndUpload(context);
+                                }
                               },
-                            )
+                            ),
                           ],
               )
             : null,

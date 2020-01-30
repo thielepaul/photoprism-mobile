@@ -47,7 +47,7 @@ class AlbumsPage extends StatelessWidget {
   //   return albums.entries.map((e) => e.value).toList();
   // }
 
-  String getAlbumPreviewUrl(context, index) {
+  static String getAlbumPreviewUrl(context, index) {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
     if (model.albums[index].imageCount <= 0) {
       return "https://raw.githubusercontent.com/photoprism/photoprism-mobile/master/assets/emptyAlbum.jpg";

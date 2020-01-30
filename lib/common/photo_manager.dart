@@ -44,17 +44,12 @@ class PhotoManager {
   static void archivePhotos(
       BuildContext context, List<String> photoUUIDs, String albumId) async {
     PhotoprismModel model = Provider.of<PhotoprismModel>(context);
-    print("Archive photos");
-    model.photoprismLoadingScreen.showLoadingScreen("Archive photos..");
-    var status = await Api.archivePhotos(photoUUIDs, model);
 
+    var status = await Api.archivePhotos(photoUUIDs, model);
     if (status == 0) {
       model.gridController.selection = Selection({});
       PhotoManager.resetPhotos(context, albumId);
-      await model.photoprismLoadingScreen.hideLoadingScreen();
-      model.photoprismMessage.showMessage("Photos archived successfully.");
     } else {
-      await model.photoprismLoadingScreen.hideLoadingScreen();
       model.photoprismMessage.showMessage("Archiving photos failed.");
     }
   }
@@ -81,7 +76,8 @@ class PhotoManager {
   static List<MomentsTime> getCummulativeMonthCount(BuildContext context) {
     PhotoprismModel model = Provider.of<PhotoprismModel>(context);
     List<MomentsTime> cummulativeMonthCount = [];
-    model.momentsTime.forEach((m) {
+    model.momentsTime.forEach((v) {
+      MomentsTime m = MomentsTime(year: v.year, month: v.month, count: v.count);
       if (cummulativeMonthCount.length > 0) {
         m.count += cummulativeMonthCount.last.count;
       }
