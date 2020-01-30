@@ -11,9 +11,10 @@ import 'package:provider/provider.dart';
 class AlbumDetailView extends StatelessWidget {
   final PhotoprismModel _model;
   final Album _album;
+  final int _albumId;
   final TextEditingController _renameAlbumTextFieldController;
 
-  AlbumDetailView(this._album, context)
+  AlbumDetailView(this._album, this._albumId, context)
       : _renameAlbumTextFieldController = new TextEditingController(),
         _model = Provider.of<PhotoprismModel>(context);
 
@@ -55,7 +56,7 @@ class AlbumDetailView extends StatelessWidget {
     List<String> selectedPhotos = [];
     _model.gridController.selection.selectedIndexes.forEach((element) {
       selectedPhotos
-          .add(PhotoManager.getPhotos(context, _album.id)[element].photoUUID);
+          .add(PhotoManager.getPhotos(context, _albumId)[element].photoUUID);
     });
 
     // remove remote photos from album
@@ -67,7 +68,7 @@ class AlbumDetailView extends StatelessWidget {
       _model.photoprismMessage
           .showMessage("Removing photos from album failed.");
     } else {
-      PhotoManager.resetPhotos(context, _album.id);
+      PhotoManager.resetPhotos(context, _albumId);
     }
     _model.notify();
     // deselect selected photos
@@ -129,7 +130,7 @@ class AlbumDetailView extends StatelessWidget {
                 ),
               ],
       ),
-      body: PhotosPage(albumId: _album.id),
+      body: PhotosPage(albumId: _albumId),
     );
   }
 

@@ -36,7 +36,7 @@ class _HttpAuthDialogState extends State<HttpAuthDialog> {
           .setPassword(_httpBasicPasswordController.text);
       model.photoprismRemoteConfigLoader.loadApplicationColor();
       SettingsPage.emptyCache();
-      PhotoManager.resetPhotos(context, "");
+      PhotoManager.resetPhotos(context, null);
       AlbumManager.resetAlbums(context);
       Navigator.of(context).pop();
     }

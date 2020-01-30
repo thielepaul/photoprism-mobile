@@ -59,7 +59,7 @@ class MainPage extends StatelessWidget {
       body: PageView(
           controller: _pageController,
           children: <Widget>[
-            PhotosPage(albumId: ""),
+            PhotosPage(albumId: null),
             AlbumsPage(),
             SettingsPage(),
           ],

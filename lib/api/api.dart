@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
 import 'package:photoprism/common/photo_manager.dart';
+import 'package:photoprism/model/album.dart';
 import 'package:photoprism/model/moments_time.dart';
 import 'package:photoprism/model/photo.dart';
 import 'package:photoprism/model/photoprism_model.dart';
@@ -225,8 +226,13 @@ class Api {
   }
 
   static Future<Map<int, Photo>> loadPhotos(
-      BuildContext context, String albumId, int offset) async {
+      BuildContext context, int albumId, int offset) async {
     PhotoprismModel model = Provider.of<PhotoprismModel>(context);
+
+    String albumIdUrlParam = "";
+    if (albumId != null && model.albums[albumId] != null) {
+      albumIdUrlParam = model.albums[albumId].id;
+    }
 
     http.Response response = await http.get(
         model.photoprismUrl +
@@ -235,11 +241,29 @@ class Api {
             '&offset=' +
             offset.toString() +
             '&album=' +
-            albumId,
+            albumIdUrlParam,
         headers: model.photoprismHttpBasicAuth.getAuthHeader());
     final parsed = json.decode(response.body).cast<Map<String, dynamic>>();
     return Map.fromIterables(
         List<int>.generate(parsed.length, (i) => i + offset),
         parsed.map<Photo>((json) => Photo.fromJson(json)).toList());
+  }
+
+  static Future<Map<int, Album>> loadAlbums(
+      BuildContext context, int offset) async {
+    PhotoprismModel model = Provider.of<PhotoprismModel>(context);
+
+    http.Response response = await http.get(
+        model.photoprismUrl +
+            '/api/v1/albums' +
+            '?count=1000' +
+            '&offset=' +
+            offset.toString(),
+        headers: model.photoprismHttpBasicAuth.getAuthHeader());
+    final parsed = json.decode(response.body).cast<Map<String, dynamic>>();
+
+    return Map.fromIterables(
+        List<int>.generate(parsed.length, (i) => i + offset),
+        parsed.map<Album>((json) => Album.fromJson(json)).toList());
   }
 }

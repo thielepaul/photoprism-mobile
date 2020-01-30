@@ -7,7 +7,7 @@ import 'package:provider/provider.dart';
 
 class AlbumManager {
   static Future<void> saveAndSetAlbums(
-      BuildContext context, Map<String, Album> albums) async {
+      BuildContext context, Map<int, Album> albums) async {
     PhotoprismModel model = Provider.of<PhotoprismModel>(context);
     await PhotoprismCommonHelper.saveAsJsonToSharedPrefs('albums', albums);
     model.setAlbums(albums);
@@ -35,5 +35,19 @@ class AlbumManager {
       await model.photoprismLoadingScreen.hideLoadingScreen();
       model.photoprismMessage.showMessage("Adding photos to album failed.");
     }
+  }
+
+  static Future<void> loadAlbums(BuildContext context, offset) async {
+    PhotoprismModel model = Provider.of<PhotoprismModel>(context);
+
+    return await model.albumLoadingLock.synchronized(() async {
+      if (model.albums.length != 0) {
+        return;
+      }
+      Map<int, Album> albums = model.albums;
+      albums.addAll(await Api.loadAlbums(context, offset));
+      saveAndSetAlbums(context, albums);
+      return;
+    });
   }
 }

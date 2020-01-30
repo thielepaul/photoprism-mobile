@@ -219,7 +219,7 @@ class SettingsPage extends StatelessWidget {
     await model.photoprismCommonHelper.setPhotoprismUrl(url);
     model.photoprismRemoteConfigLoader.loadApplicationColor();
     emptyCache();
-    await PhotoManager.resetPhotos(context, "");
+    await PhotoManager.resetPhotos(context, null);
     await AlbumManager.resetAlbums(context);
   }
 

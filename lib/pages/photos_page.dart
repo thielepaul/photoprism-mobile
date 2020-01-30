@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:drag_select_grid_view/drag_select_grid_view.dart';
 import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
@@ -10,13 +11,12 @@ import 'package:photoprism/model/moments_time.dart';
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:photoprism/pages/photoview.dart';
 import 'package:draggable_scrollbar/draggable_scrollbar.dart';
-import 'package:photoprism/widgets/lazy_tile.dart';
 import 'package:photoprism/widgets/selectable_tile.dart';
 import 'package:provider/provider.dart';
 
 class PhotosPage extends StatelessWidget {
   final ScrollController _scrollController;
-  final String albumId;
+  final int albumId;
 
   PhotosPage({Key key, this.albumId}) : _scrollController = ScrollController();
 
@@ -63,7 +63,7 @@ class PhotosPage extends StatelessWidget {
 
     model.gridController.selection.selectedIndexes.forEach((element) {
       selectedPhotos
-          .add(PhotoManager.getPhotos(context, "")[element].photoUUID);
+          .add(PhotoManager.getPhotos(context, null)[element].photoUUID);
     });
 
     PhotoManager.archivePhotos(context, selectedPhotos, albumId);
@@ -96,7 +96,7 @@ class PhotosPage extends StatelessWidget {
 
     model.gridController.selection.selectedIndexes.forEach((element) {
       selectedPhotos
-          .add(PhotoManager.getPhotos(context, "")[element].photoUUID);
+          .add(PhotoManager.getPhotos(context, null)[element].photoUUID);
     });
 
     model.gridController.clear();
@@ -115,6 +115,27 @@ class PhotosPage extends StatelessWidget {
     }
 
     return Text("");
+  }
+
+  Widget displayPhotoIfUrlLoaded(BuildContext context, int index) {
+    PhotoprismModel model = Provider.of<PhotoprismModel>(context);
+    String imageUrl = PhotoManager.getPhotoUrl(context, index, albumId);
+    if (imageUrl == null) {
+      PhotoManager.loadPhoto(context, index, albumId);
+      return Container(
+        color: Colors.grey[300],
+      );
+    }
+    return CachedNetworkImage(
+      httpHeaders: model.photoprismHttpBasicAuth.getAuthHeader(),
+      alignment: Alignment.center,
+      fit: BoxFit.contain,
+      imageUrl: imageUrl,
+      placeholder: (context, url) => Container(
+        color: Colors.grey[300],
+      ),
+      errorWidget: (context, url, error) => Icon(Icons.error),
+    );
   }
 
   @override
@@ -138,7 +159,7 @@ class PhotosPage extends StatelessWidget {
     //  return IconButton(onPressed: () => {}, icon: Icon(Icons.add));
     //}
     return Scaffold(
-        appBar: albumId == ""
+        appBar: albumId == null
             ? AppBar(
                 title: model.gridController.selection.selectedIndexes.length > 0
                     ? Text(model.gridController.selection.selectedIndexes.length
@@ -193,7 +214,7 @@ class PhotosPage extends StatelessWidget {
         body: RefreshIndicator(
             child: OrientationBuilder(builder: (context, orientation) {
           return DraggableScrollbar.semicircle(
-            labelTextBuilder: albumId == ""
+            labelTextBuilder: albumId == null
                 ? (double offset) => getMonthFromOffset(context, offset)
                 : null,
             heightScrollThumb: 50.0,
@@ -233,9 +254,9 @@ class PhotosPage extends StatelessWidget {
                         createRectTween: (begin, end) {
                           return RectTween(begin: begin, end: end);
                         },
-                        child: LazyTile(
-                          index: index,
-                          albumId: albumId,
+                        child: displayPhotoIfUrlLoaded(
+                          context,
+                          index,
                         ),
                       ));
                 }),

@@ -18,8 +18,9 @@ class PhotoprismModel extends ChangeNotifier {
   String photoprismUrl = "https://demo.photoprism.org";
   List<MomentsTime> momentsTime = [];
   Map<int, Photo> photos = {};
-  Map<String, Album> albums = {};
+  Map<int, Album> albums = {};
   Lock photoLoadingLock = Lock();
+  Lock albumLoadingLock = Lock();
 
   // theming
   String applicationColor = "#424242";
@@ -77,7 +78,7 @@ class PhotoprismModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  setAlbums(Map<String, Album> newValue) {
+  setAlbums(Map<int, Album> newValue) {
     albums = newValue;
     notifyListeners();
   }

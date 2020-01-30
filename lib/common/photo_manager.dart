@@ -11,9 +11,9 @@ import 'package:provider/provider.dart';
 class PhotoManager {
   const PhotoManager();
 
-  static Map<int, Photo> getPhotos(BuildContext context, String albumId) {
+  static Map<int, Photo> getPhotos(BuildContext context, int albumId) {
     PhotoprismModel model = Provider.of<PhotoprismModel>(context);
-    if (albumId == "") {
+    if (albumId == null) {
       return model.photos;
     }
     if (model.albums[albumId] != null) {
@@ -23,9 +23,9 @@ class PhotoManager {
   }
 
   static Future<void> saveAndSetPhotos(
-      BuildContext context, Map<int, Photo> photos, String albumId) async {
+      BuildContext context, Map<int, Photo> photos, int albumId) async {
     PhotoprismModel model = Provider.of<PhotoprismModel>(context);
-    if (albumId == "") {
+    if (albumId == null) {
       await PhotoprismCommonHelper.saveAsJsonToSharedPrefs('photos', photos);
       model.setPhotos(photos);
       return;
@@ -37,12 +37,12 @@ class PhotoManager {
     }
   }
 
-  static Future<void> resetPhotos(BuildContext context, String albumId) async {
+  static Future<void> resetPhotos(BuildContext context, int albumId) async {
     await saveAndSetPhotos(context, {}, albumId);
   }
 
   static void archivePhotos(
-      BuildContext context, List<String> photoUUIDs, String albumId) async {
+      BuildContext context, List<String> photoUUIDs, int albumId) async {
     PhotoprismModel model = Provider.of<PhotoprismModel>(context);
 
     var status = await Api.archivePhotos(photoUUIDs, model);
@@ -62,9 +62,9 @@ class PhotoManager {
     model.setMomentsTime(moments);
   }
 
-  static int getPhotosCount(BuildContext context, String albumId) {
+  static int getPhotosCount(BuildContext context, int albumId) {
     PhotoprismModel model = Provider.of<PhotoprismModel>(context);
-    if (albumId == "") {
+    if (albumId == null) {
       return model.momentsTime.map((v) => v.count).reduce((v, e) => v + e);
     }
     if (model.albums[albumId] != null) {
@@ -87,7 +87,7 @@ class PhotoManager {
   }
 
   static Future<void> loadPhoto(
-      BuildContext context, int index, String albumId) async {
+      BuildContext context, int index, int albumId) async {
     PhotoprismModel model = Provider.of<PhotoprismModel>(context);
 
     return await model.photoLoadingLock.synchronized(() async {
@@ -100,5 +100,14 @@ class PhotoManager {
       saveAndSetPhotos(context, photos, albumId);
       return;
     });
+  }
+
+  static String getPhotoUrl(BuildContext context, int index, int albumId) {
+    if (getPhotos(context, albumId)[index] == null) {
+      return null;
+    }
+    PhotoprismModel model = Provider.of<PhotoprismModel>(context);
+    String filehash = PhotoManager.getPhotos(context, albumId)[index].fileHash;
+    return model.photoprismUrl + '/api/v1/thumbnails/' + filehash + '/tile_224';
   }
 }

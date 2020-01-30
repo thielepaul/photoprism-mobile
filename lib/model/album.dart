@@ -4,7 +4,7 @@ class Album {
   String id;
   String name;
   int imageCount;
-  Map<int, Photo> photos;
+  Map<int, Photo> photos = {};
 
   Album({this.id, this.name, this.imageCount});
 

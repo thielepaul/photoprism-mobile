@@ -11,7 +11,7 @@ import 'package:http/http.dart' as http;
 import '../model/photoprism_model.dart';
 
 class FullscreenPhotoGallery extends StatefulWidget {
-  final String albumId;
+  final int albumId;
   final int currentPhotoIndex;
 
   FullscreenPhotoGallery(this.currentPhotoIndex, this.albumId);

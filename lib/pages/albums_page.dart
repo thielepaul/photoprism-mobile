@@ -25,19 +25,6 @@ class AlbumsPage extends StatelessWidget {
   //   await loadAlbums(model, photoprismUrl);
   // }
 
-  // static Future loadAlbums(PhotoprismModel model, String photoprismUrl) async {
-  //   await model.photoprismHttpBasicAuth.initialized;
-  //   http.Response response = await http.get(
-  //       photoprismUrl + '/api/v1/albums?count=1000',
-  //       headers: model.photoprismHttpBasicAuth.getAuthHeader());
-  //   final parsed = json.decode(response.body).cast<Map<String, dynamic>>();
-
-  //   List<Album> albumList =
-  //       parsed.map<Album>((json) => Album.fromJson(json)).toList();
-
-  //   model.photoprismAlbumManager.setAlbumList(albumList);
-  // }
-
   // static List<Album> getAlbumList(context) {
   //   Map<String, Album> albums =
   //       Provider.of<PhotoprismModel>(context, listen: false).albums;
@@ -47,7 +34,7 @@ class AlbumsPage extends StatelessWidget {
   //   return albums.entries.map((e) => e.value).toList();
   // }
 
-  static String getAlbumPreviewUrl(context, index) {
+  static String getAlbumPreviewUrl(context, int index) {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
     if (model.albums[index].imageCount <= 0) {
       return "https://raw.githubusercontent.com/photoprism/photoprism-mobile/master/assets/emptyAlbum.jpg";
@@ -88,7 +75,8 @@ class AlbumsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
-    if (model.albums == null) {
+    if (model.albums.length == 0) {
+      AlbumManager.loadAlbums(context, 0);
       return Text("loading", key: ValueKey("albumsGridView"));
     }
     return Scaffold(
@@ -124,7 +112,7 @@ class AlbumsPage extends StatelessWidget {
                           context,
                           MaterialPageRoute(
                               builder: (ctx) => AlbumDetailView(
-                                  model.albums[index], context)));
+                                  model.albums[index], index, context)));
                     },
                     child: ClipRRect(
                         borderRadius: new BorderRadius.circular(8.0),
