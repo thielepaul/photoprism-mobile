@@ -110,7 +110,7 @@ class PhotosPage extends StatelessWidget {
       return Text("", key: ValueKey("photosGridView"));
     }
 
-    if (model.momentsTime.length == 0) {
+    if (albumId == null && model.momentsTime.length == 0) {
       Api.loadMomentsTime(context);
       return Text("", key: ValueKey("photosGridView"));
     }
@@ -181,13 +181,10 @@ class PhotosPage extends StatelessWidget {
         body: RefreshIndicator(
             child: OrientationBuilder(builder: (context, orientation) {
           return DraggableScrollbar.semicircle(
-            labelTextBuilder:
-                // albumId == null
-                // ?
-                (double offset) =>
+            labelTextBuilder: albumId == null
+                ? (double offset) =>
                     getMonthFromOffset(context, _scrollController)
-            // : null
-            ,
+                : null,
             heightScrollThumb: 50.0,
             controller: _scrollController,
             child: DragSelectGridView(

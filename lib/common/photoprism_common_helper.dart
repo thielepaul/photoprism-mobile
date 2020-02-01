@@ -51,11 +51,12 @@ class PhotoprismCommonHelper {
           .map<int, Album>(
               (key, value) => MapEntry(int.parse(key), Album.fromJson(value)));
       for (int albumId in albums.keys) {
-        if (sp.containsKey("photos" + albumId.toString())) {}
-        albums[albumId].photos = json
-            .decode(sp.getString("photos" + albumId.toString()))
-            .map<int, Photo>((key, value) =>
-                MapEntry(int.parse(key), Photo.fromJson(value)));
+        if (sp.containsKey("photos" + albumId.toString())) {
+          albums[albumId].photos = json
+              .decode(sp.getString("photos" + albumId.toString()))
+              .map<int, Photo>((key, value) =>
+                  MapEntry(int.parse(key), Photo.fromJson(value)));
+        }
       }
       AlbumManager.saveAndSetAlbums(context, albums);
     }

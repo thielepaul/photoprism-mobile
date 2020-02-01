@@ -78,10 +78,10 @@ void main() {
 
   testWidgets('album test', (WidgetTester tester) async {
     SharedPreferences.setMockInitialValues({
-      'albumList':
-          '[{"AlbumUUID":"00000000-0000-0000-0000-000000000000","AlbumName":"New Album 1", "AlbumCount": 0},{"AlbumUUID":"00000000-0000-0000-0000-000000000001","AlbumName":"New Album 2", "AlbumCount": 0}]',
-      'photosList00000000-0000-0000-0000-000000000000':
-          '[{"FileHash":"0", "PhotoUUID":"00000000-0000-0000-0000-000000000000", "FileAspectRatio":1}, {"FileHash":"1", "PhotoUUID":"00000000-0000-0000-0000-000000000000", "FileAspectRatio":1}]'
+      'albums':
+          '{"0":{"AlbumUUID":"00000000-0000-0000-0000-000000000000","AlbumName":"New Album 1", "AlbumCount": 2},"1":{"AlbumUUID":"00000000-0000-0000-0000-000000000001","AlbumName":"New Album 2", "AlbumCount": 0}}',
+      'photos0':
+          '{"0":{"FileHash":"0", "PhotoUUID":"00000000-0000-0000-0000-000000000000", "FileAspectRatio":1}, "1":{"FileHash":"1", "PhotoUUID":"00000000-0000-0000-0000-000000000000", "FileAspectRatio":1}}'
     });
 
     await tester.pumpWidget(
@@ -102,10 +102,11 @@ void main() {
 
   testWidgets('photoview test', (WidgetTester tester) async {
     SharedPreferences.setMockInitialValues({
+      'momentsTime': '[{"PhotoYear":0, "PhotoMonth":0, "Count":3}]',
       'albumList':
-          '[{"AlbumUUID":"00000000-0000-0000-0000-000000000000","AlbumName":"New Album 1"}]',
+          '{"0":{"AlbumUUID":"00000000-0000-0000-0000-000000000000","AlbumName":"New Album 1"}}',
       'photosList':
-          '[{"FileHash":"0", "PhotoUUID":"00000000-0000-0000-0000-000000000000", "FileAspectRatio":1}, {"FileHash":"1", "PhotoUUID":"00000000-0000-0000-0000-000000000000", "FileAspectRatio":1}, {"FileHash":"2", "PhotoUUID":"00000000-0000-0000-0000-000000000000", "FileAspectRatio":1}]'
+          '{"0":{"FileHash":"0", "PhotoUUID":"00000000-0000-0000-0000-000000000000", "FileAspectRatio":1}, "1":{"FileHash":"1", "PhotoUUID":"00000000-0000-0000-0000-000000000000", "FileAspectRatio":1}, "2":{"FileHash":"2", "PhotoUUID":"00000000-0000-0000-0000-000000000000", "FileAspectRatio":1}}'
     });
 
     await tester.pumpWidget(
