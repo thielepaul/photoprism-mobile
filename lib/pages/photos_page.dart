@@ -2,7 +2,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:drag_select_grid_view/drag_select_grid_view.dart';
 import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
-import 'package:photoprism/api/api.dart';
 import 'package:photoprism/common/album_manager.dart';
 import 'package:photoprism/common/hexcolor.dart';
 import 'package:photoprism/common/photo_manager.dart';
@@ -38,19 +37,19 @@ class PhotosPage extends StatelessWidget {
         context: context,
         builder: (BuildContext bc) {
           return ListView.builder(
-              itemCount: model.albums.length,
+              itemCount: model.albums == null ? 0 : model.albums.length,
               itemBuilder: (BuildContext ctxt, int index) {
                 return ListTile(
                   title: Text(model.albums[index].name),
                   onTap: () {
-                    addPhotosToAlbum(model.albums[index].id, context);
+                    addPhotosToAlbum(index, context);
                   },
                 );
               });
         });
   }
 
-  addPhotosToAlbum(albumId, context) async {
+  addPhotosToAlbum(int albumId, BuildContext context) async {
     Navigator.pop(context);
 
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
@@ -110,8 +109,8 @@ class PhotosPage extends StatelessWidget {
       return Text("", key: ValueKey("photosGridView"));
     }
 
-    if (albumId == null && model.momentsTime.length == 0) {
-      Api.loadMomentsTime(context);
+    if (albumId == null && model.momentsTime == null) {
+      PhotoManager.loadMomentsTime(context);
       return Text("", key: ValueKey("photosGridView"));
     }
 
@@ -230,7 +229,7 @@ class PhotosPage extends StatelessWidget {
                 }),
           );
         }), onRefresh: () async {
-          return await PhotoManager.resetPhotos(context, albumId);
+          return await PhotoManager.loadMomentsTime(context, forceReload: true);
         }));
   }
 }

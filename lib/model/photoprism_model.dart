@@ -15,9 +15,9 @@ import 'package:synchronized/synchronized.dart';
 class PhotoprismModel extends ChangeNotifier {
   // general
   String photoprismUrl = "https://demo.photoprism.org";
-  List<MomentsTime> momentsTime = [];
-  Map<int, Photo> photos = {};
-  Map<int, Album> albums = {};
+  List<MomentsTime> momentsTime;
+  Map<int, Photo> photos;
+  Map<int, Album> albums;
   Lock photoLoadingLock = Lock();
   Lock albumLoadingLock = Lock();
   bool dataFromCacheLoaded = false;

@@ -219,8 +219,8 @@ class SettingsPage extends StatelessWidget {
     await model.photoprismCommonHelper.setPhotoprismUrl(url);
     model.photoprismRemoteConfigLoader.loadApplicationColor();
     emptyCache();
-    await PhotoManager.resetPhotos(context, null);
-    await AlbumManager.resetAlbums(context);
+    await PhotoManager.loadMomentsTime(context, forceReload: true);
+    await AlbumManager.loadAlbums(context, 0, forceReload: true);
   }
 
   void setNewUploadFolder(context, path) async {

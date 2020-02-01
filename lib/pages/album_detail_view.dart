@@ -19,17 +19,17 @@ class AlbumDetailView extends StatelessWidget {
         _model = Provider.of<PhotoprismModel>(context);
 
   void _renameAlbum(BuildContext context) async {
-    // close rename dialog
-    Navigator.pop(context);
-
     // rename remote album
     var status = await Api.renameAlbum(
         _album.id, _renameAlbumTextFieldController.text, _model);
 
+    await AlbumManager.loadAlbums(context, 0, forceReload: true);
+
+    // close rename dialog
+    Navigator.pop(context);
+
     // check renaming success
-    // if renaming failed, local album name will be renamed to original name
     if (status != 0) {
-      _model.notify();
       _model.photoprismMessage.showMessage("Renaming album failed.");
     }
   }
@@ -47,7 +47,7 @@ class AlbumDetailView extends StatelessWidget {
     } else {
       // go back to albums view
       Navigator.pop(context);
-      await AlbumManager.resetAlbums(context);
+      await AlbumManager.loadAlbums(context, 0, forceReload: true);
     }
   }
 
@@ -68,7 +68,7 @@ class AlbumDetailView extends StatelessWidget {
       _model.photoprismMessage
           .showMessage("Removing photos from album failed.");
     } else {
-      PhotoManager.resetPhotos(context, _albumId);
+      AlbumManager.loadAlbums(context, 0, forceReload: true);
     }
     _model.notify();
     // deselect selected photos

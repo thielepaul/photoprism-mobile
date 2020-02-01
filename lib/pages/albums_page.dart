@@ -12,13 +12,15 @@ class AlbumsPage extends StatelessWidget {
 
   static String getAlbumPreviewUrl(context, int index) {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
-    if (model.albums[index].imageCount <= 0) {
-      return "https://raw.githubusercontent.com/photoprism/photoprism-mobile/master/assets/emptyAlbum.jpg";
-    } else {
+    if (model.albums != null &&
+        model.albums[index] != null &&
+        model.albums[index].imageCount > 0) {
       return model.photoprismUrl +
           '/api/v1/albums/' +
           model.albums[index].id +
           '/thumbnail/tile_500';
+    } else {
+      return "https://raw.githubusercontent.com/photoprism/photoprism-mobile/master/assets/emptyAlbum.jpg";
     }
   }
 
@@ -29,21 +31,23 @@ class AlbumsPage extends StatelessWidget {
     if (uuid == "-1") {
       model.photoprismMessage.showMessage("Creating album failed.");
     } else {
-      await AlbumManager.resetAlbums(context);
+      await AlbumManager.loadAlbums(context, 0, forceReload: true);
 
-      // Navigator.push(
-      //   context,
-      //   MaterialPageRoute(
-      //       builder: (ctx) => AlbumDetailView(
-      //           AlbumsPage.getAlbumList(context)[length], context)),
-      // );
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (ctx) => AlbumDetailView(
+                model.albums[model.albums.length - 1],
+                model.albums.length - 1,
+                context)),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
-    if (model.albums.length == 0) {
+    if (model.albums == null) {
       AlbumManager.loadAlbums(context, 0);
       return Text("loading", key: ValueKey("albumsGridView"));
     }
@@ -107,7 +111,7 @@ class AlbumsPage extends StatelessWidget {
                         )));
               });
         }), onRefresh: () async {
-          return AlbumManager.resetAlbums(context);
+          return AlbumManager.loadAlbums(context, 0, forceReload: true);
         }));
   }
 }

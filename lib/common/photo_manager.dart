@@ -13,10 +13,10 @@ class PhotoManager {
 
   static Map<int, Photo> getPhotos(BuildContext context, int albumId) {
     PhotoprismModel model = Provider.of<PhotoprismModel>(context);
-    if (albumId == null) {
+    if (albumId == null && model.photos != null) {
       return model.photos;
     }
-    if (model.albums[albumId] != null) {
+    if (model.albums != null && model.albums[albumId] != null) {
       return model.albums[albumId].photos;
     }
     return {};
@@ -31,19 +31,10 @@ class PhotoManager {
       model.setPhotos(photos);
       return;
     }
-    if (model.albums[albumId] != null) {
+    if (model.albums != null && model.albums[albumId] != null) {
       model.albums[albumId].photos = photos;
       await AlbumManager.saveAndSetAlbums(context, model.albums);
       return;
-    }
-  }
-
-  static Future<void> resetPhotos(BuildContext context, int albumId) async {
-    if (albumId == null) {
-      await saveAndSetMomentsTime(context, []);
-      return await saveAndSetPhotos(context, {}, albumId);
-    } else {
-      AlbumManager.resetAlbums(context);
     }
   }
 
@@ -51,11 +42,14 @@ class PhotoManager {
       BuildContext context, List<String> photoUUIDs, int albumId) async {
     PhotoprismModel model = Provider.of<PhotoprismModel>(context);
 
+    model.photoprismLoadingScreen.showLoadingScreen("Archive photos..");
     var status = await Api.archivePhotos(photoUUIDs, model);
     if (status == 0) {
       model.gridController.selection = Selection({});
-      PhotoManager.resetPhotos(context, albumId);
+      await PhotoManager.loadMomentsTime(context, forceReload: true);
+      model.photoprismLoadingScreen.hideLoadingScreen();
     } else {
+      model.photoprismLoadingScreen.hideLoadingScreen();
       model.photoprismMessage.showMessage("Archiving photos failed.");
     }
   }
@@ -70,10 +64,10 @@ class PhotoManager {
 
   static int getPhotosCount(BuildContext context, int albumId) {
     PhotoprismModel model = Provider.of<PhotoprismModel>(context);
-    if (albumId == null) {
+    if (albumId == null && model.momentsTime != null) {
       return model.momentsTime.map((v) => v.count).reduce((v, e) => v + e);
     }
-    if (model.albums[albumId] != null) {
+    if (model.albums != null && model.albums[albumId] != null) {
       return model.albums[albumId].imageCount;
     }
     return 0;
@@ -82,6 +76,9 @@ class PhotoManager {
   static List<MomentsTime> getCummulativeMonthCount(BuildContext context) {
     PhotoprismModel model = Provider.of<PhotoprismModel>(context);
     List<MomentsTime> cummulativeMonthCount = [];
+    if (model.momentsTime == null) {
+      return cummulativeMonthCount;
+    }
     model.momentsTime.forEach((v) {
       MomentsTime m = MomentsTime(year: v.year, month: v.month, count: v.count);
       if (cummulativeMonthCount.length > 0) {
@@ -92,12 +89,26 @@ class PhotoManager {
     return cummulativeMonthCount;
   }
 
-  static Future<void> loadPhoto(
-      BuildContext context, int index, int albumId) async {
+  static Future<void> loadMomentsTime(BuildContext context,
+      {bool forceReload = false}) async {
     PhotoprismModel model = Provider.of<PhotoprismModel>(context);
 
     return await model.photoLoadingLock.synchronized(() async {
-      if (getPhotos(context, albumId).containsKey(index)) {
+      if (model.momentsTime != null && !forceReload) {
+        return;
+      }
+      List<MomentsTime> momentsTime = await Api.loadMomentsTime(context);
+      await saveAndSetMomentsTime(context, momentsTime);
+      await saveAndSetPhotos(context, {}, null);
+    });
+  }
+
+  static Future<void> loadPhoto(BuildContext context, int index, int albumId,
+      {bool forceReload = false}) async {
+    PhotoprismModel model = Provider.of<PhotoprismModel>(context);
+
+    return await model.photoLoadingLock.synchronized(() async {
+      if (getPhotos(context, albumId).containsKey(index) && !forceReload) {
         return;
       }
       int offset = index - (index % 100);

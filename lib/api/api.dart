@@ -2,7 +2,6 @@ import 'dart:convert';
 
 import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
-import 'package:photoprism/common/photo_manager.dart';
 import 'package:photoprism/model/album.dart';
 import 'package:photoprism/model/moments_time.dart';
 import 'package:photoprism/model/photo.dart';
@@ -214,15 +213,15 @@ class Api {
     }
   }
 
-  static Future<void> loadMomentsTime(BuildContext context) async {
+  static Future<List<MomentsTime>> loadMomentsTime(BuildContext context) async {
     PhotoprismModel model = Provider.of<PhotoprismModel>(context);
     http.Response response = await http.get(
         model.photoprismUrl + '/api/v1/moments/time',
         headers: model.photoprismHttpBasicAuth.getAuthHeader());
     final parsed = json.decode(response.body).cast<Map<String, dynamic>>();
-    final List<MomentsTime> momentsTime =
-        parsed.map<MomentsTime>((json) => MomentsTime.fromJson(json)).toList();
-    PhotoManager.saveAndSetMomentsTime(context, momentsTime);
+    return parsed
+        .map<MomentsTime>((json) => MomentsTime.fromJson(json))
+        .toList();
   }
 
   static Future<Map<int, Photo>> loadPhotos(
@@ -230,7 +229,9 @@ class Api {
     PhotoprismModel model = Provider.of<PhotoprismModel>(context);
 
     String albumIdUrlParam = "";
-    if (albumId != null && model.albums[albumId] != null) {
+    if (albumId != null &&
+        model.albums != null &&
+        model.albums[albumId] != null) {
       albumIdUrlParam = model.albums[albumId].id;
     }
 
