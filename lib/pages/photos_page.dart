@@ -141,17 +141,23 @@ class PhotosPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
+
+    if (!model.dataFromCacheLoaded) {
+      model.loadDataFromCache(context);
+      return Text("", key: ValueKey("photosGridView"));
+    }
+
+    if (model.momentsTime.length == 0) {
+      Api.loadMomentsTime(context);
+      return Text("", key: ValueKey("photosGridView"));
+    }
+
     DragSelectGridViewController gridController =
         Provider.of<PhotoprismModel>(context)
             .photoprismCommonHelper
             .getGridController();
 
     _scrollController.addListener(_scrollListener);
-
-    if (model.momentsTime.length == 0) {
-      Api.loadMomentsTime(context);
-      return Text("", key: ValueKey("photosGridView"));
-    }
 
     int tileCount = PhotoManager.getPhotosCount(context, albumId);
 

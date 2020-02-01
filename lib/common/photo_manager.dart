@@ -26,7 +26,8 @@ class PhotoManager {
       BuildContext context, Map<int, Photo> photos, int albumId) async {
     PhotoprismModel model = Provider.of<PhotoprismModel>(context);
     if (albumId == null) {
-      await PhotoprismCommonHelper.saveAsJsonToSharedPrefs('photos', photos);
+      await PhotoprismCommonHelper.saveAsJsonToSharedPrefs('photos',
+          photos.map((key, value) => MapEntry(key.toString(), value)));
       model.setPhotos(photos);
       return;
     }

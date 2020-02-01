@@ -9,7 +9,15 @@ class AlbumManager {
   static Future<void> saveAndSetAlbums(
       BuildContext context, Map<int, Album> albums) async {
     PhotoprismModel model = Provider.of<PhotoprismModel>(context);
-    await PhotoprismCommonHelper.saveAsJsonToSharedPrefs('albums', albums);
+    await PhotoprismCommonHelper.saveAsJsonToSharedPrefs(
+        'albums', albums.map((key, value) => MapEntry(key.toString(), value)));
+    for (int albumId in albums.keys) {
+      await PhotoprismCommonHelper.saveAsJsonToSharedPrefs(
+          'photos' + albumId.toString(),
+          albums[albumId]
+              .photos
+              .map((key, value) => MapEntry(key.toString(), value)));
+    }
     model.setAlbums(albums);
   }
 

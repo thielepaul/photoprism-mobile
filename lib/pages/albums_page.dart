@@ -10,30 +10,6 @@ import 'package:provider/provider.dart';
 class AlbumsPage extends StatelessWidget {
   const AlbumsPage({Key key}) : super(key: key);
 
-  // static Future loadAlbumsFromNetworkOrCache(
-  //     PhotoprismModel model, String photoprismUrl) async {
-  //   var key = 'albumList';
-  //   SharedPreferences sp = await SharedPreferences.getInstance();
-  //   if (sp.containsKey(key)) {
-  //     final parsed =
-  //         json.decode(sp.getString(key)).cast<Map<String, dynamic>>();
-  //     List<Album> albumList =
-  //         parsed.map<Album>((json) => Album.fromJson(json)).toList();
-  //     model.photoprismAlbumManager.setAlbumList(albumList);
-  //     return;
-  //   }
-  //   await loadAlbums(model, photoprismUrl);
-  // }
-
-  // static List<Album> getAlbumList(context) {
-  //   Map<String, Album> albums =
-  //       Provider.of<PhotoprismModel>(context, listen: false).albums;
-  //   if (albums == null) {
-  //     return null;
-  //   }
-  //   return albums.entries.map((e) => e.value).toList();
-  // }
-
   static String getAlbumPreviewUrl(context, int index) {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
     if (model.albums[index].imageCount <= 0) {
@@ -45,14 +21,6 @@ class AlbumsPage extends StatelessWidget {
           '/thumbnail/tile_500';
     }
   }
-
-  // Future<int> refreshAlbumsPull(BuildContext context) async {
-  //   print('refreshing albums..');
-  //   final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
-  //   await AlbumsPage.loadAlbums(model, model.photoprismUrl);
-  //   await AlbumsPage.loadAlbumsFromNetworkOrCache(model, model.photoprismUrl);
-  //   return 0;
-  // }
 
   void createAlbum(BuildContext context) async {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);

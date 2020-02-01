@@ -21,6 +21,7 @@ class PhotoprismModel extends ChangeNotifier {
   Map<int, Album> albums = {};
   Lock photoLoadingLock = Lock();
   Lock albumLoadingLock = Lock();
+  bool dataFromCacheLoaded = false;
 
   // theming
   String applicationColor = "#424242";
@@ -61,10 +62,6 @@ class PhotoprismModel extends ChangeNotifier {
     await photoprismCommonHelper.loadPhotoprismUrl();
     await photoprismHttpBasicAuth.initialized;
     photoprismRemoteConfigLoader.loadApplicationColor();
-    // TODO: load if necessary
-    // PhotosPage.loadPhotosFromNetworkOrCache(this, photoprismUrl, "");
-    // Api.loadMomentsTime(this);
-    // AlbumsPage.loadAlbumsFromNetworkOrCache(this, photoprismUrl);
     gridController.addListener(notifyListeners);
   }
 
@@ -80,6 +77,12 @@ class PhotoprismModel extends ChangeNotifier {
 
   setAlbums(Map<int, Album> newValue) {
     albums = newValue;
+    notifyListeners();
+  }
+
+  loadDataFromCache(BuildContext context) async {
+    await PhotoprismCommonHelper.getCachedDataFromSharedPrefs(context);
+    dataFromCacheLoaded = true;
     notifyListeners();
   }
 

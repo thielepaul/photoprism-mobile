@@ -1,9 +1,18 @@
 // import 'dart:convert';
 
+import 'dart:convert';
+
 import 'package:drag_select_grid_view/drag_select_grid_view.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:photo_view/photo_view.dart';
+import 'package:photoprism/common/photo_manager.dart';
+import 'package:photoprism/model/album.dart';
+import 'package:photoprism/model/moments_time.dart';
+import 'package:photoprism/model/photo.dart';
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import 'album_manager.dart';
 
 class PhotoprismCommonHelper {
   PhotoprismModel photoprismModel;
@@ -11,11 +20,46 @@ class PhotoprismCommonHelper {
     this.photoprismModel = photoprismModel;
   }
 
-  static Future saveAsJsonToSharedPrefs(String key, data) async {
+  static Future<void> saveAsJsonToSharedPrefs(String key, data) async {
     print("saveToSharedPrefs: key: " + key);
-    // TODO: persist data
-    // SharedPreferences sp = await SharedPreferences.getInstance();
-    // sp.setString(key, json.encode(data));
+    SharedPreferences sp = await SharedPreferences.getInstance();
+    sp.setString(key, json.encode(data));
+  }
+
+  static Future<void> getCachedDataFromSharedPrefs(BuildContext context) async {
+    print("getDataFromSharedPrefs");
+    SharedPreferences sp = await SharedPreferences.getInstance();
+
+    if (sp.containsKey("photos")) {
+      final Map<int, Photo> photos = json
+          .decode(sp.getString("photos"))
+          .map<int, Photo>(
+              (key, value) => MapEntry(int.parse(key), Photo.fromJson(value)));
+      PhotoManager.saveAndSetPhotos(context, photos, null);
+    }
+
+    if (sp.containsKey("momentsTime")) {
+      final List<MomentsTime> momentsTime = json
+          .decode(sp.getString("momentsTime"))
+          .map<MomentsTime>((value) => MomentsTime.fromJson(value))
+          .toList();
+      PhotoManager.saveAndSetMomentsTime(context, momentsTime);
+    }
+
+    if (sp.containsKey("albums")) {
+      final Map<int, Album> albums = json
+          .decode(sp.getString("albums"))
+          .map<int, Album>(
+              (key, value) => MapEntry(int.parse(key), Album.fromJson(value)));
+      for (int albumId in albums.keys) {
+        if (sp.containsKey("photos" + albumId.toString())) {}
+        albums[albumId].photos = json
+            .decode(sp.getString("photos" + albumId.toString()))
+            .map<int, Photo>((key, value) =>
+                MapEntry(int.parse(key), Photo.fromJson(value)));
+      }
+      AlbumManager.saveAndSetAlbums(context, albums);
+    }
   }
 
   loadPhotoprismUrl() async {
