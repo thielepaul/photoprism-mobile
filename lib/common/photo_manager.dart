@@ -39,7 +39,12 @@ class PhotoManager {
   }
 
   static Future<void> resetPhotos(BuildContext context, int albumId) async {
-    await saveAndSetPhotos(context, {}, albumId);
+    if (albumId == null) {
+      await saveAndSetMomentsTime(context, []);
+      return await saveAndSetPhotos(context, {}, albumId);
+    } else {
+      AlbumManager.resetAlbums(context);
+    }
   }
 
   static void archivePhotos(

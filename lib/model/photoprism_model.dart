@@ -9,9 +9,8 @@ import 'package:photoprism/common/photoprism_common_helper.dart';
 import 'package:photoprism/common/photoprism_uploader.dart';
 import 'package:photoprism/model/album.dart';
 import 'package:photoprism/model/photo.dart';
+import 'package:photoprism/model/moments_time.dart';
 import 'package:synchronized/synchronized.dart';
-
-import 'moments_time.dart';
 
 class PhotoprismModel extends ChangeNotifier {
   // general
@@ -36,6 +35,7 @@ class PhotoprismModel extends ChangeNotifier {
   bool isLoading = false;
   int selectedPageIndex = 0;
   DragSelectGridViewController gridController = DragSelectGridViewController();
+  ScrollController scrollController = ScrollController();
   PhotoViewScaleState photoViewScaleState = PhotoViewScaleState.initial;
   BuildContext context;
 

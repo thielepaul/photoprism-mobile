@@ -15,47 +15,9 @@ import 'package:photoprism/widgets/selectable_tile.dart';
 import 'package:provider/provider.dart';
 
 class PhotosPage extends StatelessWidget {
-  final ScrollController _scrollController;
   final int albumId;
 
-  PhotosPage({Key key, this.albumId}) : _scrollController = ScrollController();
-
-  // static Future loadPhotosFromNetworkOrCache(
-  //     PhotoprismModel model, String photoprismUrl, String albumId) async {
-  //   print("loadPhotosFromNetworkOrCache: AlbumID:" + albumId);
-  //   var key = 'photosList';
-  //   key += albumId;
-  //   SharedPreferences sp = await SharedPreferences.getInstance();
-  //   if (sp.containsKey(key)) {
-  //     final parsed =
-  //         json.decode(sp.getString(key)).cast<Map<String, dynamic>>();
-  //     List<Photo> photoList =
-  //         parsed.map<Photo>((json) => Photo.fromJson(json)).toList();
-  //     if (albumId == "") {
-  //       model.photoprismPhotoManager.setPhotoList(photoList);
-  //     } else {
-  //       model.photoprismAlbumManager.setPhotoListOfAlbum(photoList, albumId);
-  //     }
-  //     return;
-  //   }
-  //   await loadPhotos(model, photoprismUrl, albumId);
-  // }
-
-  void _scrollListener() async {
-    if (_scrollController.position.extentAfter < 500) {
-      //await Photos.loadMorePhotos(
-      //    Provider.of<PhotoprismModel>(context), photoprismUrl, albumId);
-    }
-  }
-
-  Future<int> refreshPhotosPull(BuildContext context) async {
-    print('refreshing photos..');
-    // final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
-    // await PhotosPage.loadPhotos(model, model.photoprismUrl, "");
-    // await PhotosPage.loadPhotosFromNetworkOrCache(
-    //     model, model.photoprismUrl, "");
-    return 0;
-  }
+  PhotosPage({Key key, this.albumId});
 
   archiveSelectedPhotos(BuildContext context) async {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
@@ -103,17 +65,17 @@ class PhotosPage extends StatelessWidget {
     AlbumManager.addPhotosToAlbum(context, albumId, selectedPhotos);
   }
 
-  Text getMonthFromOffset(BuildContext context, double offset) {
+  Text getMonthFromOffset(
+      BuildContext context, ScrollController scrollController) {
     double currentPhoto = PhotoManager.getPhotosCount(context, albumId) *
-        _scrollController.offset /
-        (_scrollController.position.maxScrollExtent -
-            _scrollController.position.minScrollExtent);
+        scrollController.offset /
+        (scrollController.position.maxScrollExtent -
+            scrollController.position.minScrollExtent);
     for (MomentsTime m in PhotoManager.getCummulativeMonthCount(context)) {
       if (m.count >= currentPhoto) {
         return Text("${m.month}/${m.year}");
       }
     }
-
     return Text("");
   }
 
@@ -141,6 +103,7 @@ class PhotosPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
+    final ScrollController _scrollController = model.scrollController;
 
     if (!model.dataFromCacheLoaded) {
       model.loadDataFromCache(context);
@@ -156,8 +119,6 @@ class PhotosPage extends StatelessWidget {
         Provider.of<PhotoprismModel>(context)
             .photoprismCommonHelper
             .getGridController();
-
-    _scrollController.addListener(_scrollListener);
 
     int tileCount = PhotoManager.getPhotosCount(context, albumId);
 
@@ -220,9 +181,13 @@ class PhotosPage extends StatelessWidget {
         body: RefreshIndicator(
             child: OrientationBuilder(builder: (context, orientation) {
           return DraggableScrollbar.semicircle(
-            labelTextBuilder: albumId == null
-                ? (double offset) => getMonthFromOffset(context, offset)
-                : null,
+            labelTextBuilder:
+                // albumId == null
+                // ?
+                (double offset) =>
+                    getMonthFromOffset(context, _scrollController)
+            // : null
+            ,
             heightScrollThumb: 50.0,
             controller: _scrollController,
             child: DragSelectGridView(
@@ -268,7 +233,7 @@ class PhotosPage extends StatelessWidget {
                 }),
           );
         }), onRefresh: () async {
-          return await refreshPhotosPull(context);
+          return await PhotoManager.resetPhotos(context, albumId);
         }));
   }
 }
