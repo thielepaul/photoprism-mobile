@@ -64,6 +64,7 @@ class MainPage extends StatelessWidget {
     }
 
     return Scaffold(
+      appBar: model.selectedPageIndex == 0 ? PhotosPage.appBar(context) : null,
       body: PageView(
           controller: _pageController,
           children: <Widget>[

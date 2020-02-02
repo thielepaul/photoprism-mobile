@@ -18,7 +18,7 @@ class PhotosPage extends StatelessWidget {
 
   final int albumId;
 
-  Future<void> archiveSelectedPhotos(BuildContext context) async {
+  static Future<void> archiveSelectedPhotos(BuildContext context) async {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
     final List<String> selectedPhotos = model
         .gridController.selection.selectedIndexes
@@ -26,10 +26,10 @@ class PhotosPage extends StatelessWidget {
             PhotoManager.getPhotos(context, null)[element].photoUUID)
         .toList();
 
-    PhotoManager.archivePhotos(context, selectedPhotos, albumId);
+    PhotoManager.archivePhotos(context, selectedPhotos);
   }
 
-  void _selectAlbumBottomSheet(BuildContext context) {
+  static void _selectAlbumBottomSheet(BuildContext context) {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
     if (model.albums == null) {
       AlbumManager.loadAlbums(context, 0);
@@ -51,7 +51,8 @@ class PhotosPage extends StatelessWidget {
         });
   }
 
-  Future<void> addPhotosToAlbum(int albumId, BuildContext context) async {
+  static Future<void> addPhotosToAlbum(
+      int albumId, BuildContext context) async {
     Navigator.pop(context);
 
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
@@ -99,6 +100,58 @@ class PhotosPage extends StatelessWidget {
     );
   }
 
+  static AppBar appBar(BuildContext context) {
+    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
+
+    return AppBar(
+      title: model.gridController.selection.selectedIndexes.isNotEmpty
+          ? Text(
+              model.gridController.selection.selectedIndexes.length.toString())
+          : const Text('PhotoPrism'),
+      backgroundColor: HexColor(model.applicationColor),
+      leading: model.gridController.selection.selectedIndexes.isNotEmpty
+          ? IconButton(
+              icon: const Icon(Icons.close),
+              onPressed: () {
+                model.gridController.clear();
+              },
+            )
+          : null,
+      actions: model.gridController.selection.selectedIndexes.isNotEmpty
+          ? <Widget>[
+              IconButton(
+                icon: const Icon(Icons.archive),
+                tooltip: 'Archive photos',
+                onPressed: () {
+                  archiveSelectedPhotos(context);
+                },
+              ),
+              IconButton(
+                icon: const Icon(Icons.add),
+                tooltip: 'Add to album',
+                onPressed: () {
+                  _selectAlbumBottomSheet(context);
+                },
+              ),
+            ]
+          : <Widget>[
+              PopupMenuButton<int>(
+                itemBuilder: (BuildContext context) => <PopupMenuEntry<int>>[
+                  const PopupMenuItem<int>(
+                    value: 0,
+                    child: Text('Upload photo'),
+                  )
+                ],
+                onSelected: (int choice) {
+                  if (choice == 0) {
+                    model.photoprismUploader.selectPhotoAndUpload(context);
+                  }
+                },
+              ),
+            ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
@@ -114,124 +167,67 @@ class PhotosPage extends StatelessWidget {
     //if (Photos.getPhotoList(context, albumId).length == 0) {
     //  return IconButton(onPressed: () => {}, icon: Icon(Icons.add));
     //}
-    return Scaffold(
-        appBar: albumId == null
-            ? AppBar(
-                title: model.gridController.selection.selectedIndexes.isNotEmpty
-                    ? Text(model.gridController.selection.selectedIndexes.length
-                        .toString())
-                    : const Text('PhotoPrism'),
-                backgroundColor: HexColor(model.applicationColor),
-                leading:
-                    model.gridController.selection.selectedIndexes.isNotEmpty
-                        ? IconButton(
-                            icon: const Icon(Icons.close),
-                            onPressed: () {
-                              model.gridController.clear();
-                            },
-                          )
-                        : null,
-                actions:
-                    model.gridController.selection.selectedIndexes.isNotEmpty
-                        ? <Widget>[
-                            IconButton(
-                              icon: const Icon(Icons.archive),
-                              tooltip: 'Archive photos',
-                              onPressed: () {
-                                archiveSelectedPhotos(context);
-                              },
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.add),
-                              tooltip: 'Add to album',
-                              onPressed: () {
-                                _selectAlbumBottomSheet(context);
-                              },
-                            ),
-                          ]
-                        : <Widget>[
-                            PopupMenuButton<int>(
-                              itemBuilder: (BuildContext context) =>
-                                  <PopupMenuEntry<int>>[
-                                const PopupMenuItem<int>(
-                                  value: 0,
-                                  child: Text('Upload photo'),
-                                )
-                              ],
-                              onSelected: (int choice) {
-                                if (choice == 0) {
-                                  model.photoprismUploader
-                                      .selectPhotoAndUpload(context);
-                                }
-                              },
-                            ),
-                          ],
-              )
-            : null,
-        body: RefreshIndicator(child: OrientationBuilder(
-            builder: (BuildContext context, Orientation orientation) {
-          if (albumId == null && model.momentsTime == null) {
-            PhotoManager.loadMomentsTime(context);
-            return const Text('', key: ValueKey<String>('photosGridView'));
-          }
+    return RefreshIndicator(child: OrientationBuilder(
+        builder: (BuildContext context, Orientation orientation) {
+      if (albumId == null && model.momentsTime == null) {
+        PhotoManager.loadMomentsTime(context);
+        return const Text('', key: ValueKey<String>('photosGridView'));
+      }
 
-          return DraggableScrollbar.semicircle(
-            labelTextBuilder: albumId == null
-                ? (double offset) =>
-                    getMonthFromOffset(context, _scrollController)
-                : null,
-            heightScrollThumb: 50.0,
-            controller: _scrollController,
-            child: DragSelectGridView(
-                key: const ValueKey<String>('photosGridView'),
-                scrollController: _scrollController,
-                gridController: gridController,
-                physics: const AlwaysScrollableScrollPhysics(),
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: orientation == Orientation.portrait ? 3 : 6,
-                  mainAxisSpacing: 4,
-                  crossAxisSpacing: 4,
-                ),
-                itemCount: tileCount,
-                itemBuilder: (BuildContext context, int index, bool selected) {
-                  return SelectableTile(
-                      key: const ValueKey<String>('PhotoTile'),
-                      index: index,
-                      context: context,
-                      gridController: gridController,
-                      selected: selected,
-                      onTap: () {
-                        Provider.of<PhotoprismModel>(context)
-                            .photoprismCommonHelper
-                            .setPhotoViewScaleState(
-                                PhotoViewScaleState.initial);
-                        Navigator.push(
-                            context,
-                            TransparentRoute(
-                              builder: (BuildContext context) =>
-                                  FullscreenPhotoGallery(index, albumId),
-                            ));
-                      },
-                      child: Hero(
-                        tag: index.toString(),
-                        createRectTween: (Rect begin, Rect end) {
-                          return RectTween(begin: begin, end: end);
-                        },
-                        child: displayPhotoIfUrlLoaded(
-                          context,
-                          index,
-                        ),
-                      ));
-                }),
-          );
-        }), onRefresh: () async {
-          if (albumId == null) {
-            return await PhotoManager.loadMomentsTime(context,
-                forceReload: true);
-          } else {
-            await AlbumManager.loadAlbums(context, 0,
-                forceReload: true, loadPhotosForAlbumId: albumId);
-          }
-        }));
+      return DraggableScrollbar.semicircle(
+        labelTextBuilder: albumId == null
+            ? (double offset) => getMonthFromOffset(context, _scrollController)
+            : null,
+        heightScrollThumb: 50.0,
+        controller: _scrollController,
+        child: DragSelectGridView(
+            key: const ValueKey<String>('photosGridView'),
+            scrollController: _scrollController,
+            gridController: gridController,
+            physics: const AlwaysScrollableScrollPhysics(),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: orientation == Orientation.portrait ? 3 : 6,
+              mainAxisSpacing: 4,
+              crossAxisSpacing: 4,
+            ),
+            itemCount: tileCount,
+            itemBuilder: (BuildContext context, int index, bool selected) {
+              return SelectableTile(
+                  key: const ValueKey<String>('PhotoTile'),
+                  index: index,
+                  context: context,
+                  gridController: gridController,
+                  selected: selected,
+                  onTap: () {
+                    Provider.of<PhotoprismModel>(context)
+                        .photoprismCommonHelper
+                        .setPhotoViewScaleState(PhotoViewScaleState.initial);
+                    Navigator.push(
+                        context,
+                        TransparentRoute(
+                          builder: (BuildContext context) =>
+                              FullscreenPhotoGallery(index, albumId),
+                        ));
+                  },
+                  child: Hero(
+                    tag: index.toString(),
+                    createRectTween: (Rect begin, Rect end) {
+                      return RectTween(begin: begin, end: end);
+                    },
+                    child: displayPhotoIfUrlLoaded(
+                      context,
+                      index,
+                    ),
+                  ));
+            }),
+      );
+    }), onRefresh: () async {
+      if (albumId == null) {
+        return await PhotoManager.loadMomentsTime(context, forceReload: true);
+      } else {
+        await AlbumManager.loadAlbums(context, 0,
+            forceReload: true, loadPhotosForAlbumId: albumId);
+      }
+    });
   }
 }

@@ -40,7 +40,7 @@ class PhotoManager {
   }
 
   static Future<void> archivePhotos(
-      BuildContext context, List<String> photoUUIDs, int albumId) async {
+      BuildContext context, List<String> photoUUIDs) async {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
 
     model.photoprismLoadingScreen.showLoadingScreen('Archive photos..');
