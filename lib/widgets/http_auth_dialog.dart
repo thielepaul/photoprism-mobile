@@ -1,25 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:photoprism/model/photoprism_model.dart';
-import 'package:photoprism/pages/albums_page.dart';
-import 'package:photoprism/pages/photos_page.dart';
 import 'package:photoprism/pages/settings_page.dart';
 import 'package:provider/provider.dart';
 
 class HttpAuthDialog extends StatefulWidget {
+  const HttpAuthDialog({Key key, this.context}) : super(key: key);
   final BuildContext context;
 
-  const HttpAuthDialog({Key key, this.context}) : super(key: key);
-
+  @override
   _HttpAuthDialogState createState() => _HttpAuthDialogState(context);
 }
 
 class _HttpAuthDialogState extends State<HttpAuthDialog> {
-  PhotoprismModel model;
-  TextEditingController _httpBasicUserController;
-  TextEditingController _httpBasicPasswordController;
-  bool enabled;
-
   _HttpAuthDialogState(BuildContext context) {
     model = Provider.of<PhotoprismModel>(context);
     _httpBasicUserController = TextEditingController();
@@ -27,17 +20,20 @@ class _HttpAuthDialogState extends State<HttpAuthDialog> {
     enabled = model.photoprismHttpBasicAuth.enabled;
   }
 
+  PhotoprismModel model;
+  TextEditingController _httpBasicUserController;
+  TextEditingController _httpBasicPasswordController;
+  bool enabled;
+
   @override
   Widget build(BuildContext context) {
-    void saveAndPop() {
+    Future<void> saveAndPop() async {
       model.photoprismHttpBasicAuth.setEnabled(enabled);
       model.photoprismHttpBasicAuth.setUser(_httpBasicUserController.text);
       model.photoprismHttpBasicAuth
           .setPassword(_httpBasicPasswordController.text);
       model.photoprismRemoteConfigLoader.loadApplicationColor();
-      SettingsPage.emptyCache();
-      PhotosPage.loadPhotos(model, model.photoprismUrl, "");
-      AlbumsPage.loadAlbums(model, model.photoprismUrl);
+      await SettingsPage.emptyCache(context);
       Navigator.of(context).pop();
     }
 
@@ -45,12 +41,12 @@ class _HttpAuthDialogState extends State<HttpAuthDialog> {
     _httpBasicPasswordController.text = model.photoprismHttpBasicAuth.password;
 
     return AlertDialog(
-      title: Text('HTTP Authentication'),
+      title: const Text('HTTP Authentication'),
       content: SingleChildScrollView(
           child: ListBody(
         children: <Widget>[
           SwitchListTile(
-            title: Text("HTTP Basic"),
+            title: const Text('HTTP Basic'),
             onChanged: (bool value) {
               setState(() {
                 enabled = value;
@@ -61,33 +57,33 @@ class _HttpAuthDialogState extends State<HttpAuthDialog> {
           Visibility(
               visible: enabled,
               child: ListTile(
-                  subtitle: Text("user"),
+                  subtitle: const Text('user'),
                   title: TextField(
-                    key: ValueKey("httpBasicUserTextField"),
+                    key: const ValueKey<String>('httpBasicUserTextField'),
                     controller: _httpBasicUserController,
-                    decoration: InputDecoration(hintText: "user"),
+                    decoration: const InputDecoration(hintText: 'user'),
                   ))),
           Visibility(
               visible: enabled,
               child: ListTile(
-                  subtitle: Text("password"),
+                  subtitle: const Text('password'),
                   title: TextField(
-                    key: ValueKey("httpBasicPasswordTextField"),
+                    key: const ValueKey<String>('httpBasicPasswordTextField'),
                     controller: _httpBasicPasswordController,
-                    decoration: InputDecoration(hintText: "password"),
+                    decoration: const InputDecoration(hintText: 'password'),
                     obscureText: true,
                   ))),
         ],
       )),
       actions: <Widget>[
         FlatButton(
-          child: Text('Cancel'),
+          child: const Text('Cancel'),
           onPressed: () {
             Navigator.of(context).pop();
           },
         ),
         FlatButton(
-          child: Text('Save'),
+          child: const Text('Save'),
           onPressed: () => saveAndPop(),
         )
       ],

@@ -1,8 +1,4 @@
 class Photo {
-  final String fileHash;
-  final String photoUUID;
-  final double aspectRatio;
-
   Photo({this.fileHash, this.photoUUID, this.aspectRatio});
 
   factory Photo.fromJson(Map<String, dynamic> json) {
@@ -13,7 +9,11 @@ class Photo {
     );
   }
 
-  Map<String, dynamic> toJson() => {
+  final String fileHash;
+  final String photoUUID;
+  final double aspectRatio;
+
+  Map<String, dynamic> toJson() => <String, dynamic>{
         'FileHash': fileHash,
         'PhotoUUID': photoUUID,
         'FileAspectRatio': aspectRatio,

@@ -5,34 +5,31 @@ import 'package:photoprism/model/photoprism_model.dart';
 import 'package:progress_dialog/progress_dialog.dart';
 
 class PhotoprismLoadingScreen {
+  PhotoprismLoadingScreen(this.photoprismModel);
   PhotoprismModel photoprismModel;
   ProgressDialog pr;
   BuildContext context;
 
-  PhotoprismLoadingScreen(PhotoprismModel photoprismModel) {
-    this.photoprismModel = photoprismModel;
-  }
-
-  showLoadingScreen(String message) {
-    pr = new ProgressDialog(context);
+  void showLoadingScreen(String message) {
+    pr = ProgressDialog(context);
     pr.style(message: message);
     pr.show();
     photoprismModel.notify();
   }
 
-  updateLoadingScreen(String message) {
+  void updateLoadingScreen(String message) {
     pr.update(message: message);
   }
 
-  Future hideLoadingScreen() {
-    Completer hideLoadingScreenCompleter;
-    Future.delayed(Duration(milliseconds: 500)).then((value) {
+  Future<void> hideLoadingScreen() {
+    Completer<void> hideLoadingScreenCompleter;
+    Future<void>.delayed(const Duration(milliseconds: 500)).then((_) {
       pr.hide().whenComplete(() {
         hideLoadingScreenCompleter.complete();
       });
     });
     photoprismModel.notify();
-    hideLoadingScreenCompleter = Completer();
+    hideLoadingScreenCompleter = Completer<void>();
     return hideLoadingScreenCompleter.future;
   }
 }

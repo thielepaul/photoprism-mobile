@@ -1,126 +1,91 @@
-import 'package:drag_select_grid_view/drag_select_grid_view.dart';
 import 'package:flutter/material.dart';
-import 'package:photoprism/pages/albums_page.dart';
+import 'package:photoprism/common/album_manager.dart';
+import 'package:photoprism/common/photo_manager.dart';
 import 'package:photoprism/api/api.dart';
 import 'package:photoprism/pages/photos_page.dart';
 import 'package:photoprism/model/album.dart';
-import 'package:photoprism/model/photo.dart';
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:provider/provider.dart';
 
 class AlbumDetailView extends StatelessWidget {
-  final PhotoprismModel _model;
-  final Album _album;
-  final TextEditingController _renameAlbumTextFieldController;
-
-  AlbumDetailView(this._album, context)
-      : _renameAlbumTextFieldController = new TextEditingController(),
+  AlbumDetailView(this._album, this._albumId, BuildContext context)
+      : _renameAlbumTextFieldController = TextEditingController(),
         _model = Provider.of<PhotoprismModel>(context);
 
-  void _renameAlbum(BuildContext context) async {
+  final PhotoprismModel _model;
+  final Album _album;
+  final int _albumId;
+  final TextEditingController _renameAlbumTextFieldController;
+
+  Future<void> _renameAlbum(BuildContext context) async {
+    _model.photoprismLoadingScreen.showLoadingScreen('Renaming album...');
+
+    // rename remote album
+    final int status = await Api.renameAlbum(
+        _album.id, _renameAlbumTextFieldController.text, _model);
+
+    await AlbumManager.loadAlbums(context, 0, forceReload: true);
+
+    await _model.photoprismLoadingScreen.hideLoadingScreen();
     // close rename dialog
     Navigator.pop(context);
 
-    List<Album> albums = AlbumsPage.getAlbumList(context);
-    String oldAlbumName = _album.name;
-
-    // rename album name in local album list
-    for (var i = 0; i < albums.length; i++) {
-      if (albums[i].id == _album.id) {
-        albums[i].name = _renameAlbumTextFieldController.text;
-      }
-    }
-    _model.notify();
-
-    // rename remote album
-    var status = await Api.renameAlbum(
-        _album.id, _renameAlbumTextFieldController.text, _model);
-
     // check renaming success
-    // if renaming failed, local album name will be renamed to original name
     if (status != 0) {
-      for (var i = 0; i < albums.length; i++) {
-        if (albums[i].id == _album.id) {
-          albums[i].name = oldAlbumName;
-        }
-      }
-      _model.notify();
-      _model.photoprismMessage.showMessage("Renaming album failed.");
+      _model.photoprismMessage.showMessage('Renaming album failed.');
     }
   }
 
-  void _deleteAlbum(BuildContext context) async {
-    // close delete dialog
-    Navigator.pop(context);
+  Future<void> _deleteAlbum(BuildContext context) async {
+    _model.photoprismLoadingScreen.showLoadingScreen('Deleting album...');
 
     // delete remote album
-    var status = await Api.deleteAlbum(_album.id, _model);
+    final int status = await Api.deleteAlbum(_album.id, _model);
 
+    await _model.photoprismLoadingScreen.hideLoadingScreen();
+
+    // close delete dialog
+    Navigator.pop(context);
     // check if successful
     if (status != 0) {
-      _model.photoprismMessage.showMessage("Deleting album failed.");
+      _model.photoprismMessage.showMessage('Deleting album failed.');
     } else {
       // go back to albums view
+      await AlbumManager.loadAlbums(context, 0, forceReload: true);
       Navigator.pop(context);
-
-      // remove local album from album list
-      List<Album> albums = AlbumsPage.getAlbumList(context);
-      for (var i = 0; i < albums.length; i++) {
-        if (albums[i].id == _album.id) {
-          albums.removeAt(i);
-        }
-      }
-      _model.photoprismAlbumManager.setAlbumList(albums);
-      _model.notify();
     }
   }
 
-  void _removePhotosFromAlbum(BuildContext context) async {
+  Future<void> _removePhotosFromAlbum(BuildContext context) async {
+    _model.photoprismLoadingScreen.showLoadingScreen('Removing photos...');
+
     // save all selected photos in list
-    List<String> selectedPhotos = [];
-    _model.gridController.selection.selectedIndexes.forEach((element) {
+    final List<String> selectedPhotos = <String>[];
+    for (final int photoId in _model.gridController.selection.selectedIndexes) {
       selectedPhotos
-          .add(PhotosPage.getPhotoList(context, _album.id)[element].photoUUID);
-    });
+          .add(PhotoManager.getPhotos(context, _albumId)[photoId].photoUUID);
+    }
 
     // remove remote photos from album
-    var status =
+    final int status =
         await Api.removePhotosFromAlbum(_album.id, selectedPhotos, _model);
 
     // check if successful
     if (status != 0) {
       _model.photoprismMessage
-          .showMessage("Removing photos from album failed.");
+          .showMessage('Removing photos from album failed.');
     } else {
-      // create new photo list for current album without removed photos
-      List<Photo> photosOfAlbum = PhotosPage.getPhotoList(context, _album.id);
-      List<Photo> photosOfAlbumNew = [];
-      for (var i = 0; i < photosOfAlbum.length; i++) {
-        if (!selectedPhotos.contains(photosOfAlbum[i].photoUUID)) {
-          photosOfAlbumNew.add(photosOfAlbum[i]);
-        }
-      }
-      _model.photoprismAlbumManager
-          .setPhotoListOfAlbum(photosOfAlbumNew, _album.id);
-
-      // update image count of local album
-      List<Album> albums = AlbumsPage.getAlbumList(context);
-      Album currentAlbum;
-      for (var i = 0; i < albums.length; i++) {
-        if (albums[i].id == _album.id) {
-          currentAlbum = albums[i];
-        }
-      }
-      currentAlbum.imageCount = currentAlbum.imageCount - selectedPhotos.length;
+      AlbumManager.loadAlbums(context, 0,
+          forceReload: true, loadPhotosForAlbumId: _albumId);
     }
-    _model.notify();
     // deselect selected photos
     _model.gridController.clear();
+    _model.photoprismLoadingScreen.hideLoadingScreen();
   }
 
   @override
   Widget build(BuildContext context) {
-    int _selectedPhotosCount =
+    final int _selectedPhotosCount =
         _model.gridController.selection.selectedIndexes.length;
     return Scaffold(
       appBar: AppBar(
@@ -132,20 +97,20 @@ class AlbumDetailView extends StatelessWidget {
             ? IconButton(
                 icon: const Icon(Icons.close),
                 onPressed: () {
-                  _model.gridController.selection = Selection({});
+                  _model.gridController.clear();
                 },
               )
             : null,
         actions: _selectedPhotosCount > 0
             ? <Widget>[
                 PopupMenuButton<int>(
-                  itemBuilder: (BuildContext context) => [
-                    PopupMenuItem(
+                  itemBuilder: (BuildContext context) => <PopupMenuEntry<int>>[
+                    const PopupMenuItem<int>(
                       value: 2,
-                      child: Text("Remove from album"),
+                      child: Text('Remove from album'),
                     ),
                   ],
-                  onSelected: (choice) {
+                  onSelected: (int choice) {
                     _removePhotosFromAlbum(context);
                   },
                 ),
@@ -153,17 +118,17 @@ class AlbumDetailView extends StatelessWidget {
             : <Widget>[
                 // overflow menu
                 PopupMenuButton<int>(
-                  itemBuilder: (BuildContext context) => [
-                    PopupMenuItem(
+                  itemBuilder: (BuildContext context) => <PopupMenuEntry<int>>[
+                    const PopupMenuItem<int>(
                       value: 0,
-                      child: Text("Rename album"),
+                      child: Text('Rename album'),
                     ),
-                    PopupMenuItem(
+                    const PopupMenuItem<int>(
                       value: 1,
-                      child: Text("Delete album"),
+                      child: Text('Delete album'),
                     ),
                   ],
-                  onSelected: (choice) {
+                  onSelected: (int choice) {
                     if (choice == 0) {
                       _showRenameAlbumDialog(context);
                     } else if (choice == 1) {
@@ -173,29 +138,29 @@ class AlbumDetailView extends StatelessWidget {
                 ),
               ],
       ),
-      body: PhotosPage(albumId: _album.id),
+      body: PhotosPage(albumId: _albumId),
     );
   }
 
-  _showRenameAlbumDialog(BuildContext context) async {
+  Future<void> _showRenameAlbumDialog(BuildContext context) async {
     _renameAlbumTextFieldController.text = _album.name;
     return showDialog(
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
-            title: Text('Rename album'),
+            title: const Text('Rename album'),
             content: TextField(
               controller: _renameAlbumTextFieldController,
             ),
             actions: <Widget>[
               FlatButton(
-                child: Text('Cancel'),
+                child: const Text('Cancel'),
                 onPressed: () {
                   Navigator.pop(context);
                 },
               ),
               FlatButton(
-                child: Text('Rename album'),
+                child: const Text('Rename album'),
                 onPressed: () {
                   _renameAlbum(context);
                 },
@@ -205,23 +170,23 @@ class AlbumDetailView extends StatelessWidget {
         });
   }
 
-  _showDeleteAlbumDialog(BuildContext albumContext) async {
+  Future<void> _showDeleteAlbumDialog(BuildContext albumContext) async {
     return showDialog(
         context: albumContext,
         builder: (BuildContext context) {
           return AlertDialog(
-            title: Text('Delete album?'),
-            content: Text(
+            title: const Text('Delete album?'),
+            content: const Text(
                 'Are you sure you want to delete this album? Your photos will not be deleted.'),
             actions: <Widget>[
               FlatButton(
-                child: Text('Cancel'),
+                child: const Text('Cancel'),
                 onPressed: () {
                   Navigator.pop(context);
                 },
               ),
               FlatButton(
-                child: Text('Delete album'),
+                child: const Text('Delete album'),
                 onPressed: () {
                   _deleteAlbum(albumContext);
                 },

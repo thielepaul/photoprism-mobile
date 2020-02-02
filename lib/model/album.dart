@@ -1,11 +1,6 @@
 import 'package:photoprism/model/photo.dart';
 
 class Album {
-  String id;
-  String name;
-  int imageCount;
-  List<Photo> photoList;
-
   Album({this.id, this.name, this.imageCount});
 
   factory Album.fromJson(Map<String, dynamic> json) {
@@ -16,7 +11,12 @@ class Album {
     );
   }
 
-  Map<String, dynamic> toJson() => {
+  String id;
+  String name;
+  int imageCount;
+  Map<int, Photo> photos = <int, Photo>{};
+
+  Map<String, dynamic> toJson() => <String, dynamic>{
         'AlbumUUID': id,
         'AlbumName': name,
         'AlbumCount': imageCount,

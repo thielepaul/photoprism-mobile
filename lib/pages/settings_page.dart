@@ -6,8 +6,6 @@ import 'package:photoprism/widgets/http_auth_dialog.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'albums_page.dart';
-import 'photos_page.dart';
 import '../model/photoprism_model.dart';
 import 'auto_upload_queue.dart';
 
@@ -22,14 +20,14 @@ class SettingsPage extends StatelessWidget {
 
     return Scaffold(
         appBar: AppBar(
-          title: Text("PhotoPrism"),
+          title: const Text('PhotoPrism'),
         ),
         body: Container(
             //width: double.maxFinite,
             child: ListView(
           children: <Widget>[
             ListTile(
-              title: Text("Photoprism URL"),
+              title: const Text('Photoprism URL'),
               subtitle: Text(model.photoprismUrl),
               leading: Container(
                 width: 10,
@@ -41,50 +39,51 @@ class SettingsPage extends StatelessWidget {
               },
             ),
             ListTile(
-              title: Text("HTTP Basic authentication"),
+              title: const Text('HTTP Basic authentication'),
               leading: Container(
                 width: 10,
                 alignment: Alignment.center,
                 child: Icon(Icons.vpn_key),
               ),
-              onTap: () => showDialog(
+              onTap: () => showDialog<void>(
                   context: context,
-                  builder: (context) => HttpAuthDialog(
+                  builder: (BuildContext context) => HttpAuthDialog(
                         context: context,
                       )),
             ),
             ListTile(
-              title: Text("Empty cache"),
+              title: const Text('Empty cache'),
               leading: Container(
                 width: 10,
                 alignment: Alignment.center,
                 child: Icon(Icons.delete),
               ),
               onTap: () {
-                emptyCache();
+                emptyCache(context);
               },
             ),
             SwitchListTile(
-              title: Text("Auto Upload"),
+              title: const Text('Auto Upload'),
               secondary: const Icon(Icons.cloud_upload),
               value: model.autoUploadEnabled,
               onChanged: (bool newState) async {
                 final PermissionHandler _permissionHandler =
                     PermissionHandler();
-                var result = await _permissionHandler
-                    .requestPermissions([PermissionGroup.storage]);
+                final Map<PermissionGroup, PermissionStatus> result =
+                    await _permissionHandler.requestPermissions(
+                        <PermissionGroup>[PermissionGroup.storage]);
 
                 if (result[PermissionGroup.storage] ==
                     PermissionStatus.granted) {
                   print(newState);
                   model.photoprismUploader.setAutoUpload(newState);
                 } else {
-                  print("Not authorized.");
+                  print('Not authorized.');
                 }
               },
             ),
             ListTile(
-              title: Text("Upload folder"),
+              title: const Text('Upload folder'),
               subtitle: Text(model.autoUploadFolder),
               leading: Container(
                 width: 10,
@@ -96,7 +95,7 @@ class SettingsPage extends StatelessWidget {
               },
             ),
             ListTile(
-              title: Text("Last time checked for photos to be uploaded"),
+              title: const Text('Last time checked for photos to be uploaded'),
               subtitle: Text(model.autoUploadLastTimeCheckedForPhotos),
               leading: Container(
                 width: 10,
@@ -105,7 +104,7 @@ class SettingsPage extends StatelessWidget {
               ),
             ),
             ListTile(
-              title: Text("Delete already uploaded photos info"),
+              title: const Text('Delete already uploaded photos info'),
               leading: Container(
                 width: 10,
                 alignment: Alignment.center,
@@ -116,7 +115,7 @@ class SettingsPage extends StatelessWidget {
               },
             ),
             ListTile(
-              title: Text("Show upload queue"),
+              title: const Text('Show upload queue'),
               leading: Container(
                 width: 10,
                 alignment: Alignment.center,
@@ -124,53 +123,54 @@ class SettingsPage extends StatelessWidget {
               ),
               onTap: () {
                 model.photoprismUploader.getPhotosToUpload();
-                Navigator.push(
+                Navigator.push<void>(
                   context,
-                  MaterialPageRoute(builder: (ctx) => AutoUploadQueue(model)),
+                  MaterialPageRoute<void>(
+                      builder: (BuildContext ctx) => AutoUploadQueue(model)),
                 );
               },
             ),
-            ListTile(
+            const ListTile(
               title: Text(
-                  "Warning: Auto upload is still under development. It only works under Android at this moment. Not fully working."),
+                  'Warning: Auto upload is still under development. It only works under Android at this moment. Not fully working.'),
             ),
           ],
         )));
   }
 
-  void deleteUploadInfo() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    prefs.setStringList("alreadyUploadedPhotos", []);
+  Future<void> deleteUploadInfo() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setStringList('alreadyUploadedPhotos', <String>[]);
   }
 
-  void getUploadFolder(context) async {
+  Future<void> getUploadFolder(BuildContext context) async {
     _settingsDisplayUploadFolderDialog(context);
   }
 
-  _settingsDisplayUrlDialog(BuildContext context) async {
+  Future<void> _settingsDisplayUrlDialog(BuildContext context) async {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
     _urlTextFieldController.text = model.photoprismUrl;
 
     return showDialog(
         context: context,
-        builder: (context) {
+        builder: (BuildContext context) {
           return AlertDialog(
-            title: Text('Enter Photoprism URL'),
+            title: const Text('Enter Photoprism URL'),
             content: TextField(
-              key: ValueKey("photoprismUrlTextField"),
+              key: const ValueKey<String>('photoprismUrlTextField'),
               controller: _urlTextFieldController,
-              decoration:
-                  InputDecoration(hintText: "https://demo.photoprism.org"),
+              decoration: const InputDecoration(
+                  hintText: 'https://demo.photoprism.org'),
             ),
             actions: <Widget>[
               FlatButton(
-                child: Text('Cancel'),
+                child: const Text('Cancel'),
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
               ),
               FlatButton(
-                child: Text('Save'),
+                child: const Text('Save'),
                 onPressed: () {
                   setNewPhotoprismUrl(context, _urlTextFieldController.text);
                 },
@@ -180,29 +180,29 @@ class SettingsPage extends StatelessWidget {
         });
   }
 
-  _settingsDisplayUploadFolderDialog(BuildContext context) async {
+  Future<void> _settingsDisplayUploadFolderDialog(BuildContext context) async {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
     _uploadFolderTextFieldController.text = model.autoUploadFolder;
 
     return showDialog(
         context: context,
-        builder: (context) {
+        builder: (BuildContext context) {
           return AlertDialog(
-            title: Text('Enter upload folder path'),
+            title: const Text('Enter upload folder path'),
             content: TextField(
               controller: _uploadFolderTextFieldController,
-              decoration:
-                  InputDecoration(hintText: "/storage/emulated/0/DCIM/Camera"),
+              decoration: const InputDecoration(
+                  hintText: '/storage/emulated/0/DCIM/Camera'),
             ),
             actions: <Widget>[
               FlatButton(
-                child: Text('Cancel'),
+                child: const Text('Cancel'),
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
               ),
               FlatButton(
-                child: Text('Save'),
+                child: const Text('Save'),
                 onPressed: () {
                   setNewUploadFolder(
                       context, _uploadFolderTextFieldController.text);
@@ -213,23 +213,34 @@ class SettingsPage extends StatelessWidget {
         });
   }
 
-  void setNewPhotoprismUrl(context, url) async {
+  Future<void> setNewPhotoprismUrl(BuildContext context, String url) async {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
     Navigator.of(context).pop();
     await model.photoprismCommonHelper.setPhotoprismUrl(url);
     model.photoprismRemoteConfigLoader.loadApplicationColor();
-    emptyCache();
-    await PhotosPage.loadPhotos(model, model.photoprismUrl, "");
-    await AlbumsPage.loadAlbums(model, model.photoprismUrl);
+    emptyCache(context);
   }
 
-  void setNewUploadFolder(context, path) async {
+  Future<void> setNewUploadFolder(BuildContext context, String path) async {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
     Navigator.of(context).pop();
     await model.photoprismUploader.setUploadFolder(path);
   }
 
-  static void emptyCache() async {
+  static Future<void> emptyCache(BuildContext context) async {
+    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
+    final SharedPreferences sp = await SharedPreferences.getInstance();
+    sp.remove('momentsTime');
+    sp.remove('photos');
+    sp.remove('albums');
+    if (model.albums != null) {
+      for (final int albumId in model.albums.keys) {
+        sp.remove('photos' + albumId.toString());
+      }
+    }
+    model.photos = null;
+    model.momentsTime = null;
+    model.albums = null;
     await DefaultCacheManager().emptyCache();
   }
 }
