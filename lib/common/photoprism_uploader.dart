@@ -23,10 +23,10 @@ class PhotoprismUploader {
   FlutterUploader uploader;
   List<FileSystemEntity> entries;
 
-  PhotoprismUploader(PhotoprismModel photoprismModel) {
+  PhotoprismUploader(PhotoprismModel photoprismModel, BuildContext context) {
     this.photoprismModel = photoprismModel;
     loadPreferences();
-    initPlatformState();
+    initPlatformState(context);
     getPhotosToUpload();
 
     uploader = FlutterUploader();
@@ -215,7 +215,7 @@ class PhotoprismUploader {
     }
   }
 
-  Future<void> initPlatformState() async {
+  Future<void> initPlatformState(BuildContext context) async {
     BackgroundFetch.configure(
         BackgroundFetchConfig(
             minimumFetchInterval: 15,

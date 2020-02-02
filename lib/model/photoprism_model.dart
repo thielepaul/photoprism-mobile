@@ -52,7 +52,7 @@ class PhotoprismModel extends ChangeNotifier {
   }
 
   initialize() async {
-    photoprismUploader = new PhotoprismUploader(this);
+    photoprismUploader = new PhotoprismUploader(this, context);
     photoprismRemoteConfigLoader = new PhotoprismRemoteConfigLoader(this);
     photoprismCommonHelper = new PhotoprismCommonHelper(this);
     photoprismLoadingScreen = new PhotoprismLoadingScreen(this);
@@ -75,9 +75,11 @@ class PhotoprismModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  setAlbums(Map<int, Album> newValue) {
+  setAlbums(Map<int, Album> newValue, {bool notify = true}) {
     albums = newValue;
-    notifyListeners();
+    if (notify) {
+      notifyListeners();
+    }
   }
 
   loadDataFromCache(BuildContext context) async {

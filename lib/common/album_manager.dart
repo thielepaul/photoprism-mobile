@@ -8,7 +8,8 @@ import 'package:provider/provider.dart';
 
 class AlbumManager {
   static Future<void> saveAndSetAlbums(
-      BuildContext context, Map<int, Album> albums) async {
+      BuildContext context, Map<int, Album> albums,
+      {bool notify = true}) async {
     PhotoprismModel model = Provider.of<PhotoprismModel>(context);
     await PhotoprismCommonHelper.saveAsJsonToSharedPrefs(
         'albums', albums.map((key, value) => MapEntry(key.toString(), value)));
@@ -19,7 +20,7 @@ class AlbumManager {
               .photos
               .map((key, value) => MapEntry(key.toString(), value)));
     }
-    model.setAlbums(albums);
+    model.setAlbums(albums, notify: notify);
   }
 
   static void addPhotosToAlbum(
@@ -45,16 +46,24 @@ class AlbumManager {
   }
 
   static Future<void> loadAlbums(BuildContext context, int offset,
-      {bool forceReload = false}) async {
+      {bool forceReload = false, int loadPhotosForAlbumId}) async {
     PhotoprismModel model = Provider.of<PhotoprismModel>(context);
 
-    return await model.albumLoadingLock.synchronized(() async {
+    await model.albumLoadingLock.synchronized(() async {
       if (model.albums != null && !forceReload) {
         return;
       }
       Map<int, Album> albums = await Api.loadAlbums(context, offset);
-      await saveAndSetAlbums(context, albums);
-      return;
+      return await saveAndSetAlbums(context, albums,
+          notify: loadPhotosForAlbumId == null);
     });
+    if (loadPhotosForAlbumId != null) {
+      return PhotoManager.loadPhoto(
+          context,
+          PhotoManager.getPhotoIndexInScrollView(context, loadPhotosForAlbumId),
+          loadPhotosForAlbumId,
+          forceReload: true);
+    }
+    return;
   }
 }

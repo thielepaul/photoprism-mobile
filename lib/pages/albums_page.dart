@@ -26,12 +26,15 @@ class AlbumsPage extends StatelessWidget {
 
   void createAlbum(BuildContext context) async {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
+    await model.photoprismLoadingScreen.showLoadingScreen("Creating album...");
     var uuid = await Api.createAlbum("New album", model);
 
     if (uuid == "-1") {
+      await model.photoprismLoadingScreen.hideLoadingScreen();
       model.photoprismMessage.showMessage("Creating album failed.");
     } else {
       await AlbumManager.loadAlbums(context, 0, forceReload: true);
+      await model.photoprismLoadingScreen.hideLoadingScreen();
 
       Navigator.push(
         context,
@@ -47,10 +50,6 @@ class AlbumsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
-    if (model.albums == null) {
-      AlbumManager.loadAlbums(context, 0);
-      return Text("loading", key: ValueKey("albumsGridView"));
-    }
     return Scaffold(
         appBar: AppBar(
           title: Text("PhotoPrism"),
@@ -68,6 +67,10 @@ class AlbumsPage extends StatelessWidget {
         ),
         body: RefreshIndicator(
             child: OrientationBuilder(builder: (context, orientation) {
+          if (model.albums == null) {
+            AlbumManager.loadAlbums(context, 0);
+            return Text("", key: ValueKey("albumsGridView"));
+          }
           return GridView.builder(
               key: ValueKey('albumsGridView'),
               gridDelegate: new SliverGridDelegateWithFixedCrossAxisCount(

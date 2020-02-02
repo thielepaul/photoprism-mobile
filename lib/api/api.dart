@@ -165,8 +165,10 @@ class Api {
       print(response.body);
       if (response.statusCode == 200) {
         print("loading photos");
-        // TODO: does this make sense with lazy loading
-        // await PhotosPage.loadPhotos(model, photoprismUrl, "");
+        // TODO: context is not available (does this make sense at all if the app might not be in foreground?)
+        // instead it might make  more sense to check the success of the import by a dedicated http GET call
+        // and refresh the photos the next time the UI is displayed
+        // await PhotoManager.loadMomentsTime(context, forceReload: true);
         print("Finished");
         bool found = false;
         model.photos.forEach((_, Photo photo) {

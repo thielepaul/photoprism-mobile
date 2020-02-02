@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:photoprism/common/album_manager.dart';
-import 'package:photoprism/common/photo_manager.dart';
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:photoprism/pages/settings_page.dart';
 import 'package:provider/provider.dart';
@@ -29,15 +27,13 @@ class _HttpAuthDialogState extends State<HttpAuthDialog> {
 
   @override
   Widget build(BuildContext context) {
-    void saveAndPop() {
+    void saveAndPop() async {
       model.photoprismHttpBasicAuth.setEnabled(enabled);
       model.photoprismHttpBasicAuth.setUser(_httpBasicUserController.text);
       model.photoprismHttpBasicAuth
           .setPassword(_httpBasicPasswordController.text);
       model.photoprismRemoteConfigLoader.loadApplicationColor();
-      SettingsPage.emptyCache();
-      PhotoManager.loadMomentsTime(context, forceReload: true);
-      AlbumManager.loadAlbums(context, 0, forceReload: true);
+      await SettingsPage.emptyCache(context);
       Navigator.of(context).pop();
     }
 

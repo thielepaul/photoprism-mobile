@@ -93,38 +93,73 @@ class PhotoManager {
       {bool forceReload = false}) async {
     PhotoprismModel model = Provider.of<PhotoprismModel>(context);
 
-    return await model.photoLoadingLock.synchronized(() async {
+    await model.photoLoadingLock.synchronized(() async {
       if (model.momentsTime != null && !forceReload) {
         return;
       }
       List<MomentsTime> momentsTime = await Api.loadMomentsTime(context);
       await saveAndSetMomentsTime(context, momentsTime);
-      await saveAndSetPhotos(context, {}, null);
     });
+    if (model.selectedPageIndex == 0) {
+      print("reload photos");
+      await loadPhoto(context, getPhotoIndexInScrollView(context, null), null,
+          forceReload: true);
+    } else {
+      await saveAndSetPhotos(context, {}, null);
+    }
+    return;
   }
 
   static Future<void> loadPhoto(BuildContext context, int index, int albumId,
       {bool forceReload = false}) async {
     PhotoprismModel model = Provider.of<PhotoprismModel>(context);
-
     return await model.photoLoadingLock.synchronized(() async {
+      // early stop in case an old request wants a photo that has been removed
+      if (albumId != null &&
+          model.albums != null &&
+          model.albums[albumId] != null &&
+          index >= model.albums[albumId].imageCount) {
+        return;
+      }
       if (getPhotos(context, albumId).containsKey(index) && !forceReload) {
         return;
       }
       int offset = index - (index % 100);
-      Map<int, Photo> photos = getPhotos(context, albumId);
+      Map<int, Photo> photos;
+      if (forceReload) {
+        photos = {};
+      } else {
+        photos = getPhotos(context, albumId);
+      }
       photos.addAll(await Api.loadPhotos(context, albumId, offset));
       saveAndSetPhotos(context, photos, albumId);
       return;
     });
   }
 
-  static String getPhotoUrl(BuildContext context, int index, int albumId) {
+  static String getPhotoThumbnailUrl(
+      BuildContext context, int index, int albumId) {
     if (getPhotos(context, albumId)[index] == null) {
       return null;
     }
     PhotoprismModel model = Provider.of<PhotoprismModel>(context);
     String filehash = PhotoManager.getPhotos(context, albumId)[index].fileHash;
     return model.photoprismUrl + '/api/v1/thumbnails/' + filehash + '/tile_224';
+  }
+
+  static int getPhotoIndexInScrollView(BuildContext context, int albumId) {
+    PhotoprismModel model = Provider.of<PhotoprismModel>(context);
+    try {
+      double currentPhoto = PhotoManager.getPhotosCount(context, albumId) *
+          model.scrollController.offset /
+          (model.scrollController.position.maxScrollExtent -
+              model.scrollController.position.minScrollExtent);
+      if (currentPhoto.isNaN || currentPhoto.isInfinite) {
+        return 0;
+      }
+      return currentPhoto.floor();
+    } catch (_) {
+      return 0;
+    }
   }
 }

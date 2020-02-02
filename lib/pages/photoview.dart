@@ -141,6 +141,8 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
   }
 
   Widget getPreview(index) {
+    String imageUrl =
+        PhotoManager.getPhotoThumbnailUrl(context, index, widget.albumId);
     return Container(
         width: MediaQuery.of(context).size.width,
         height: MediaQuery.of(context).size.height,
@@ -160,10 +162,7 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
                       this.photos[index].aspectRatio,
                   fit: BoxFit.contain,
                   alignment: Alignment.center,
-                  imageUrl: photoprismUrl +
-                      '/api/v1/thumbnails/' +
-                      photos[index].fileHash +
-                      '/tile_224',
+                  imageUrl: imageUrl,
                 ))));
   }
 
@@ -175,6 +174,11 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
             ? const BouncingScrollPhysics()
             : const NeverScrollableScrollPhysics(),
         itemBuilder: (BuildContext context, int index) {
+          if (PhotoManager.getPhotos(context, widget.albumId)[index] == null) {
+            PhotoManager.loadPhoto(context, index, widget.albumId);
+            return Container();
+          }
+
           return Padding(
               padding: EdgeInsets.symmetric(
                   horizontal: MediaQuery.of(context).size.width * 0.03),
@@ -193,7 +197,7 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
                     child: photoview(index)),
               ]));
         },
-        itemCount: photos.length,
+        itemCount: PhotoManager.getPhotosCount(context, widget.albumId),
         controller: pageController,
       ));
 

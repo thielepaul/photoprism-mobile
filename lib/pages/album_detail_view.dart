@@ -19,12 +19,15 @@ class AlbumDetailView extends StatelessWidget {
         _model = Provider.of<PhotoprismModel>(context);
 
   void _renameAlbum(BuildContext context) async {
+    await _model.photoprismLoadingScreen.showLoadingScreen("Renaming album...");
+
     // rename remote album
     var status = await Api.renameAlbum(
         _album.id, _renameAlbumTextFieldController.text, _model);
 
     await AlbumManager.loadAlbums(context, 0, forceReload: true);
 
+    await _model.photoprismLoadingScreen.hideLoadingScreen();
     // close rename dialog
     Navigator.pop(context);
 
@@ -35,23 +38,28 @@ class AlbumDetailView extends StatelessWidget {
   }
 
   void _deleteAlbum(BuildContext context) async {
-    // close delete dialog
-    Navigator.pop(context);
+    await _model.photoprismLoadingScreen.showLoadingScreen("Deleting album...");
 
     // delete remote album
     var status = await Api.deleteAlbum(_album.id, _model);
 
+    await _model.photoprismLoadingScreen.hideLoadingScreen();
+
+    // close delete dialog
+    Navigator.pop(context);
     // check if successful
     if (status != 0) {
       _model.photoprismMessage.showMessage("Deleting album failed.");
     } else {
       // go back to albums view
-      Navigator.pop(context);
       await AlbumManager.loadAlbums(context, 0, forceReload: true);
+      Navigator.pop(context);
     }
   }
 
   void _removePhotosFromAlbum(BuildContext context) async {
+    _model.photoprismLoadingScreen.showLoadingScreen("Removing photos...");
+
     // save all selected photos in list
     List<String> selectedPhotos = [];
     _model.gridController.selection.selectedIndexes.forEach((element) {
@@ -68,11 +76,12 @@ class AlbumDetailView extends StatelessWidget {
       _model.photoprismMessage
           .showMessage("Removing photos from album failed.");
     } else {
-      AlbumManager.loadAlbums(context, 0, forceReload: true);
+      AlbumManager.loadAlbums(context, 0,
+          forceReload: true, loadPhotosForAlbumId: _albumId);
     }
-    _model.notify();
     // deselect selected photos
     _model.gridController.clear();
+    _model.photoprismLoadingScreen.hideLoadingScreen();
   }
 
   @override

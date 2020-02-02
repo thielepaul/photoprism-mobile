@@ -66,12 +66,8 @@ class PhotosPage extends StatelessWidget {
 
   Text getMonthFromOffset(
       BuildContext context, ScrollController scrollController) {
-    double currentPhoto = PhotoManager.getPhotosCount(context, albumId) *
-        scrollController.offset /
-        (scrollController.position.maxScrollExtent -
-            scrollController.position.minScrollExtent);
     for (MomentsTime m in PhotoManager.getCummulativeMonthCount(context)) {
-      if (m.count >= currentPhoto) {
+      if (m.count >= PhotoManager.getPhotoIndexInScrollView(context, albumId)) {
         return Text("${m.month}/${m.year}");
       }
     }
@@ -80,7 +76,8 @@ class PhotosPage extends StatelessWidget {
 
   Widget displayPhotoIfUrlLoaded(BuildContext context, int index) {
     PhotoprismModel model = Provider.of<PhotoprismModel>(context);
-    String imageUrl = PhotoManager.getPhotoUrl(context, index, albumId);
+    String imageUrl =
+        PhotoManager.getPhotoThumbnailUrl(context, index, albumId);
     if (imageUrl == null) {
       PhotoManager.loadPhoto(context, index, albumId);
       return Container(
@@ -103,16 +100,6 @@ class PhotosPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
     final ScrollController _scrollController = model.scrollController;
-
-    if (!model.dataFromCacheLoaded) {
-      model.loadDataFromCache(context);
-      return Text("", key: ValueKey("photosGridView"));
-    }
-
-    if (albumId == null && model.momentsTime == null) {
-      PhotoManager.loadMomentsTime(context);
-      return Text("", key: ValueKey("photosGridView"));
-    }
 
     DragSelectGridViewController gridController =
         Provider.of<PhotoprismModel>(context)
@@ -179,6 +166,11 @@ class PhotosPage extends StatelessWidget {
             : null,
         body: RefreshIndicator(
             child: OrientationBuilder(builder: (context, orientation) {
+          if (albumId == null && model.momentsTime == null) {
+            PhotoManager.loadMomentsTime(context);
+            return Text("", key: ValueKey("photosGridView"));
+          }
+
           return DraggableScrollbar.semicircle(
             labelTextBuilder: albumId == null
                 ? (double offset) =>
@@ -229,7 +221,13 @@ class PhotosPage extends StatelessWidget {
                 }),
           );
         }), onRefresh: () async {
-          return await PhotoManager.loadMomentsTime(context, forceReload: true);
+          if (albumId == null) {
+            return await PhotoManager.loadMomentsTime(context,
+                forceReload: true);
+          } else {
+            await AlbumManager.loadAlbums(context, 0,
+                forceReload: true, loadPhotosForAlbumId: albumId);
+          }
         }));
   }
 }

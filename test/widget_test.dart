@@ -17,12 +17,15 @@ void main() {
 
   testWidgets('bottom navigation bar switches between pages',
       (WidgetTester tester) async {
+    SharedPreferences.setMockInitialValues({'test': 'test'});
+
     await tester.pumpWidget(
       ChangeNotifierProvider(
         create: (context) => PhotoprismModel(),
         child: PhotoprismApp(),
       ),
     );
+    await tester.pump();
     expect(find.byKey(ValueKey("photosGridView")), findsOneWidget);
 
     await tester.tap(find.byIcon(Icons.photo_album));
@@ -48,6 +51,7 @@ void main() {
         child: PhotoprismApp(),
       ),
     );
+    await tester.pump();
     await tester.tap(find.byIcon(Icons.settings));
     await tester.pump();
     expect(find.text("Photoprism URL"), findsOneWidget);
@@ -90,6 +94,7 @@ void main() {
         child: PhotoprismApp(),
       ),
     );
+    await tester.pump();
     await tester.tap(find.byIcon(Icons.photo_album));
     await tester.pump();
     expect(find.text("New Album 1"), findsOneWidget);

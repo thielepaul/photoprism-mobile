@@ -55,6 +55,15 @@ class MainPage extends StatelessWidget {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
     model.photoprismLoadingScreen.context = context;
 
+    if (!model.dataFromCacheLoaded) {
+      model.loadDataFromCache(context);
+      return Scaffold(
+        appBar: AppBar(
+          title: Text("PhotoPrism"),
+        ),
+      );
+    }
+
     return Scaffold(
       body: PageView(
           controller: _pageController,

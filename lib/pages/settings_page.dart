@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:photoprism/common/album_manager.dart';
-import 'package:photoprism/common/photo_manager.dart';
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:photoprism/widgets/http_auth_dialog.dart';
 import 'package:provider/provider.dart';
@@ -61,7 +59,7 @@ class SettingsPage extends StatelessWidget {
                 child: Icon(Icons.delete),
               ),
               onTap: () {
-                emptyCache();
+                emptyCache(context);
               },
             ),
             SwitchListTile(
@@ -218,9 +216,7 @@ class SettingsPage extends StatelessWidget {
     Navigator.of(context).pop();
     await model.photoprismCommonHelper.setPhotoprismUrl(url);
     model.photoprismRemoteConfigLoader.loadApplicationColor();
-    emptyCache();
-    await PhotoManager.loadMomentsTime(context, forceReload: true);
-    await AlbumManager.loadAlbums(context, 0, forceReload: true);
+    emptyCache(context);
   }
 
   void setNewUploadFolder(context, path) async {
@@ -229,7 +225,20 @@ class SettingsPage extends StatelessWidget {
     await model.photoprismUploader.setUploadFolder(path);
   }
 
-  static void emptyCache() async {
+  static Future<void> emptyCache(BuildContext context) async {
+    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
+    SharedPreferences sp = await SharedPreferences.getInstance();
+    sp.remove("momentsTime");
+    sp.remove("photos");
+    sp.remove("albums");
+    if (model.albums != null) {
+      for (int albumId in model.albums.keys) {
+        sp.remove("photos" + albumId.toString());
+      }
+    }
+    model.photos = null;
+    model.momentsTime = null;
+    model.albums = null;
     await DefaultCacheManager().emptyCache();
   }
 }
