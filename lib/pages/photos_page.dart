@@ -14,26 +14,28 @@ import 'package:photoprism/widgets/selectable_tile.dart';
 import 'package:provider/provider.dart';
 
 class PhotosPage extends StatelessWidget {
+  const PhotosPage({Key key, this.albumId}) : super(key: key);
+
   final int albumId;
 
-  PhotosPage({Key key, this.albumId});
-
-  archiveSelectedPhotos(BuildContext context) async {
+  Future<void> archiveSelectedPhotos(BuildContext context) async {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
-    List<String> selectedPhotos = [];
-
-    model.gridController.selection.selectedIndexes.forEach((element) {
-      selectedPhotos
-          .add(PhotoManager.getPhotos(context, null)[element].photoUUID);
-    });
+    final List<String> selectedPhotos = model
+        .gridController.selection.selectedIndexes
+        .map<String>((int element) =>
+            PhotoManager.getPhotos(context, null)[element].photoUUID)
+        .toList();
 
     PhotoManager.archivePhotos(context, selectedPhotos, albumId);
   }
 
-  void _selectAlbumBottomSheet(context) {
-    PhotoprismModel model = Provider.of<PhotoprismModel>(context);
+  void _selectAlbumBottomSheet(BuildContext context) {
+    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
+    if (model.albums == null) {
+      AlbumManager.loadAlbums(context, 0);
+    }
 
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
         context: context,
         builder: (BuildContext bc) {
           return ListView.builder(
@@ -49,16 +51,15 @@ class PhotosPage extends StatelessWidget {
         });
   }
 
-  addPhotosToAlbum(int albumId, BuildContext context) async {
+  Future<void> addPhotosToAlbum(int albumId, BuildContext context) async {
     Navigator.pop(context);
 
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
-    List<String> selectedPhotos = [];
-
-    model.gridController.selection.selectedIndexes.forEach((element) {
-      selectedPhotos
-          .add(PhotoManager.getPhotos(context, null)[element].photoUUID);
-    });
+    final List<String> selectedPhotos = model
+        .gridController.selection.selectedIndexes
+        .map<String>((int element) =>
+            PhotoManager.getPhotos(context, null)[element].photoUUID)
+        .toList();
 
     model.gridController.clear();
     AlbumManager.addPhotosToAlbum(context, albumId, selectedPhotos);
@@ -66,17 +67,18 @@ class PhotosPage extends StatelessWidget {
 
   Text getMonthFromOffset(
       BuildContext context, ScrollController scrollController) {
-    for (MomentsTime m in PhotoManager.getCummulativeMonthCount(context)) {
+    for (final MomentsTime m
+        in PhotoManager.getCummulativeMonthCount(context)) {
       if (m.count >= PhotoManager.getPhotoIndexInScrollView(context, albumId)) {
-        return Text("${m.month}/${m.year}");
+        return Text('${m.month}/${m.year}');
       }
     }
-    return Text("");
+    return const Text('');
   }
 
   Widget displayPhotoIfUrlLoaded(BuildContext context, int index) {
-    PhotoprismModel model = Provider.of<PhotoprismModel>(context);
-    String imageUrl =
+    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
+    final String imageUrl =
         PhotoManager.getPhotoThumbnailUrl(context, index, albumId);
     if (imageUrl == null) {
       PhotoManager.loadPhoto(context, index, albumId);
@@ -89,10 +91,11 @@ class PhotosPage extends StatelessWidget {
       alignment: Alignment.center,
       fit: BoxFit.contain,
       imageUrl: imageUrl,
-      placeholder: (context, url) => Container(
+      placeholder: (BuildContext context, String url) => Container(
         color: Colors.grey[300],
       ),
-      errorWidget: (context, url, error) => Icon(Icons.error),
+      errorWidget: (BuildContext context, String url, Object error) =>
+          Icon(Icons.error),
     );
   }
 
@@ -101,12 +104,12 @@ class PhotosPage extends StatelessWidget {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
     final ScrollController _scrollController = model.scrollController;
 
-    DragSelectGridViewController gridController =
+    final DragSelectGridViewController gridController =
         Provider.of<PhotoprismModel>(context)
             .photoprismCommonHelper
             .getGridController();
 
-    int tileCount = PhotoManager.getPhotosCount(context, albumId);
+    final int tileCount = PhotoManager.getPhotosCount(context, albumId);
 
     //if (Photos.getPhotoList(context, albumId).length == 0) {
     //  return IconButton(onPressed: () => {}, icon: Icon(Icons.add));
@@ -114,22 +117,22 @@ class PhotosPage extends StatelessWidget {
     return Scaffold(
         appBar: albumId == null
             ? AppBar(
-                title: model.gridController.selection.selectedIndexes.length > 0
+                title: model.gridController.selection.selectedIndexes.isNotEmpty
                     ? Text(model.gridController.selection.selectedIndexes.length
                         .toString())
-                    : Text("PhotoPrism"),
+                    : const Text('PhotoPrism'),
                 backgroundColor: HexColor(model.applicationColor),
                 leading:
-                    model.gridController.selection.selectedIndexes.length > 0
+                    model.gridController.selection.selectedIndexes.isNotEmpty
                         ? IconButton(
                             icon: const Icon(Icons.close),
                             onPressed: () {
-                              model.gridController.selection = Selection({});
+                              model.gridController.clear();
                             },
                           )
                         : null,
                 actions:
-                    model.gridController.selection.selectedIndexes.length > 0
+                    model.gridController.selection.selectedIndexes.isNotEmpty
                         ? <Widget>[
                             IconButton(
                               icon: const Icon(Icons.archive),
@@ -148,13 +151,14 @@ class PhotosPage extends StatelessWidget {
                           ]
                         : <Widget>[
                             PopupMenuButton<int>(
-                              itemBuilder: (BuildContext context) => [
-                                PopupMenuItem(
+                              itemBuilder: (BuildContext context) =>
+                                  <PopupMenuEntry<int>>[
+                                const PopupMenuItem<int>(
                                   value: 0,
                                   child: Text('Upload photo'),
                                 )
                               ],
-                              onSelected: (choice) {
+                              onSelected: (int choice) {
                                 if (choice == 0) {
                                   model.photoprismUploader
                                       .selectPhotoAndUpload(context);
@@ -164,11 +168,11 @@ class PhotosPage extends StatelessWidget {
                           ],
               )
             : null,
-        body: RefreshIndicator(
-            child: OrientationBuilder(builder: (context, orientation) {
+        body: RefreshIndicator(child: OrientationBuilder(
+            builder: (BuildContext context, Orientation orientation) {
           if (albumId == null && model.momentsTime == null) {
             PhotoManager.loadMomentsTime(context);
-            return Text("", key: ValueKey("photosGridView"));
+            return const Text('', key: ValueKey<String>('photosGridView'));
           }
 
           return DraggableScrollbar.semicircle(
@@ -179,19 +183,19 @@ class PhotosPage extends StatelessWidget {
             heightScrollThumb: 50.0,
             controller: _scrollController,
             child: DragSelectGridView(
-                key: ValueKey('photosGridView'),
+                key: const ValueKey<String>('photosGridView'),
                 scrollController: _scrollController,
                 gridController: gridController,
-                physics: AlwaysScrollableScrollPhysics(),
-                gridDelegate: new SliverGridDelegateWithFixedCrossAxisCount(
+                physics: const AlwaysScrollableScrollPhysics(),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: orientation == Orientation.portrait ? 3 : 6,
                   mainAxisSpacing: 4,
                   crossAxisSpacing: 4,
                 ),
                 itemCount: tileCount,
-                itemBuilder: (context, index, selected) {
+                itemBuilder: (BuildContext context, int index, bool selected) {
                   return SelectableTile(
-                      key: ValueKey("PhotoTile"),
+                      key: const ValueKey<String>('PhotoTile'),
                       index: index,
                       context: context,
                       gridController: gridController,
@@ -204,13 +208,13 @@ class PhotosPage extends StatelessWidget {
                         Navigator.push(
                             context,
                             TransparentRoute(
-                              builder: (context) =>
+                              builder: (BuildContext context) =>
                                   FullscreenPhotoGallery(index, albumId),
                             ));
                       },
                       child: Hero(
                         tag: index.toString(),
-                        createRectTween: (begin, end) {
+                        createRectTween: (Rect begin, Rect end) {
                           return RectTween(begin: begin, end: end);
                         },
                         child: displayPhotoIfUrlLoaded(

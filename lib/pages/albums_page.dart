@@ -10,7 +10,7 @@ import 'package:provider/provider.dart';
 class AlbumsPage extends StatelessWidget {
   const AlbumsPage({Key key}) : super(key: key);
 
-  static String getAlbumPreviewUrl(context, int index) {
+  static String getAlbumPreviewUrl(BuildContext context, int index) {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
     if (model.albums != null &&
         model.albums[index] != null &&
@@ -20,26 +20,26 @@ class AlbumsPage extends StatelessWidget {
           model.albums[index].id +
           '/thumbnail/tile_500';
     } else {
-      return "https://raw.githubusercontent.com/photoprism/photoprism-mobile/master/assets/emptyAlbum.jpg";
+      return 'https://raw.githubusercontent.com/photoprism/photoprism-mobile/master/assets/emptyAlbum.jpg';
     }
   }
 
-  void createAlbum(BuildContext context) async {
+  Future<void> createAlbum(BuildContext context) async {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
-    await model.photoprismLoadingScreen.showLoadingScreen("Creating album...");
-    var uuid = await Api.createAlbum("New album", model);
+    model.photoprismLoadingScreen.showLoadingScreen('Creating album...');
+    final String uuid = await Api.createAlbum('New album', model);
 
-    if (uuid == "-1") {
+    if (uuid == '-1') {
       await model.photoprismLoadingScreen.hideLoadingScreen();
-      model.photoprismMessage.showMessage("Creating album failed.");
+      model.photoprismMessage.showMessage('Creating album failed.');
     } else {
       await AlbumManager.loadAlbums(context, 0, forceReload: true);
       await model.photoprismLoadingScreen.hideLoadingScreen();
 
-      Navigator.push(
+      Navigator.push<void>(
         context,
-        MaterialPageRoute(
-            builder: (ctx) => AlbumDetailView(
+        MaterialPageRoute<void>(
+            builder: (BuildContext ctx) => AlbumDetailView(
                 model.albums[model.albums.length - 1],
                 model.albums.length - 1,
                 context)),
@@ -52,7 +52,7 @@ class AlbumsPage extends StatelessWidget {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
     return Scaffold(
         appBar: AppBar(
-          title: Text("PhotoPrism"),
+          title: const Text('PhotoPrism'),
           backgroundColor: HexColor(model.applicationColor),
           actions: <Widget>[
             IconButton(
@@ -65,40 +65,41 @@ class AlbumsPage extends StatelessWidget {
             ),
           ],
         ),
-        body: RefreshIndicator(
-            child: OrientationBuilder(builder: (context, orientation) {
+        body: RefreshIndicator(child: OrientationBuilder(
+            builder: (BuildContext context, Orientation orientation) {
           if (model.albums == null) {
             AlbumManager.loadAlbums(context, 0);
-            return Text("", key: ValueKey("albumsGridView"));
+            return const Text('', key: ValueKey<String>('albumsGridView'));
           }
           return GridView.builder(
-              key: ValueKey('albumsGridView'),
-              gridDelegate: new SliverGridDelegateWithFixedCrossAxisCount(
+              key: const ValueKey<String>('albumsGridView'),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: orientation == Orientation.portrait ? 2 : 4,
                 mainAxisSpacing: 10,
                 crossAxisSpacing: 10,
               ),
               padding: const EdgeInsets.all(10),
               itemCount: model.albums.length,
-              itemBuilder: (context, index) {
+              itemBuilder: (BuildContext context, int index) {
                 return GestureDetector(
                     onTap: () {
-                      Navigator.push(
+                      Navigator.push<void>(
                           context,
-                          MaterialPageRoute(
-                              builder: (ctx) => AlbumDetailView(
+                          MaterialPageRoute<void>(
+                              builder: (BuildContext ctx) => AlbumDetailView(
                                   model.albums[index], index, context)));
                     },
                     child: ClipRRect(
-                        borderRadius: new BorderRadius.circular(8.0),
+                        borderRadius: BorderRadius.circular(8.0),
                         child: GridTile(
                           child: CachedNetworkImage(
                             httpHeaders:
                                 model.photoprismHttpBasicAuth.getAuthHeader(),
                             imageUrl: getAlbumPreviewUrl(context, index),
-                            placeholder: (context, url) =>
+                            placeholder: (BuildContext context, String url) =>
                                 Container(color: Colors.grey),
-                            errorWidget: (context, url, error) =>
+                            errorWidget: (BuildContext context, String url,
+                                    Object error) =>
                                 Icon(Icons.error),
                           ),
                           footer: GestureDetector(
@@ -106,7 +107,7 @@ class AlbumsPage extends StatelessWidget {
                               backgroundColor: Colors.black45,
                               trailing: Text(
                                 model.albums[index].imageCount.toString(),
-                                style: TextStyle(color: Colors.white),
+                                style: const TextStyle(color: Colors.white),
                               ),
                               title: _GridTitleText(model.albums[index].name),
                             ),

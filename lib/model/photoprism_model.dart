@@ -13,8 +13,11 @@ import 'package:photoprism/model/moments_time.dart';
 import 'package:synchronized/synchronized.dart';
 
 class PhotoprismModel extends ChangeNotifier {
+  PhotoprismModel() {
+    initialize();
+  }
   // general
-  String photoprismUrl = "https://demo.photoprism.org";
+  String photoprismUrl = 'https://demo.photoprism.org';
   List<MomentsTime> momentsTime;
   Map<int, Photo> photos;
   Map<int, Album> albums;
@@ -23,13 +26,13 @@ class PhotoprismModel extends ChangeNotifier {
   bool dataFromCacheLoaded = false;
 
   // theming
-  String applicationColor = "#424242";
+  String applicationColor = '#424242';
 
   // photoprism uploader
   bool autoUploadEnabled = false;
-  String autoUploadFolder = "/storage/emulated/0/DCIM/Camera";
-  String autoUploadLastTimeCheckedForPhotos = "Never";
-  List<String> photosToUpload = [];
+  String autoUploadFolder = '/storage/emulated/0/DCIM/Camera';
+  String autoUploadLastTimeCheckedForPhotos = 'Never';
+  List<String> photosToUpload = <String>[];
 
   // runtime data
   bool isLoading = false;
@@ -47,17 +50,13 @@ class PhotoprismModel extends ChangeNotifier {
   PhotoprismMessage photoprismMessage;
   PhotoprismHttpBasicAuth photoprismHttpBasicAuth;
 
-  PhotoprismModel() {
-    initialize();
-  }
-
-  initialize() async {
-    photoprismUploader = new PhotoprismUploader(this, context);
-    photoprismRemoteConfigLoader = new PhotoprismRemoteConfigLoader(this);
-    photoprismCommonHelper = new PhotoprismCommonHelper(this);
-    photoprismLoadingScreen = new PhotoprismLoadingScreen(this);
-    photoprismMessage = new PhotoprismMessage(this);
-    photoprismHttpBasicAuth = new PhotoprismHttpBasicAuth(this);
+  Future<void> initialize() async {
+    photoprismLoadingScreen = PhotoprismLoadingScreen(this);
+    photoprismUploader = PhotoprismUploader(this);
+    photoprismRemoteConfigLoader = PhotoprismRemoteConfigLoader(this);
+    photoprismCommonHelper = PhotoprismCommonHelper(this);
+    photoprismMessage = PhotoprismMessage(this);
+    photoprismHttpBasicAuth = PhotoprismHttpBasicAuth(this);
 
     await photoprismCommonHelper.loadPhotoprismUrl();
     await photoprismHttpBasicAuth.initialized;
@@ -65,24 +64,24 @@ class PhotoprismModel extends ChangeNotifier {
     gridController.addListener(notifyListeners);
   }
 
-  setMomentsTime(List<MomentsTime> newValue) {
+  void setMomentsTime(List<MomentsTime> newValue) {
     momentsTime = newValue;
     notifyListeners();
   }
 
-  setPhotos(Map<int, Photo> newValue) {
+  void setPhotos(Map<int, Photo> newValue) {
     photos = newValue;
     notifyListeners();
   }
 
-  setAlbums(Map<int, Album> newValue, {bool notify = true}) {
+  void setAlbums(Map<int, Album> newValue, {bool notify = true}) {
     albums = newValue;
     if (notify) {
       notifyListeners();
     }
   }
 
-  loadDataFromCache(BuildContext context) async {
+  Future<void> loadDataFromCache(BuildContext context) async {
     await PhotoprismCommonHelper.getCachedDataFromSharedPrefs(context);
     dataFromCacheLoaded = true;
     notifyListeners();

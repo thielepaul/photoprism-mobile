@@ -3,8 +3,8 @@ import 'package:photoprism/pages/albums_page.dart';
 import 'package:photoprism/pages/settings_page.dart';
 import 'package:provider/provider.dart';
 import 'package:photoprism/common/hexcolor.dart';
-import 'pages/photos_page.dart';
-import 'model/photoprism_model.dart';
+import 'package:photoprism/pages/photos_page.dart';
+import 'package:photoprism/model/photoprism_model.dart';
 // use this for debugging animations
 // import 'package:flutter/scheduler.dart' show timeDilation;
 
@@ -12,8 +12,8 @@ void main() {
   // use this for debugging animations
   // timeDilation = 10.0;
   runApp(
-    ChangeNotifierProvider(
-      create: (context) => PhotoprismModel(),
+    ChangeNotifierProvider<PhotoprismModel>(
+      create: (BuildContext context) => PhotoprismModel(),
       child: PhotoprismApp(),
     ),
   );
@@ -46,9 +46,8 @@ class PhotoprismApp extends StatelessWidget {
 }
 
 class MainPage extends StatelessWidget {
-  final PageController _pageController;
-
   MainPage() : _pageController = PageController(initialPage: 0);
+  final PageController _pageController;
 
   @override
   Widget build(BuildContext context) {
@@ -59,7 +58,7 @@ class MainPage extends StatelessWidget {
       model.loadDataFromCache(context);
       return Scaffold(
         appBar: AppBar(
-          title: Text("PhotoPrism"),
+          title: const Text('PhotoPrism'),
         ),
       );
     }
@@ -68,11 +67,11 @@ class MainPage extends StatelessWidget {
       body: PageView(
           controller: _pageController,
           children: <Widget>[
-            PhotosPage(albumId: null),
-            AlbumsPage(),
+            const PhotosPage(albumId: null),
+            const AlbumsPage(),
             SettingsPage(),
           ],
-          physics: NeverScrollableScrollPhysics()),
+          physics: const NeverScrollableScrollPhysics()),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
@@ -89,7 +88,7 @@ class MainPage extends StatelessWidget {
           ),
         ],
         currentIndex: model.selectedPageIndex,
-        onTap: (index) {
+        onTap: (int index) {
           _pageController.jumpToPage(index);
           model.photoprismCommonHelper.setSelectedPageIndex(index);
         },
