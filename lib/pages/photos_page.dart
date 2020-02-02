@@ -181,6 +181,7 @@ class PhotosPage extends StatelessWidget {
         heightScrollThumb: 50.0,
         controller: _scrollController,
         child: DragSelectGridView(
+            padding: const EdgeInsets.only(top: 0),
             key: const ValueKey<String>('photosGridView'),
             scrollController: _scrollController,
             gridController: gridController,
