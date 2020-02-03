@@ -8,7 +8,7 @@ import 'package:photoprism/model/photoprism_model.dart';
 // use this for debugging animations
 // import 'package:flutter/scheduler.dart' show timeDilation;
 
-main() {
+void main() {
   // use this for debugging animations
   // timeDilation = 10.0;
   runApp(
