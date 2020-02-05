@@ -87,59 +87,69 @@ class AlbumDetailView extends StatelessWidget {
   Widget build(BuildContext context) {
     final int _selectedPhotosCount =
         _model.gridController.selection.selectedIndexes.length;
-    return Scaffold(
-      appBar: AppBar(
-        title: _selectedPhotosCount > 0
-            ? Text(_selectedPhotosCount.toString())
-            : Text(_album.name),
-        centerTitle: _selectedPhotosCount > 0 ? false : null,
-        leading: _selectedPhotosCount > 0
-            ? IconButton(
-                icon: const Icon(Icons.close),
-                onPressed: () {
-                  _model.gridController.clear();
-                },
-              )
-            : null,
-        actions: _selectedPhotosCount > 0
-            ? <Widget>[
-                PopupMenuButton<int>(
-                  itemBuilder: (BuildContext context) => <PopupMenuEntry<int>>[
-                    const PopupMenuItem<int>(
-                      value: 2,
-                      child: Text('Remove from album'),
-                    ),
-                  ],
-                  onSelected: (int choice) {
-                    _removePhotosFromAlbum(context);
-                  },
-                ),
-              ]
-            : <Widget>[
-                // overflow menu
-                PopupMenuButton<int>(
-                  itemBuilder: (BuildContext context) => <PopupMenuEntry<int>>[
-                    const PopupMenuItem<int>(
-                      value: 0,
-                      child: Text('Rename album'),
-                    ),
-                    const PopupMenuItem<int>(
-                      value: 1,
-                      child: Text('Delete album'),
-                    ),
-                  ],
-                  onSelected: (int choice) {
-                    if (choice == 0) {
-                      _showRenameAlbumDialog(context);
-                    } else if (choice == 1) {
-                      _showDeleteAlbumDialog(context);
-                    }
-                  },
-                ),
-              ],
-      ),
-      body: PhotosPage(albumId: _albumId),
-    );
+    return NestedScrollView(
+        headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
+          return <Widget>[
+            SliverAppBar(
+              floating: false,
+              pinned: true,
+              flexibleSpace: FlexibleSpaceBar(
+                title: _selectedPhotosCount > 0
+                    ? Text(_selectedPhotosCount.toString())
+                    : Text(_album.name),
+                centerTitle: _selectedPhotosCount > 0 ? false : null,
+              ),
+              leading: _selectedPhotosCount > 0
+                  ? IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () {
+                        _model.gridController.clear();
+                      },
+                    )
+                  : null,
+              actions: _selectedPhotosCount > 0
+                  ? <Widget>[
+                      PopupMenuButton<int>(
+                        itemBuilder: (BuildContext context) =>
+                            <PopupMenuEntry<int>>[
+                          const PopupMenuItem<int>(
+                            value: 2,
+                            child: Text('Remove from album'),
+                          ),
+                        ],
+                        onSelected: (int choice) {
+                          _removePhotosFromAlbum(context);
+                        },
+                      ),
+                    ]
+                  : <Widget>[
+                      // overflow menu
+                      PopupMenuButton<int>(
+                        itemBuilder: (BuildContext context) =>
+                            <PopupMenuEntry<int>>[
+                          const PopupMenuItem<int>(
+                            value: 0,
+                            child: Text('Rename album'),
+                          ),
+                          const PopupMenuItem<int>(
+                            value: 1,
+                            child: Text('Delete album'),
+                          ),
+                        ],
+                        onSelected: (int choice) {
+                          if (choice == 0) {
+                            _showRenameAlbumDialog(context);
+                          } else if (choice == 1) {
+                            _showDeleteAlbumDialog(context);
+                          }
+                        },
+                      ),
+                    ],
+            ),
+          ];
+        },
+        body: Container(
+            color: Colors.white, child: PhotosPage(albumId: _albumId)));
   }
 
   Future<void> _showRenameAlbumDialog(BuildContext context) async {
