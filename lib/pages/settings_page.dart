@@ -76,12 +76,18 @@ class SettingsPage extends StatelessWidget {
 
                 if (result[PermissionGroup.storage] ==
                     PermissionStatus.granted) {
-                  print(newState);
                   model.photoprismUploader.setAutoUpload(newState);
                 } else {
                   print('Not authorized.');
                 }
               },
+            ),
+            const ListTile(
+              title: Text('''
+Warning: Auto upload is still under development.
+Use it at your own risk!
+Only Android is supported at this moment.
+                  '''),
             ),
             ListTile(
               title: const Text('Upload folder'),
@@ -129,7 +135,7 @@ class SettingsPage extends StatelessWidget {
                   context,
                   MaterialPageRoute<void>(
                       builder: (BuildContext ctx) => FileList(
-                          files: model.photosToUpload,
+                          files: model.photosToUpload.toList(),
                           title: 'Auto upload queue')),
                 );
               },
@@ -147,14 +153,28 @@ class SettingsPage extends StatelessWidget {
                   context,
                   MaterialPageRoute<void>(
                       builder: (BuildContext ctx) => FileList(
-                          files: model.alreadyUploadedPhotos,
+                          files: model.alreadyUploadedPhotos.toList(),
                           title: 'Uploaded photos list')),
                 );
               },
             ),
-            const ListTile(
-              title: Text(
-                  'Warning: Auto upload is still under development. It only works under Android at this moment. Not fully working.'),
+            ListTile(
+              title: const Text('Show failed uploads list'),
+              leading: Container(
+                width: 10,
+                alignment: Alignment.center,
+                child: Icon(Icons.warning),
+              ),
+              trailing: Text(model.photosUploadFailed.length.toString()),
+              onTap: () {
+                Navigator.push<void>(
+                  context,
+                  MaterialPageRoute<void>(
+                      builder: (BuildContext ctx) => FileList(
+                          files: model.photosUploadFailed.toList(),
+                          title: 'Failed uploads list')),
+                );
+              },
             ),
           ],
         )));
@@ -162,7 +182,9 @@ class SettingsPage extends StatelessWidget {
 
   Future<void> deleteUploadInfo(BuildContext context) async {
     await PhotoprismUploader.saveAndSetAlreadyUploadedPhotos(
-        Provider.of<PhotoprismModel>(context), <String>[]);
+        Provider.of<PhotoprismModel>(context), <String>{});
+    await PhotoprismUploader.saveAndSetPhotosUploadFailed(
+        Provider.of<PhotoprismModel>(context), <String>{});
   }
 
   Future<void> getUploadFolder(BuildContext context) async {

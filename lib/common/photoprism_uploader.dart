@@ -181,12 +181,11 @@ class PhotoprismUploader {
       final Directory dir = Directory(photoprismModel.autoUploadFolder);
       entries = dir.listSync(recursive: false).toList();
       entries = filterForJpgFiles(entries);
-      entries = await filterForNonUploadedFiles(entries);
-
+      entries = await filterForNonUploadedFiles(entries, checkServer: false);
       photoprismModel.photosToUpload =
-          entries.map((FileSystemEntity e) => e.path).toList();
+          entries.map((FileSystemEntity e) => e.path).toSet();
     } else {
-      photoprismModel.photosToUpload = <String>[];
+      photoprismModel.photosToUpload = <String>{};
     }
   }
 
@@ -227,7 +226,7 @@ class PhotoprismUploader {
     final Directory dir = Directory(photoprismModel.autoUploadFolder);
     entries = dir.listSync(recursive: false).toList();
     entries = filterForJpgFiles(entries);
-    entries = await filterForNonUploadedFiles(entries);
+    entries = await filterForNonUploadedFiles(entries, checkServer: true);
 
     for (final FileSystemEntity entry in entries) {
       print('########## Upload new photo ##########');
@@ -247,7 +246,10 @@ class PhotoprismUploader {
         }
         getPhotosToUpload();
         print('############################################');
+        continue;
       }
+      saveAndSetPhotosUploadFailed(
+          photoprismModel, photoprismModel.photosUploadFailed..add(entry.path));
     }
     print('All new photos uploaded.');
 
@@ -260,7 +262,6 @@ class PhotoprismUploader {
     Uint8List bytes;
     await imageFile.readAsBytes().then((Uint8List value) {
       bytes = Uint8List.fromList(value);
-      print('reading of bytes is completed');
     }).catchError((Object onError) {
       print('Exception Error while reading image from path:' +
           onError.toString());
@@ -289,10 +290,18 @@ class PhotoprismUploader {
   }
 
   static Future<void> saveAndSetAlreadyUploadedPhotos(
-      PhotoprismModel model, List<String> alreadyUploadedPhotos) async {
+      PhotoprismModel model, Set<String> alreadyUploadedPhotos) async {
     model.alreadyUploadedPhotos = alreadyUploadedPhotos;
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    prefs.setStringList('alreadyUploadedPhotos', alreadyUploadedPhotos);
+    prefs.setStringList(
+        'alreadyUploadedPhotos', alreadyUploadedPhotos.toList());
+  }
+
+  static Future<void> saveAndSetPhotosUploadFailed(
+      PhotoprismModel model, Set<String> photosUploadFailed) async {
+    model.photosUploadFailed = photosUploadFailed;
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setStringList('photosUploadFailed', photosUploadFailed.toList());
   }
 
   static List<FileSystemEntity> filterForJpgFiles(
@@ -309,21 +318,24 @@ class PhotoprismUploader {
   }
 
   Future<List<FileSystemEntity>> filterForNonUploadedFiles(
-      List<FileSystemEntity> entries) async {
+      List<FileSystemEntity> entries,
+      {bool checkServer = false}) async {
     final List<FileSystemEntity> filteredEntries = <FileSystemEntity>[];
     for (final FileSystemEntity entry in entries) {
       if (photoprismModel.alreadyUploadedPhotos.contains(entry.path)) {
         continue;
       }
-      final String filehash =
-          sha1.convert(await readFileByte(entry.path)).toString();
 
-      if (await Api.isPhotoOnServer(photoprismModel, filehash)) {
-        if (!photoprismModel.alreadyUploadedPhotos.contains(entry.path)) {
+      if (checkServer) {
+        final String filehash =
+            sha1.convert(await readFileByte(entry.path)).toString();
+
+        if (await Api.isPhotoOnServer(photoprismModel, filehash)) {
           saveAndSetAlreadyUploadedPhotos(photoprismModel,
               photoprismModel.alreadyUploadedPhotos..add(entry.path));
+          getPhotosToUpload();
+          continue;
         }
-        continue;
       }
       filteredEntries.add(entry);
     }

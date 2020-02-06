@@ -71,7 +71,13 @@ class PhotoprismCommonHelper {
     if (sp.containsKey('alreadyUploadedPhotos')) {
       PhotoprismUploader.saveAndSetAlreadyUploadedPhotos(
           Provider.of<PhotoprismModel>(context),
-          sp.getStringList('alreadyUploadedPhotos'));
+          sp.getStringList('alreadyUploadedPhotos').toSet());
+    }
+
+    if (sp.containsKey('photosUploadFailed')) {
+      PhotoprismUploader.saveAndSetAlreadyUploadedPhotos(
+          Provider.of<PhotoprismModel>(context),
+          sp.getStringList('photosUploadFailed').toSet());
     }
   }
 
