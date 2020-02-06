@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:photoprism/model/photoprism_model.dart';
 
-class AutoUploadQueue extends StatelessWidget {
-  const AutoUploadQueue(PhotoprismModel model) : _model = model;
+class FileList extends StatelessWidget {
+  const FileList({this.files, this.title = ''});
 
-  final PhotoprismModel _model;
+  final List<String> files;
+  final String title;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(title: const Text('Auto upload queue')),
+        appBar: AppBar(title: Text(title)),
         body: ListView.builder(
-            itemCount: _model.photosToUpload.length,
+            itemCount: files.length,
             itemBuilder: (BuildContext context, int index) {
-              return ListTile(title: Text(_model.photosToUpload[index]));
+              return ListTile(title: Text(files[index]));
             }));
   }
 }

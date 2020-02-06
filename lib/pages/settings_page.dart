@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:photoprism/common/photoprism_uploader.dart';
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:photoprism/widgets/http_auth_dialog.dart';
 import 'package:provider/provider.dart';
@@ -111,7 +112,7 @@ class SettingsPage extends StatelessWidget {
                 child: Icon(Icons.delete_sweep),
               ),
               onTap: () {
-                deleteUploadInfo();
+                deleteUploadInfo(context);
               },
             ),
             ListTile(
@@ -121,12 +122,33 @@ class SettingsPage extends StatelessWidget {
                 alignment: Alignment.center,
                 child: Icon(Icons.sort),
               ),
+              trailing: Text(model.photosToUpload.length.toString()),
               onTap: () {
                 model.photoprismUploader.getPhotosToUpload();
                 Navigator.push<void>(
                   context,
                   MaterialPageRoute<void>(
-                      builder: (BuildContext ctx) => AutoUploadQueue(model)),
+                      builder: (BuildContext ctx) => FileList(
+                          files: model.photosToUpload,
+                          title: 'Auto upload queue')),
+                );
+              },
+            ),
+            ListTile(
+              title: const Text('Show uploaded photos list'),
+              leading: Container(
+                width: 10,
+                alignment: Alignment.center,
+                child: Icon(Icons.sort),
+              ),
+              trailing: Text(model.alreadyUploadedPhotos.length.toString()),
+              onTap: () {
+                Navigator.push<void>(
+                  context,
+                  MaterialPageRoute<void>(
+                      builder: (BuildContext ctx) => FileList(
+                          files: model.alreadyUploadedPhotos,
+                          title: 'Uploaded photos list')),
                 );
               },
             ),
@@ -138,9 +160,9 @@ class SettingsPage extends StatelessWidget {
         )));
   }
 
-  Future<void> deleteUploadInfo() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    prefs.setStringList('alreadyUploadedPhotos', <String>[]);
+  Future<void> deleteUploadInfo(BuildContext context) async {
+    await PhotoprismUploader.saveAndSetAlreadyUploadedPhotos(
+        Provider.of<PhotoprismModel>(context), <String>[]);
   }
 
   Future<void> getUploadFolder(BuildContext context) async {

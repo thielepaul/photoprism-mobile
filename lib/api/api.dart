@@ -158,19 +158,7 @@ class Api {
           headers: model.photoprismHttpBasicAuth.getAuthHeader());
       print(response.body);
       if (response.statusCode == 200) {
-        print('loading photos');
-        // TODO: context is not available (does this make sense at all if the app might not be in foreground?)
-        // instead it might make  more sense to check the success of the import by a dedicated http GET call
-        // and refresh the photos the next time the UI is displayed
-        // await PhotoManager.loadMomentsTime(context, forceReload: true);
-        print('Finished');
-        bool found = false;
-        model.photos.forEach((_, Photo photo) {
-          if (photo.fileHash == fileHash) {
-            found = true;
-          }
-        });
-        if (found == true) {
+        if (await Api.isPhotoOnServer(model, fileHash)) {
           print('Photo found in PhotoPrism');
           return 0;
         } else {
@@ -269,5 +257,13 @@ class Api {
             .map<Album>(
                 (dynamic json) => Album.fromJson(json as Map<String, dynamic>))
             .toList());
+  }
+
+  static Future<bool> isPhotoOnServer(
+      PhotoprismModel model, String filehash) async {
+    final http.Response response = await http.get(
+        model.photoprismUrl + '/api/v1/thumbnails/$filehash/tile_50',
+        headers: model.photoprismHttpBasicAuth.getAuthHeader());
+    return response.statusCode == 200;
   }
 }
