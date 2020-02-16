@@ -231,7 +231,6 @@ class PhotoprismUploader {
       final String filehash = sha1.convert(await readFileByte(path)).toString();
 
       if (await Api.isPhotoOnServer(photoprismModel, filehash)) {
-        getPhotosToUpload(photoprismModel);
         saveAndSetAlreadyUploadedPhotos(
             photoprismModel, photoprismModel.alreadyUploadedPhotos..add(path));
         continue;
@@ -245,13 +244,11 @@ class PhotoprismUploader {
 
       // add uploaded photo to shared pref
       if (status == 0) {
-        getPhotosToUpload(photoprismModel);
         saveAndSetAlreadyUploadedPhotos(
             photoprismModel, photoprismModel.alreadyUploadedPhotos..add(path));
         print('############################################');
         continue;
       }
-      getPhotosToUpload(photoprismModel);
       saveAndSetPhotosUploadFailed(
           photoprismModel, photoprismModel.photosUploadFailed..add(path));
     }
@@ -297,6 +294,7 @@ class PhotoprismUploader {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setStringList(
         'alreadyUploadedPhotos', alreadyUploadedPhotos.toList());
+    await getPhotosToUpload(model);
   }
 
   static Future<void> saveAndSetPhotosUploadFailed(
@@ -304,6 +302,7 @@ class PhotoprismUploader {
     model.photosUploadFailed = photosUploadFailed;
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setStringList('photosUploadFailed', photosUploadFailed.toList());
+    await getPhotosToUpload(model);
   }
 
   static List<FileSystemEntity> filterForJpgFiles(
@@ -337,6 +336,5 @@ class PhotoprismUploader {
 
   static Future<void> clearFailedUploadList(PhotoprismModel model) async {
     await PhotoprismUploader.saveAndSetPhotosUploadFailed(model, <String>{});
-    await getPhotosToUpload(model);
   }
 }
