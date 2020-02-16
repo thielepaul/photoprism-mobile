@@ -101,81 +101,98 @@ Only Android is supported at this moment.
                 getUploadFolder(context);
               },
             ),
-            ListTile(
-              title: const Text('Last time checked for photos to be uploaded'),
-              subtitle: Text(model.autoUploadLastTimeCheckedForPhotos),
-              leading: Container(
-                width: 10,
-                alignment: Alignment.center,
-                child: Icon(Icons.sync),
+            if (model.autoUploadEnabled)
+              ListTile(
+                title:
+                    const Text('Last time checked for photos to be uploaded'),
+                subtitle: Text(model.autoUploadLastTimeCheckedForPhotos),
+                leading: Container(
+                  width: 10,
+                  alignment: Alignment.center,
+                  child: Icon(Icons.sync),
+                ),
               ),
-            ),
-            ListTile(
-              title: const Text('Delete already uploaded photos info'),
-              leading: Container(
-                width: 10,
-                alignment: Alignment.center,
-                child: Icon(Icons.delete_sweep),
+            if (model.autoUploadEnabled)
+              ListTile(
+                title: const Text('Delete already uploaded photos info'),
+                leading: Container(
+                  width: 10,
+                  alignment: Alignment.center,
+                  child: Icon(Icons.delete_sweep),
+                ),
+                onTap: () {
+                  deleteUploadInfo(context);
+                },
               ),
-              onTap: () {
-                deleteUploadInfo(context);
-              },
-            ),
-            ListTile(
-              title: const Text('Show upload queue'),
-              leading: Container(
-                width: 10,
-                alignment: Alignment.center,
-                child: Icon(Icons.sort),
+            if (model.autoUploadEnabled)
+              ListTile(
+                title: const Text('Retry all failed uploads'),
+                leading: Container(
+                  width: 10,
+                  alignment: Alignment.center,
+                  child: Icon(Icons.refresh),
+                ),
+                onTap: () {
+                  PhotoprismUploader.clearFailedUploadList(model);
+                },
               ),
-              trailing: Text(model.photosToUpload.length.toString()),
-              onTap: () {
-                model.photoprismUploader.getPhotosToUpload();
-                Navigator.push<void>(
-                  context,
-                  MaterialPageRoute<void>(
-                      builder: (BuildContext ctx) => FileList(
-                          files: model.photosToUpload.toList(),
-                          title: 'Auto upload queue')),
-                );
-              },
-            ),
-            ListTile(
-              title: const Text('Show uploaded photos list'),
-              leading: Container(
-                width: 10,
-                alignment: Alignment.center,
-                child: Icon(Icons.sort),
+            if (model.autoUploadEnabled)
+              ListTile(
+                title: const Text('Show upload queue'),
+                leading: Container(
+                  width: 10,
+                  alignment: Alignment.center,
+                  child: Icon(Icons.sort),
+                ),
+                trailing: Text(model.photosToUpload.length.toString()),
+                onTap: () {
+                  Navigator.push<void>(
+                    context,
+                    MaterialPageRoute<void>(
+                        builder: (BuildContext ctx) => FileList(
+                            files: model.photosToUpload.toList(),
+                            title: 'Auto upload queue')),
+                  );
+                },
               ),
-              trailing: Text(model.alreadyUploadedPhotos.length.toString()),
-              onTap: () {
-                Navigator.push<void>(
-                  context,
-                  MaterialPageRoute<void>(
-                      builder: (BuildContext ctx) => FileList(
-                          files: model.alreadyUploadedPhotos.toList(),
-                          title: 'Uploaded photos list')),
-                );
-              },
-            ),
-            ListTile(
-              title: const Text('Show failed uploads list'),
-              leading: Container(
-                width: 10,
-                alignment: Alignment.center,
-                child: Icon(Icons.warning),
+            if (model.autoUploadEnabled)
+              ListTile(
+                title: const Text('Show uploaded photos list'),
+                leading: Container(
+                  width: 10,
+                  alignment: Alignment.center,
+                  child: Icon(Icons.sort),
+                ),
+                trailing: Text(model.alreadyUploadedPhotos.length.toString()),
+                onTap: () {
+                  Navigator.push<void>(
+                    context,
+                    MaterialPageRoute<void>(
+                        builder: (BuildContext ctx) => FileList(
+                            files: model.alreadyUploadedPhotos.toList(),
+                            title: 'Uploaded photos list')),
+                  );
+                },
               ),
-              trailing: Text(model.photosUploadFailed.length.toString()),
-              onTap: () {
-                Navigator.push<void>(
-                  context,
-                  MaterialPageRoute<void>(
-                      builder: (BuildContext ctx) => FileList(
-                          files: model.photosUploadFailed.toList(),
-                          title: 'Failed uploads list')),
-                );
-              },
-            ),
+            if (model.autoUploadEnabled)
+              ListTile(
+                title: const Text('Show failed uploads list'),
+                leading: Container(
+                  width: 10,
+                  alignment: Alignment.center,
+                  child: Icon(Icons.warning),
+                ),
+                trailing: Text(model.photosUploadFailed.length.toString()),
+                onTap: () {
+                  Navigator.push<void>(
+                    context,
+                    MaterialPageRoute<void>(
+                        builder: (BuildContext ctx) => FileList(
+                            files: model.photosUploadFailed.toList(),
+                            title: 'Failed uploads list')),
+                  );
+                },
+              ),
           ],
         )));
   }

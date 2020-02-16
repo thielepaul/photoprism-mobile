@@ -19,7 +19,7 @@ class PhotoprismUploader {
   PhotoprismUploader(this.photoprismModel) {
     loadPreferences();
     initPlatformState();
-    getPhotosToUpload();
+    getPhotosToUpload(photoprismModel);
 
     uploader = FlutterUploader();
     BackgroundFetch.start().then((int status) {
@@ -63,13 +63,13 @@ class PhotoprismUploader {
   Completer<int> uploadFinishedCompleter;
   Completer<int> manualUploadFinishedCompleter;
   FlutterUploader uploader;
-  List<FileSystemEntity> entries;
 
   Future<void> setAutoUpload(bool autoUploadEnabledNew) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setBool('autoUploadEnabled', autoUploadEnabledNew);
     photoprismModel.autoUploadEnabled = autoUploadEnabledNew;
     photoprismModel.notify();
+    getPhotosToUpload(photoprismModel);
   }
 
   Future<void> setAutoUploadLastTimeActive() async {
@@ -175,17 +175,15 @@ class PhotoprismUploader {
     return manualUploadFinishedCompleter.future;
   }
 
-  Future<void> getPhotosToUpload() async {
-    if (FileSystemEntity.typeSync(photoprismModel.autoUploadFolder) !=
+  static Future<void> getPhotosToUpload(PhotoprismModel model) async {
+    if (FileSystemEntity.typeSync(model.autoUploadFolder) !=
         FileSystemEntityType.notFound) {
-      final Directory dir = Directory(photoprismModel.autoUploadFolder);
-      entries = dir.listSync(recursive: false).toList();
+      final Directory dir = Directory(model.autoUploadFolder);
+      List<FileSystemEntity> entries = dir.listSync(recursive: false).toList();
       entries = filterForJpgFiles(entries);
-      entries = await filterForNonUploadedFiles(entries, checkServer: false);
-      photoprismModel.photosToUpload =
+      entries = filterForNonUploadedFiles(entries, model);
+      model.photosToUpload =
           entries.map((FileSystemEntity e) => e.path).toSet();
-    } else {
-      photoprismModel.photosToUpload = <String>{};
     }
   }
 
@@ -223,33 +221,39 @@ class PhotoprismUploader {
     }
 
     setAutoUploadLastTimeActive();
-    final Directory dir = Directory(photoprismModel.autoUploadFolder);
-    entries = dir.listSync(recursive: false).toList();
-    entries = filterForJpgFiles(entries);
-    entries = await filterForNonUploadedFiles(entries, checkServer: true);
+    for (final String path in photoprismModel.photosToUpload) {
+      if (!photoprismModel.autoUploadEnabled) {
+        print('automatic photo upload was disabled, breaking');
+        break;
+      }
 
-    for (final FileSystemEntity entry in entries) {
       print('########## Upload new photo ##########');
-      print('Uploading ' + entry.path);
-      await uploadPhotoAuto(entry);
+      final String filehash = sha1.convert(await readFileByte(path)).toString();
 
-      final int status = await Api.importPhotos(
-          photoprismModel.photoprismUrl,
-          photoprismModel,
-          sha1.convert(await readFileByte(entry.path)).toString());
+      if (await Api.isPhotoOnServer(photoprismModel, filehash)) {
+        getPhotosToUpload(photoprismModel);
+        saveAndSetAlreadyUploadedPhotos(
+            photoprismModel, photoprismModel.alreadyUploadedPhotos..add(path));
+        continue;
+      }
+
+      print('Uploading ' + path);
+      await uploadPhotoAuto(path);
+
+      final int status = await Api.importPhotos(photoprismModel.photoprismUrl,
+          photoprismModel, sha1.convert(await readFileByte(path)).toString());
 
       // add uploaded photo to shared pref
       if (status == 0) {
-        if (!photoprismModel.alreadyUploadedPhotos.contains(entry.path)) {
-          saveAndSetAlreadyUploadedPhotos(photoprismModel,
-              photoprismModel.alreadyUploadedPhotos..add(entry.path));
-        }
-        getPhotosToUpload();
+        getPhotosToUpload(photoprismModel);
+        saveAndSetAlreadyUploadedPhotos(
+            photoprismModel, photoprismModel.alreadyUploadedPhotos..add(path));
         print('############################################');
         continue;
       }
+      getPhotosToUpload(photoprismModel);
       saveAndSetPhotosUploadFailed(
-          photoprismModel, photoprismModel.photosUploadFailed..add(entry.path));
+          photoprismModel, photoprismModel.photosUploadFailed..add(path));
     }
     print('All new photos uploaded.');
 
@@ -269,12 +273,10 @@ class PhotoprismUploader {
     return bytes;
   }
 
-  Future<int> uploadPhotoAuto(FileSystemEntity file) async {
+  Future<int> uploadPhotoAuto(String path) async {
     final List<FileItem> fileToUpload = <FileItem>[
       FileItem(
-          filename: basename(file.path),
-          savedDir: dirname(file.path),
-          fieldname: 'files')
+          filename: basename(path), savedDir: dirname(path), fieldname: 'files')
     ];
 
     await uploader.enqueue(
@@ -317,28 +319,24 @@ class PhotoprismUploader {
     return filteredEntries;
   }
 
-  Future<List<FileSystemEntity>> filterForNonUploadedFiles(
-      List<FileSystemEntity> entries,
-      {bool checkServer = false}) async {
+  static List<FileSystemEntity> filterForNonUploadedFiles(
+      List<FileSystemEntity> entries, PhotoprismModel model,
+      {bool checkServer = false}) {
     final List<FileSystemEntity> filteredEntries = <FileSystemEntity>[];
     for (final FileSystemEntity entry in entries) {
-      if (photoprismModel.alreadyUploadedPhotos.contains(entry.path)) {
+      if (model.alreadyUploadedPhotos.contains(entry.path)) {
         continue;
       }
-
-      if (checkServer) {
-        final String filehash =
-            sha1.convert(await readFileByte(entry.path)).toString();
-
-        if (await Api.isPhotoOnServer(photoprismModel, filehash)) {
-          saveAndSetAlreadyUploadedPhotos(photoprismModel,
-              photoprismModel.alreadyUploadedPhotos..add(entry.path));
-          getPhotosToUpload();
-          continue;
-        }
+      if (model.photosUploadFailed.contains(entry.path)) {
+        continue;
       }
       filteredEntries.add(entry);
     }
     return filteredEntries;
+  }
+
+  static Future<void> clearFailedUploadList(PhotoprismModel model) async {
+    await PhotoprismUploader.saveAndSetPhotosUploadFailed(model, <String>{});
+    await getPhotosToUpload(model);
   }
 }
