@@ -23,7 +23,7 @@ class PhotoprismModel extends ChangeNotifier {
   Map<int, Album> albums;
   Lock photoLoadingLock = Lock();
   Lock albumLoadingLock = Lock();
-  bool dataFromCacheLoaded = false;
+  bool _dataFromCacheLoaded = false;
 
   // theming
   String applicationColor = '#424242';
@@ -32,7 +32,9 @@ class PhotoprismModel extends ChangeNotifier {
   bool autoUploadEnabled = false;
   String autoUploadFolder = '/storage/emulated/0/DCIM/Camera';
   String autoUploadLastTimeCheckedForPhotos = 'Never';
-  List<String> photosToUpload = <String>[];
+  Set<String> _photosToUpload = <String>{};
+  Set<String> _photosUploadFailed = <String>{};
+  Set<String> _alreadyUploadedPhotos = <String>{};
 
   // runtime data
   bool isLoading = false;
@@ -81,11 +83,35 @@ class PhotoprismModel extends ChangeNotifier {
     }
   }
 
-  Future<void> loadDataFromCache(BuildContext context) async {
-    await PhotoprismCommonHelper.getCachedDataFromSharedPrefs(context);
-    dataFromCacheLoaded = true;
+  set alreadyUploadedPhotos(Set<String> newValue) {
+    _alreadyUploadedPhotos = newValue;
     notifyListeners();
   }
+
+  Set<String> get alreadyUploadedPhotos =>
+      Set<String>.from(_alreadyUploadedPhotos);
+
+  set photosToUpload(Set<String> newValue) {
+    _photosToUpload = newValue;
+    notifyListeners();
+  }
+
+  Set<String> get photosToUpload => Set<String>.from(_photosToUpload);
+
+  set photosUploadFailed(Set<String> newValue) {
+    _photosUploadFailed = newValue;
+    notifyListeners();
+  }
+
+  Set<String> get photosUploadFailed => Set<String>.from(_photosUploadFailed);
+
+  Future<void> loadDataFromCache(BuildContext context) async {
+    await PhotoprismCommonHelper.getCachedDataFromSharedPrefs(context);
+    _dataFromCacheLoaded = true;
+    notifyListeners();
+  }
+
+  bool get dataFromCacheLoaded => _dataFromCacheLoaded;
 
   void notify() => notifyListeners();
 }

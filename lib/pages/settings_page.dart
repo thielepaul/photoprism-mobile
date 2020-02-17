@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:photoprism/common/photoprism_uploader.dart';
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:photoprism/widgets/http_auth_dialog.dart';
 import 'package:provider/provider.dart';
@@ -75,12 +76,18 @@ class SettingsPage extends StatelessWidget {
 
                 if (result[PermissionGroup.storage] ==
                     PermissionStatus.granted) {
-                  print(newState);
                   model.photoprismUploader.setAutoUpload(newState);
                 } else {
                   print('Not authorized.');
                 }
               },
+            ),
+            const ListTile(
+              title: Text('''
+Warning: Auto upload is still under development.
+Use it at your own risk!
+Only Android is supported at this moment.
+                  '''),
             ),
             ListTile(
               title: const Text('Upload folder'),
@@ -94,53 +101,107 @@ class SettingsPage extends StatelessWidget {
                 getUploadFolder(context);
               },
             ),
-            ListTile(
-              title: const Text('Last time checked for photos to be uploaded'),
-              subtitle: Text(model.autoUploadLastTimeCheckedForPhotos),
-              leading: Container(
-                width: 10,
-                alignment: Alignment.center,
-                child: Icon(Icons.sync),
+            if (model.autoUploadEnabled)
+              ListTile(
+                title:
+                    const Text('Last time checked for photos to be uploaded'),
+                subtitle: Text(model.autoUploadLastTimeCheckedForPhotos),
+                leading: Container(
+                  width: 10,
+                  alignment: Alignment.center,
+                  child: Icon(Icons.sync),
+                ),
               ),
-            ),
-            ListTile(
-              title: const Text('Delete already uploaded photos info'),
-              leading: Container(
-                width: 10,
-                alignment: Alignment.center,
-                child: Icon(Icons.delete_sweep),
+            if (model.autoUploadEnabled)
+              ListTile(
+                title: const Text('Delete already uploaded photos info'),
+                leading: Container(
+                  width: 10,
+                  alignment: Alignment.center,
+                  child: Icon(Icons.delete_sweep),
+                ),
+                onTap: () {
+                  deleteUploadInfo(context);
+                },
               ),
-              onTap: () {
-                deleteUploadInfo();
-              },
-            ),
-            ListTile(
-              title: const Text('Show upload queue'),
-              leading: Container(
-                width: 10,
-                alignment: Alignment.center,
-                child: Icon(Icons.sort),
+            if (model.autoUploadEnabled)
+              ListTile(
+                title: const Text('Retry all failed uploads'),
+                leading: Container(
+                  width: 10,
+                  alignment: Alignment.center,
+                  child: Icon(Icons.refresh),
+                ),
+                onTap: () {
+                  PhotoprismUploader.clearFailedUploadList(model);
+                },
               ),
-              onTap: () {
-                model.photoprismUploader.getPhotosToUpload();
-                Navigator.push<void>(
-                  context,
-                  MaterialPageRoute<void>(
-                      builder: (BuildContext ctx) => AutoUploadQueue(model)),
-                );
-              },
-            ),
-            const ListTile(
-              title: Text(
-                  'Warning: Auto upload is still under development. It only works under Android at this moment. Not fully working.'),
-            ),
+            if (model.autoUploadEnabled)
+              ListTile(
+                title: const Text('Show upload queue'),
+                leading: Container(
+                  width: 10,
+                  alignment: Alignment.center,
+                  child: Icon(Icons.sort),
+                ),
+                trailing: Text(model.photosToUpload.length.toString()),
+                onTap: () {
+                  Navigator.push<void>(
+                    context,
+                    MaterialPageRoute<void>(
+                        builder: (BuildContext ctx) => FileList(
+                            files: model.photosToUpload.toList(),
+                            title: 'Auto upload queue')),
+                  );
+                },
+              ),
+            if (model.autoUploadEnabled)
+              ListTile(
+                title: const Text('Show uploaded photos list'),
+                leading: Container(
+                  width: 10,
+                  alignment: Alignment.center,
+                  child: Icon(Icons.sort),
+                ),
+                trailing: Text(model.alreadyUploadedPhotos.length.toString()),
+                onTap: () {
+                  Navigator.push<void>(
+                    context,
+                    MaterialPageRoute<void>(
+                        builder: (BuildContext ctx) => FileList(
+                            files: model.alreadyUploadedPhotos.toList(),
+                            title: 'Uploaded photos list')),
+                  );
+                },
+              ),
+            if (model.autoUploadEnabled)
+              ListTile(
+                title: const Text('Show failed uploads list'),
+                leading: Container(
+                  width: 10,
+                  alignment: Alignment.center,
+                  child: Icon(Icons.warning),
+                ),
+                trailing: Text(model.photosUploadFailed.length.toString()),
+                onTap: () {
+                  Navigator.push<void>(
+                    context,
+                    MaterialPageRoute<void>(
+                        builder: (BuildContext ctx) => FileList(
+                            files: model.photosUploadFailed.toList(),
+                            title: 'Failed uploads list')),
+                  );
+                },
+              ),
           ],
         )));
   }
 
-  Future<void> deleteUploadInfo() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    prefs.setStringList('alreadyUploadedPhotos', <String>[]);
+  Future<void> deleteUploadInfo(BuildContext context) async {
+    await PhotoprismUploader.saveAndSetAlreadyUploadedPhotos(
+        Provider.of<PhotoprismModel>(context), <String>{});
+    await PhotoprismUploader.saveAndSetPhotosUploadFailed(
+        Provider.of<PhotoprismModel>(context), <String>{});
   }
 
   Future<void> getUploadFolder(BuildContext context) async {
