@@ -197,26 +197,26 @@ class PhotoprismUploader {
             requiresCharging: false,
             requiresStorageNotLow: false,
             requiresDeviceIdle: false,
-            requiredNetworkType: BackgroundFetchConfig.NETWORK_TYPE_NONE),
-        () async => backgroundUpload()).then((int status) {
+            requiredNetworkType: NetworkType.NONE),
+        (String taskId) async => backgroundUpload(taskId)).then((int status) {
       print('[BackgroundFetch] configure success: $status');
     }).catchError((Object e) {
       print('[BackgroundFetch] configure ERROR: $e');
     });
   }
 
-  Future<void> backgroundUpload() async {
+  Future<void> backgroundUpload(String taskId) async {
     print('[BackgroundFetch] Event received');
 
     if (!photoprismModel.autoUploadEnabled) {
       print('Auto upload disabled.');
-      BackgroundFetch.finish();
+      BackgroundFetch.finish(taskId);
       return;
     }
 
     if (photoprismModel.photoprismUrl == 'https://demo.photoprism.org') {
       print('Auto upload disabled for demo page!');
-      BackgroundFetch.finish();
+      BackgroundFetch.finish(taskId);
       return;
     }
 
@@ -254,7 +254,7 @@ class PhotoprismUploader {
     }
     print('All new photos uploaded.');
 
-    BackgroundFetch.finish();
+    BackgroundFetch.finish(taskId);
   }
 
   static Future<Uint8List> readFileByte(String filePath) async {
