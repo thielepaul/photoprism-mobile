@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:photoprism/common/photoprism_uploader.dart';
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:photoprism/widgets/http_auth_dialog.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:photo_manager/photo_manager.dart' as photolib;
 
 import '../model/photoprism_model.dart';
 import 'auto_upload_queue.dart';
@@ -68,14 +68,9 @@ class SettingsPage extends StatelessWidget {
               secondary: const Icon(Icons.cloud_upload),
               value: model.autoUploadEnabled,
               onChanged: (bool newState) async {
-                final PermissionHandler _permissionHandler =
-                    PermissionHandler();
-                final Map<PermissionGroup, PermissionStatus> result =
-                    await _permissionHandler.requestPermissions(
-                        <PermissionGroup>[PermissionGroup.storage]);
-
-                if (result[PermissionGroup.storage] ==
-                    PermissionStatus.granted) {
+                final bool result =
+                    await photolib.PhotoManager.requestPermission();
+                if (result) {
                   model.photoprismUploader.setAutoUpload(newState);
                 } else {
                   print('Not authorized.');

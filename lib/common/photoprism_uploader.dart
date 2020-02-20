@@ -14,6 +14,7 @@ import 'package:path/path.dart';
 import 'package:background_fetch/background_fetch.dart';
 import 'package:photoprism/api/api.dart';
 import 'package:photoprism/model/photoprism_model.dart';
+import 'package:photo_manager/photo_manager.dart' as photolib;
 
 class PhotoprismUploader {
   PhotoprismUploader(this.photoprismModel) {
@@ -176,15 +177,7 @@ class PhotoprismUploader {
   }
 
   static Future<void> getPhotosToUpload(PhotoprismModel model) async {
-    if (FileSystemEntity.typeSync(model.autoUploadFolder) !=
-        FileSystemEntityType.notFound) {
-      final Directory dir = Directory(model.autoUploadFolder);
-      List<FileSystemEntity> entries = dir.listSync(recursive: false).toList();
-      entries = filterForJpgFiles(entries);
-      entries = filterForNonUploadedFiles(entries, model);
-      model.photosToUpload =
-          entries.map((FileSystemEntity e) => e.path).toSet();
-    }
+    //TODO: implement
   }
 
   Future<void> initPlatformState() async {
@@ -221,36 +214,51 @@ class PhotoprismUploader {
     }
 
     setAutoUploadLastTimeActive();
-    for (final String path in photoprismModel.photosToUpload) {
+    final List<photolib.AssetPathEntity> list =
+        await photolib.PhotoManager.getAssetPathList(
+            type: photolib.RequestType.image);
+    List<photolib.AssetEntity> assetList;
+    for (final photolib.AssetPathEntity album in list) {
+      // TODO: implement album selection
+      // if (album.name == 'Camera Roll') {
+      // if (album.name == 'Camera') {
+      if (album.name == 'Recents') {
+        assetList = await album.getAssetListPaged(0, 10);
+      }
+    }
+    for (final photolib.AssetEntity asset in assetList) {
       if (!photoprismModel.autoUploadEnabled) {
         print('automatic photo upload was disabled, breaking');
         break;
       }
 
       print('########## Upload new photo ##########');
-      final String filehash = sha1.convert(await readFileByte(path)).toString();
+      final Uri uri = (await asset.file).uri;
+      final String filehash = sha1.convert(await asset.originBytes).toString();
 
       if (await Api.isPhotoOnServer(photoprismModel, filehash)) {
-        saveAndSetAlreadyUploadedPhotos(
-            photoprismModel, photoprismModel.alreadyUploadedPhotos..add(path));
+        saveAndSetAlreadyUploadedPhotos(photoprismModel,
+            photoprismModel.alreadyUploadedPhotos..add(uri.toString()));
         continue;
       }
 
-      print('Uploading ' + path);
-      await uploadPhotoAuto(path);
+      print('Uploading ' + uri.toString());
+      // await uploadPhotoAuto(await asset.originBytes);
+      await Api.upload(photoprismModel, filehash, uri.pathSegments.last,
+          await asset.originBytes);
 
-      final int status = await Api.importPhotos(photoprismModel.photoprismUrl,
-          photoprismModel, sha1.convert(await readFileByte(path)).toString());
+      final int status = await Api.importPhotos(
+          photoprismModel.photoprismUrl, photoprismModel, filehash);
 
       // add uploaded photo to shared pref
       if (status == 0) {
-        saveAndSetAlreadyUploadedPhotos(
-            photoprismModel, photoprismModel.alreadyUploadedPhotos..add(path));
+        saveAndSetAlreadyUploadedPhotos(photoprismModel,
+            photoprismModel.alreadyUploadedPhotos..add(uri.toString()));
         print('############################################');
         continue;
       }
-      saveAndSetPhotosUploadFailed(
-          photoprismModel, photoprismModel.photosUploadFailed..add(path));
+      saveAndSetPhotosUploadFailed(photoprismModel,
+          photoprismModel.photosUploadFailed..add(uri.toString()));
     }
     print('All new photos uploaded.');
 
@@ -268,24 +276,6 @@ class PhotoprismUploader {
           onError.toString());
     });
     return bytes;
-  }
-
-  Future<int> uploadPhotoAuto(String path) async {
-    final List<FileItem> fileToUpload = <FileItem>[
-      FileItem(
-          filename: basename(path), savedDir: dirname(path), fieldname: 'files')
-    ];
-
-    await uploader.enqueue(
-        url: photoprismModel.photoprismUrl + '/api/v1/upload/mobile',
-        files: fileToUpload,
-        method: UploadMethod.POST,
-        showNotification: false,
-        tag: 'upload 1',
-        headers: photoprismModel.photoprismHttpBasicAuth.getAuthHeader());
-    print('Waiting uploadPhoto()');
-    uploadFinishedCompleter = Completer<int>();
-    return uploadFinishedCompleter.future;
   }
 
   static Future<void> saveAndSetAlreadyUploadedPhotos(

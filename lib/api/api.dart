@@ -7,6 +7,7 @@ import 'package:photoprism/model/moments_time.dart';
 import 'package:photoprism/model/photo.dart';
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:provider/provider.dart';
+import 'package:http_parser/http_parser.dart';
 
 class Api {
   static Future<String> createAlbum(
@@ -153,7 +154,7 @@ class Api {
       String photoprismUrl, PhotoprismModel model, String fileHash) async {
     try {
       final http.Response response = await http.post(
-          photoprismUrl + '/api/v1/import/upload/mobile',
+          photoprismUrl + '/api/v1/import/upload/$fileHash',
           body: '{}',
           headers: model.photoprismHttpBasicAuth.getAuthHeader());
       print(response.body);
@@ -265,5 +266,26 @@ class Api {
         model.photoprismUrl + '/api/v1/thumbnails/$filehash/tile_50',
         headers: model.photoprismHttpBasicAuth.getAuthHeader());
     return response.statusCode == 200;
+  }
+
+  static Future<bool> upload(PhotoprismModel model, String fileId,
+      String fileName, List<int> file) async {
+    try {
+      final http.MultipartRequest request = http.MultipartRequest(
+          'POST', Uri.parse('${model.photoprismUrl}/api/v1/upload/$fileId'));
+      request.files.add(http.MultipartFile.fromBytes('files', file,
+          filename: fileName, contentType: MediaType('image', 'jpeg')));
+      final http.StreamedResponse response = await request.send();
+
+      if (response.statusCode == 200) {
+        return true;
+      } else {
+        print('Upload failed: statusCode=${response.statusCode}');
+        return false;
+      }
+    } catch (e) {
+      print('Upload failed: $e');
+      return false;
+    }
   }
 }
