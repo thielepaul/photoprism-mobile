@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:math';
+import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:flutter_uploader/flutter_uploader.dart';
 import 'package:intl/intl.dart';
 import 'package:photoprism/common/photo_manager.dart';
@@ -167,6 +169,10 @@ class PhotoprismUploader {
   }
 
   static Future<void> getPhotosToUpload(PhotoprismModel model) async {
+    if (!model.autoUploadEnabled) {
+      return;
+    }
+
     if (await photolib.PhotoManager.requestPermission()) {
       final List<photolib.AssetPathEntity> albums =
           await photolib.PhotoManager.getAssetPathList(
@@ -231,9 +237,24 @@ class PhotoprismUploader {
       }
 
       print('########## Upload new photo ##########');
-      final Uri uri = (await assets[id].file).uri;
-      final String filehash =
-          sha1.convert(await assets[id].originBytes).toString();
+      String filename = (await assets[id].file).uri.pathSegments.last;
+
+      Uint8List imageBytes = await assets[id].originBytes;
+
+      if (filename.toLowerCase().split('.').last == 'heic') {
+        imageBytes =
+            Uint8List.fromList(await FlutterImageCompress.compressWithList(
+          imageBytes,
+          minHeight: assets[id].height,
+          minWidth: assets[id].width,
+          quality: 90,
+          format: CompressFormat.jpeg,
+          keepExif: true,
+        ));
+        filename = filename.substring(0, filename.length - 4) + 'jpg';
+      }
+
+      final String filehash = sha1.convert(imageBytes).toString();
 
       if (await Api.isPhotoOnServer(photoprismModel, filehash)) {
         saveAndSetAlreadyUploadedPhotos(
@@ -241,9 +262,8 @@ class PhotoprismUploader {
         continue;
       }
 
-      print('Uploading ' + uri.toString());
-      await Api.upload(photoprismModel, filehash, uri.pathSegments.last,
-          await assets[id].originBytes);
+      print('Uploading $filename');
+      await Api.upload(photoprismModel, filehash, filename, imageBytes);
 
       final int status = await Api.importPhotos(
           photoprismModel.photoprismUrl, photoprismModel, filehash);
