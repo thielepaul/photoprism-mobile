@@ -169,7 +169,8 @@ class PhotoprismUploader {
   static Future<void> getPhotosToUpload(PhotoprismModel model) async {
     if (await photolib.PhotoManager.requestPermission()) {
       final List<photolib.AssetPathEntity> albums =
-          await photolib.PhotoManager.getAssetPathList();
+          await photolib.PhotoManager.getAssetPathList(
+              type: photolib.RequestType.image);
       final Set<String> photosToUpload = <String>{};
       for (final photolib.AssetPathEntity album in albums) {
         if (model.albumsToUpload.contains(album.name)) {
@@ -221,16 +222,8 @@ class PhotoprismUploader {
     }
 
     setAutoUploadLastTimeActive();
-    final List<photolib.AssetPathEntity> list =
-        await photolib.PhotoManager.getAssetPathList(
-            type: photolib.RequestType.image);
     final Map<String, photolib.AssetEntity> assets =
-        <String, photolib.AssetEntity>{};
-    for (final photolib.AssetPathEntity album in list) {
-      assets.addEntries((await album.assetList).map(
-          (photolib.AssetEntity asset) =>
-              MapEntry<String, photolib.AssetEntity>(asset.id, asset)));
-    }
+        await getAllPhotoAssetsAsMap();
     for (final String id in photoprismModel.photosToUpload) {
       if (!photoprismModel.autoUploadEnabled) {
         print('automatic photo upload was disabled, breaking');
@@ -311,5 +304,20 @@ class PhotoprismUploader {
 
   static Future<void> clearFailedUploadList(PhotoprismModel model) async {
     await PhotoprismUploader.saveAndSetPhotosUploadFailed(model, <String>{});
+  }
+
+  static Future<Map<String, photolib.AssetEntity>>
+      getAllPhotoAssetsAsMap() async {
+    final List<photolib.AssetPathEntity> list =
+        await photolib.PhotoManager.getAssetPathList(
+            type: photolib.RequestType.image);
+    final Map<String, photolib.AssetEntity> assets =
+        <String, photolib.AssetEntity>{};
+    for (final photolib.AssetPathEntity album in list) {
+      assets.addEntries((await album.assetList).map(
+          (photolib.AssetEntity asset) =>
+              MapEntry<String, photolib.AssetEntity>(asset.id, asset)));
+    }
+    return assets;
   }
 }
