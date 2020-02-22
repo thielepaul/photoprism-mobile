@@ -30,8 +30,8 @@ class PhotoprismModel extends ChangeNotifier {
 
   // photoprism uploader
   bool autoUploadEnabled = false;
-  String autoUploadFolder = '/storage/emulated/0/DCIM/Camera';
   String autoUploadLastTimeCheckedForPhotos = 'Never';
+  Set<String> _albumsToUpload = <String>{};
   Set<String> _photosToUpload = <String>{};
   Set<String> _photosUploadFailed = <String>{};
   Set<String> _alreadyUploadedPhotos = <String>{};
@@ -90,6 +90,13 @@ class PhotoprismModel extends ChangeNotifier {
 
   Set<String> get alreadyUploadedPhotos =>
       Set<String>.from(_alreadyUploadedPhotos);
+
+  set albumsToUpload(Set<String> newValue) {
+    _albumsToUpload = newValue;
+    notifyListeners();
+  }
+
+  Set<String> get albumsToUpload => Set<String>.from(_albumsToUpload);
 
   set photosToUpload(Set<String> newValue) {
     _photosToUpload = newValue;

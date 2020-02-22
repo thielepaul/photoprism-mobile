@@ -275,6 +275,7 @@ class Api {
           'POST', Uri.parse('${model.photoprismUrl}/api/v1/upload/$fileId'));
       request.files.add(http.MultipartFile.fromBytes('files', file,
           filename: fileName, contentType: MediaType('image', 'jpeg')));
+      request.headers.addAll(model.photoprismHttpBasicAuth.getAuthHeader());
       final http.StreamedResponse response = await request.send();
 
       if (response.statusCode == 200) {
