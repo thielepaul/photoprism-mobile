@@ -179,7 +179,7 @@ class PhotoprismUploader {
               type: photolib.RequestType.image);
       final Set<String> photosToUpload = <String>{};
       for (final photolib.AssetPathEntity album in albums) {
-        if (model.albumsToUpload.contains(album.name)) {
+        if (model.albumsToUpload.contains(album.id)) {
           List<photolib.AssetEntity> entries = await album.assetList;
           entries = filterForNonUploadedFiles(entries, model);
           photosToUpload.addAll(entries.map((photolib.AssetEntity e) => e.id));
@@ -201,7 +201,7 @@ class PhotoprismUploader {
             requiresDeviceIdle: false,
             requiredNetworkType: NetworkType.NONE), (String taskId) async {
       try {
-        backgroundUpload(taskId);
+        backgroundUpload();
       } finally {
         BackgroundFetch.finish(taskId);
       }
@@ -212,18 +212,16 @@ class PhotoprismUploader {
     });
   }
 
-  Future<void> backgroundUpload(String taskId) async {
+  Future<void> backgroundUpload() async {
     print('[BackgroundFetch] Event received');
 
     if (!photoprismModel.autoUploadEnabled) {
       print('Auto upload disabled.');
-      BackgroundFetch.finish(taskId);
       return;
     }
 
     if (photoprismModel.photoprismUrl == 'https://demo.photoprism.org') {
       print('Auto upload disabled for demo page!');
-      BackgroundFetch.finish(taskId);
       return;
     }
 

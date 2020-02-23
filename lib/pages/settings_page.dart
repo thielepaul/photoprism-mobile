@@ -8,9 +8,7 @@ import 'package:photoprism/widgets/multi_select_dialog.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:photo_manager/photo_manager.dart' as photolib;
-
-import '../model/photoprism_model.dart';
-import 'auto_upload_queue.dart';
+import 'package:photoprism/pages/auto_upload_queue.dart';
 
 class SettingsPage extends StatelessWidget {
   final TextEditingController _urlTextFieldController = TextEditingController();
@@ -90,7 +88,7 @@ Use it at your own risk!
             if (model.autoUploadEnabled)
               ListTile(
                 title: const Text('Albums to upload'),
-                subtitle: Text(model.albumsToUpload.toString()),
+                subtitle: _albumsToUploadText(),
                 leading: Container(
                   width: 10,
                   alignment: Alignment.center,
@@ -133,6 +131,18 @@ Use it at your own risk!
                 ),
                 onTap: () {
                   PhotoprismUploader.clearFailedUploadList(model);
+                },
+              ),
+            if (model.autoUploadEnabled)
+              ListTile(
+                title: const Text('Trigger auto upload manually'),
+                leading: Container(
+                  width: 10,
+                  alignment: Alignment.center,
+                  child: Icon(Icons.sync),
+                ),
+                onTap: () {
+                  model.photoprismUploader.backgroundUpload();
                 },
               ),
             if (model.autoUploadEnabled)
@@ -212,15 +222,29 @@ Use it at your own risk!
       return;
     }
 
-    final List<String> items = (await photolib.PhotoManager.getAssetPathList())
-        .map((photolib.AssetPathEntity asset) => asset.name)
-        .toList();
+    final List<photolib.AssetPathEntity> assets =
+        await photolib.PhotoManager.getAssetPathList();
+    assets.sort((photolib.AssetPathEntity a, photolib.AssetPathEntity b) =>
+        b.assetCount.compareTo(a.assetCount));
 
     final Set<String> result = await showDialog(
         context: context,
         builder: (BuildContext context) => MultiSelectDialog(
-            items: items, selected: model.albumsToUpload.toList()));
+            titles: assets
+                .map((photolib.AssetPathEntity asset) => asset.name)
+                .toList(),
+            subtitles: assets
+                .map((photolib.AssetPathEntity asset) =>
+                    '${asset.assetCount} Elements')
+                .toList(),
+            ids: assets
+                .map((photolib.AssetPathEntity asset) => asset.id)
+                .toList(),
+            selected: model.albumsToUpload.toList()));
 
+    if (result == null) {
+      return;
+    }
     if (!const SetEquality<String>().equals(result, model.albumsToUpload)) {
       print('album selection updated');
       PhotoprismUploader.saveAndSetAlbumsToUpload(model, result);
@@ -285,4 +309,24 @@ Use it at your own risk!
     model.albums = null;
     await DefaultCacheManager().emptyCache();
   }
+
+  Widget _albumsToUploadText() => FutureBuilder<List<photolib.AssetPathEntity>>(
+      future: photolib.PhotoManager.getAssetPathList(),
+      builder: (BuildContext context,
+          AsyncSnapshot<List<photolib.AssetPathEntity>> snapshot) {
+        if (snapshot.data == null) {
+          return const Text('');
+        }
+        final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
+        String selectedAlbums = '';
+        for (final photolib.AssetPathEntity album in snapshot.data) {
+          if (model.albumsToUpload.contains(album.id)) {
+            selectedAlbums += '${album.name}, ';
+          }
+        }
+        if (selectedAlbums.isEmpty) {
+          return const Text('none');
+        }
+        return Text(selectedAlbums.substring(0, selectedAlbums.length - 2));
+      });
 }
