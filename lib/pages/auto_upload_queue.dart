@@ -1,6 +1,7 @@
-import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:photoprism/common/photoprism_uploader.dart';
 import 'package:photo_manager/photo_manager.dart' as photolib;
 
@@ -14,16 +15,15 @@ class FileList extends StatefulWidget {
 }
 
 class _FileListState extends State<FileList> {
-  Future<Map<String, photolib.AssetEntity>> assetsFuture =
-      PhotoprismUploader.getAllPhotoAssetsAsMap();
+  Map<String, photolib.AssetEntity> assets = <String, photolib.AssetEntity>{};
 
-  Map<String, String> filenames = <String, String>{};
-
-  Future<void> getFileName(String id) async {
-    assetsFuture.then((Map<String, photolib.AssetEntity> assets) =>
-        assets[id].file.then((File file) => setState(() {
-              filenames[id] = file.uri.toString();
-            })));
+  @override
+  void initState() {
+    PhotoprismUploader.getAllPhotoAssetsAsMap()
+        .then((Map<String, photolib.AssetEntity> assets) => setState(() {
+              this.assets = assets;
+            }));
+    super.initState();
   }
 
   @override
@@ -34,8 +34,38 @@ class _FileListState extends State<FileList> {
             itemCount: widget.files.length,
             itemBuilder: (BuildContext context, int index) {
               final String id = widget.files[index];
-              filenames[id] ?? getFileName(id);
-              return ListTile(title: Text(filenames[id] ?? id));
+              return ListTile(
+                leading: assets[id] == null
+                    ? null
+                    : FutureBuilder<Uint8List>(
+                        future: assets[id].thumbData,
+                        builder: (BuildContext context,
+                            AsyncSnapshot<Uint8List> snapshot) {
+                          if (snapshot.data == null) {
+                            return Container(
+                              height: 1,
+                              width: 1,
+                            );
+                          }
+                          return AspectRatio(
+                              aspectRatio: 1,
+                              child: Image.memory(
+                                snapshot.data,
+                                fit: BoxFit.cover,
+                              ));
+                        }),
+                title: assets[id] == null
+                    ? Text(id)
+                    : FutureBuilder<String>(
+                        future: assets[id].titleAsync,
+                        builder: (BuildContext context,
+                                AsyncSnapshot<String> snapshot) =>
+                            Text(snapshot.data ?? '')),
+                subtitle: assets[id] == null
+                    ? null
+                    : Text(DateFormat('yyyy-MM-dd HH:mm:ss')
+                        .format(assets[id].createDateTime)),
+              );
             }));
   }
 }
