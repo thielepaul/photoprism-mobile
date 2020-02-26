@@ -10,15 +10,26 @@ import 'package:provider/provider.dart';
 import 'package:http_parser/http_parser.dart';
 
 class Api {
+  static Future<dynamic> httpAuth(PhotoprismModel model, Function call) async {
+    dynamic response = await call();
+    if ((response as http.BaseResponse).statusCode == 401) {
+      if (await getNewSession(model)) {
+        response = await call();
+      }
+    }
+    return response;
+  }
+
   static Future<String> createAlbum(
       String albumName, PhotoprismModel model) async {
     final String body = '{"AlbumName":"' + albumName + '"}';
 
     try {
-      final http.Response response = await http.post(
-          model.photoprismUrl + '/api/v1/albums',
-          body: body,
-          headers: model.photoprismHttpBasicAuth.getAuthHeader());
+      final http.Response response = await httpAuth(
+          model,
+          () => http.post(model.photoprismUrl + '/api/v1/albums',
+              body: body,
+              headers: model.photoprismAuth.getAuthHeaders())) as http.Response;
 
       if (response.statusCode == 200) {
         final dynamic bodyjson = json.decode(response.body);
@@ -36,10 +47,11 @@ class Api {
     final String body = '{"AlbumName":"' + newAlbumName + '"}';
 
     try {
-      final http.Response response = await http.put(
-          model.photoprismUrl + '/api/v1/albums/' + albumId,
-          body: body,
-          headers: model.photoprismHttpBasicAuth.getAuthHeader());
+      final http.Response response = await httpAuth(
+          model,
+          () => http.put(model.photoprismUrl + '/api/v1/albums/' + albumId,
+              body: body,
+              headers: model.photoprismAuth.getAuthHeaders())) as http.Response;
 
       if (response.statusCode == 200) {
         return 0;
@@ -55,10 +67,11 @@ class Api {
     final String body = '{"albums":["' + albumId + '"]}';
 
     try {
-      final http.Response response = await http.post(
-          model.photoprismUrl + '/api/v1/batch/albums/delete',
-          body: body,
-          headers: model.photoprismHttpBasicAuth.getAuthHeader());
+      final http.Response response = await httpAuth(
+          model,
+          () => http.post(model.photoprismUrl + '/api/v1/batch/albums/delete',
+              body: body,
+              headers: model.photoprismAuth.getAuthHeaders())) as http.Response;
 
       if (response.statusCode == 200) {
         return 0;
@@ -80,10 +93,12 @@ class Api {
     final String body = '{"photos":' + photoUUIDsWrapped.toString() + '}';
 
     try {
-      final http.Response response = await http.post(
-          model.photoprismUrl + '/api/v1/albums/' + albumId + '/photos',
-          body: body,
-          headers: model.photoprismHttpBasicAuth.getAuthHeader());
+      final http.Response response = await httpAuth(
+          model,
+          () => http.post(
+              model.photoprismUrl + '/api/v1/albums/' + albumId + '/photos',
+              body: body,
+              headers: model.photoprismAuth.getAuthHeaders())) as http.Response;
       if (response.statusCode == 200) {
         return 0;
       } else {
@@ -103,7 +118,6 @@ class Api {
     final String body = '{"photos":' + photoUUIDsWrapped.toString() + '}';
 
     final http.Client client = http.Client();
-    print(albumId);
     try {
       final http.Request request = http.Request(
           'DELETE',
@@ -111,12 +125,12 @@ class Api {
               model.photoprismUrl + '/api/v1/albums/' + albumId + '/photos'));
       request.headers['Content-Type'] = 'application/json';
       request.body = body;
-      model.photoprismHttpBasicAuth
-          .getAuthHeader()
-          .forEach((String k, String v) {
+      model.photoprismAuth.getAuthHeaders().forEach((String k, String v) {
         request.headers[k] = v;
       });
-      final http.StreamedResponse response = await client.send(request);
+      final http.StreamedResponse response =
+          await httpAuth(model, () => client.send(request))
+              as http.StreamedResponse;
       if (response.statusCode == 200) {
         return 0;
       } else {
@@ -136,10 +150,11 @@ class Api {
     final String body = '{"photos":' + photoUUIDsWrapped.toString() + '}';
 
     try {
-      final http.Response response = await http.post(
-          model.photoprismUrl + '/api/v1/batch/photos/archive',
-          body: body,
-          headers: model.photoprismHttpBasicAuth.getAuthHeader());
+      final http.Response response = await httpAuth(
+          model,
+          () => http.post(model.photoprismUrl + '/api/v1/batch/photos/archive',
+              body: body,
+              headers: model.photoprismAuth.getAuthHeaders())) as http.Response;
       if (response.statusCode == 200) {
         return 0;
       } else {
@@ -153,11 +168,11 @@ class Api {
   static Future<int> importPhotos(
       String photoprismUrl, PhotoprismModel model, String fileHash) async {
     try {
-      final http.Response response = await http.post(
-          photoprismUrl + '/api/v1/import/upload/$fileHash',
-          body: '{}',
-          headers: model.photoprismHttpBasicAuth.getAuthHeader());
-      print(response.body);
+      final http.Response response = await httpAuth(
+          model,
+          () => http.post(photoprismUrl + '/api/v1/import/upload/$fileHash',
+              body: '{}',
+              headers: model.photoprismAuth.getAuthHeaders())) as http.Response;
       if (response.statusCode == 200) {
         if (await Api.isPhotoOnServer(model, fileHash)) {
           print('Photo found in PhotoPrism');
@@ -178,11 +193,12 @@ class Api {
   static Future<int> importPhotoEvent(
       PhotoprismModel model, String event) async {
     try {
-      final http.Response response = await http.post(
-          model.photoprismUrl + '/api/v1/import/upload/' + event,
-          body: '{}',
-          headers: model.photoprismHttpBasicAuth.getAuthHeader());
-      print(response.body);
+      final http.Response response = await httpAuth(
+          model,
+          () => http.post(
+              model.photoprismUrl + '/api/v1/import/upload/' + event,
+              body: '{}',
+              headers: model.photoprismAuth.getAuthHeaders())) as http.Response;
       if (response.statusCode == 200) {
         // TODO: Check if import is really successful
         if (response.body == '{"message":"import completed in 0 s"}') {
@@ -200,9 +216,13 @@ class Api {
 
   static Future<List<MomentsTime>> loadMomentsTime(BuildContext context) async {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
-    final http.Response response = await http.get(
-        model.photoprismUrl + '/api/v1/moments/time',
-        headers: model.photoprismHttpBasicAuth.getAuthHeader());
+    final http.Response response = await httpAuth(
+        model,
+        () => http.get(model.photoprismUrl + '/api/v1/moments/time',
+            headers: model.photoprismAuth.getAuthHeaders())) as http.Response;
+    if (response.statusCode != 200) {
+      return <MomentsTime>[];
+    }
     return json
         .decode(response.body)
         .map<MomentsTime>((dynamic value) =>
@@ -221,15 +241,17 @@ class Api {
       albumIdUrlParam = model.albums[albumId].id;
     }
 
-    final http.Response response = await http.get(
-        model.photoprismUrl +
-            '/api/v1/photos' +
-            '?count=100' +
-            '&offset=' +
-            offset.toString() +
-            '&album=' +
-            albumIdUrlParam,
-        headers: model.photoprismHttpBasicAuth.getAuthHeader());
+    final http.Response response = await httpAuth(
+        model,
+        () => http.get(
+            model.photoprismUrl +
+                '/api/v1/photos' +
+                '?count=100' +
+                '&offset=' +
+                offset.toString() +
+                '&album=' +
+                albumIdUrlParam,
+            headers: model.photoprismAuth.getAuthHeaders())) as http.Response;
     final List<dynamic> parsed = json.decode(response.body) as List<dynamic>;
     return Map<int, Photo>.fromIterables(
         List<int>.generate(parsed.length, (int i) => i + offset),
@@ -243,13 +265,15 @@ class Api {
       BuildContext context, int offset) async {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
 
-    final http.Response response = await http.get(
-        model.photoprismUrl +
-            '/api/v1/albums' +
-            '?count=1000' +
-            '&offset=' +
-            offset.toString(),
-        headers: model.photoprismHttpBasicAuth.getAuthHeader());
+    final http.Response response = await httpAuth(
+        model,
+        () => http.get(
+            model.photoprismUrl +
+                '/api/v1/albums' +
+                '?count=1000' +
+                '&offset=' +
+                offset.toString(),
+            headers: model.photoprismAuth.getAuthHeaders())) as http.Response;
     final List<dynamic> parsed = json.decode(response.body) as List<dynamic>;
 
     return Map<int, Album>.fromIterables(
@@ -262,9 +286,11 @@ class Api {
 
   static Future<bool> isPhotoOnServer(
       PhotoprismModel model, String filehash) async {
-    final http.Response response = await http.get(
-        model.photoprismUrl + '/api/v1/thumbnails/$filehash/tile_50',
-        headers: model.photoprismHttpBasicAuth.getAuthHeader());
+    final http.Response response = await httpAuth(
+        model,
+        () => http.get(
+            model.photoprismUrl + '/api/v1/thumbnails/$filehash/tile_50',
+            headers: model.photoprismAuth.getAuthHeaders())) as http.Response;
     return response.statusCode == 200;
   }
 
@@ -275,8 +301,9 @@ class Api {
           'POST', Uri.parse('${model.photoprismUrl}/api/v1/upload/$fileId'));
       request.files.add(http.MultipartFile.fromBytes('files', file,
           filename: fileName, contentType: MediaType('image', 'jpeg')));
-      request.headers.addAll(model.photoprismHttpBasicAuth.getAuthHeader());
-      final http.StreamedResponse response = await request.send();
+      request.headers.addAll(model.photoprismAuth.getAuthHeaders());
+      final http.StreamedResponse response =
+          await httpAuth(model, () => request.send()) as http.StreamedResponse;
 
       if (response.statusCode == 200) {
         return true;
@@ -288,5 +315,26 @@ class Api {
       print('Upload failed: $e');
       return false;
     }
+  }
+
+  static Future<bool> getNewSession(PhotoprismModel model) async {
+    if (model.photoprismAuth.enabled == false) {
+      return false;
+    }
+
+    final http.Response response = await httpAuth(
+            model,
+            () => http.post(model.photoprismUrl + '/api/v1/session',
+                headers: model.photoprismAuth.getAuthHeaders(),
+                body:
+                    '{"email":"${model.photoprismAuth.user}", "password":"${model.photoprismAuth.password}"}'))
+        as http.Response;
+    if (response.statusCode == 200 &&
+        response.headers.containsKey('x-session-token')) {
+      await model.photoprismAuth
+          .setSessionToken(response.headers['x-session-token']);
+      return true;
+    }
+    return false;
   }
 }

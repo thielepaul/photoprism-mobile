@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:photoprism/common/photoprism_uploader.dart';
 import 'package:photoprism/model/photoprism_model.dart';
-import 'package:photoprism/widgets/http_auth_dialog.dart';
+import 'package:photoprism/widgets/auth_dialog.dart';
 import 'package:photoprism/widgets/multi_select_dialog.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -38,7 +38,7 @@ class SettingsPage extends StatelessWidget {
               },
             ),
             ListTile(
-              title: const Text('HTTP Basic authentication'),
+              title: const Text('Authentication'),
               leading: Container(
                 width: 10,
                 alignment: Alignment.center,
@@ -46,7 +46,7 @@ class SettingsPage extends StatelessWidget {
               ),
               onTap: () => showDialog<void>(
                   context: context,
-                  builder: (BuildContext context) => HttpAuthDialog(
+                  builder: (BuildContext context) => AuthDialog(
                         context: context,
                       )),
             ),

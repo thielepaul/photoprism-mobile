@@ -93,8 +93,7 @@ class AlbumsPage extends StatelessWidget {
                         borderRadius: BorderRadius.circular(8.0),
                         child: GridTile(
                           child: CachedNetworkImage(
-                            httpHeaders:
-                                model.photoprismHttpBasicAuth.getAuthHeader(),
+                            httpHeaders: model.photoprismAuth.getAuthHeaders(),
                             imageUrl: getAlbumPreviewUrl(context, index),
                             placeholder: (BuildContext context, String url) =>
                                 Container(color: Colors.grey),

@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:photoprism/api/api.dart';
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
@@ -21,9 +22,11 @@ class PhotoprismRemoteConfigLoader {
 
     // load color scheme from server
     try {
-      final http.Response response = await http.get(
-          photoprismModel.photoprismUrl + '/api/v1/settings',
-          headers: photoprismModel.photoprismHttpBasicAuth.getAuthHeader());
+      final http.Response response = await Api.httpAuth(
+              photoprismModel,
+              () => http.get(photoprismModel.photoprismUrl + '/api/v1/settings',
+                  headers: photoprismModel.photoprismAuth.getAuthHeaders()))
+          as http.Response;
 
       try {
         final Map<String, String> settingsJson = json

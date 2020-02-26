@@ -1,7 +1,7 @@
 import 'package:drag_select_grid_view/drag_select_grid_view.dart';
 import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
-import 'package:photoprism/common/photoprism_http_basic_auth.dart';
+import 'package:photoprism/common/photoprism_auth.dart';
 import 'package:photoprism/common/photoprism_remote_config_loader.dart';
 import 'package:photoprism/common/photoprism_loading_screen.dart';
 import 'package:photoprism/common/photoprism_message.dart';
@@ -50,7 +50,7 @@ class PhotoprismModel extends ChangeNotifier {
   PhotoprismCommonHelper photoprismCommonHelper;
   PhotoprismLoadingScreen photoprismLoadingScreen;
   PhotoprismMessage photoprismMessage;
-  PhotoprismHttpBasicAuth photoprismHttpBasicAuth;
+  PhotoprismAuth photoprismAuth;
 
   Future<void> initialize() async {
     photoprismLoadingScreen = PhotoprismLoadingScreen(this);
@@ -58,10 +58,10 @@ class PhotoprismModel extends ChangeNotifier {
     photoprismRemoteConfigLoader = PhotoprismRemoteConfigLoader(this);
     photoprismCommonHelper = PhotoprismCommonHelper(this);
     photoprismMessage = PhotoprismMessage(this);
-    photoprismHttpBasicAuth = PhotoprismHttpBasicAuth(this);
+    photoprismAuth = PhotoprismAuth(this);
 
     await photoprismCommonHelper.loadPhotoprismUrl();
-    await photoprismHttpBasicAuth.initialized;
+    await photoprismAuth.initialized;
     photoprismRemoteConfigLoader.loadApplicationColor();
     gridController.addListener(notifyListeners);
   }
