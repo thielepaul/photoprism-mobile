@@ -88,7 +88,7 @@ class PhotosPage extends StatelessWidget {
       );
     }
     return CachedNetworkImage(
-      httpHeaders: model.photoprismHttpBasicAuth.getAuthHeader(),
+      httpHeaders: model.photoprismAuth.getAuthHeaders(),
       alignment: Alignment.center,
       fit: BoxFit.contain,
       imageUrl: imageUrl,

@@ -157,13 +157,14 @@ class PhotoprismUploader {
   Future<int> uploadPhoto(List<FileItem> filesToUpload, String event) async {
     manualUploadFinishedCompleter = Completer<int>();
 
+    await Api.getNewSession(photoprismModel);
     await uploader.enqueue(
         url: photoprismModel.photoprismUrl + '/api/v1/upload/' + event,
         files: filesToUpload,
         method: UploadMethod.POST,
         showNotification: false,
         tag: 'manual',
-        headers: photoprismModel.photoprismHttpBasicAuth.getAuthHeader());
+        headers: photoprismModel.photoprismAuth.getAuthHeaders());
 
     return manualUploadFinishedCompleter.future;
   }

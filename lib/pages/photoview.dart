@@ -3,6 +3,7 @@ import 'package:esys_flutter_share/esys_flutter_share.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
+import 'package:photoprism/api/api.dart';
 import 'package:photoprism/common/photo_manager.dart';
 import 'package:photoprism/model/photo.dart';
 import 'package:provider/provider.dart';
@@ -120,8 +121,8 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
                 photos[index].fileHash +
                 '/fit_1920',
             headers: Provider.of<PhotoprismModel>(context)
-                .photoprismHttpBasicAuth
-                .getAuthHeader(),
+                .photoprismAuth
+                .getAuthHeaders(),
           ),
           initialScale: PhotoViewComputedScale.contained,
           minScale: PhotoViewComputedScale.contained,
@@ -154,8 +155,8 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
                 },
                 child: CachedNetworkImage(
                   httpHeaders: Provider.of<PhotoprismModel>(context)
-                      .photoprismHttpBasicAuth
-                      .getAuthHeader(),
+                      .photoprismAuth
+                      .getAuthHeaders(),
                   width: MediaQuery.of(context).size.height *
                       photos[index].aspectRatio,
                   height: MediaQuery.of(context).size.width /
@@ -314,10 +315,12 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
 
   Future<void> sharePhoto(int index, BuildContext context) async {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
-    final http.Response response = await http.get(
-        Uri.parse(photoprismUrl + '/api/v1/download/' + photos[index].fileHash),
-        headers: model.photoprismHttpBasicAuth.getAuthHeader());
-    print(response.statusCode);
+    final http.Response response = await Api.httpAuth(
+        model,
+        () => http.get(
+            Uri.parse(
+                photoprismUrl + '/api/v1/download/' + photos[index].fileHash),
+            headers: model.photoprismAuth.getAuthHeaders())) as http.Response;
 
     if (response.statusCode == 200) {
       await Share.file('Photoprism Photo', photos[index].fileHash + '.jpg',
