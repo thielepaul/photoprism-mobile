@@ -113,7 +113,7 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
             : Orientation.portrait,
         animation: animation,
         child: PhotoView(
-          // filterQuality: FilterQuality.medium,
+          filterQuality: FilterQuality.medium,
           imageProvider: CachedNetworkImageProvider(
             photoprismUrl +
                 '/api/v1/thumbnails/' +

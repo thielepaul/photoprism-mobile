@@ -6,6 +6,7 @@ import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:flutter_uploader/flutter_uploader.dart';
 import 'package:intl/intl.dart';
 import 'package:photoprism/common/photo_manager.dart';
@@ -14,6 +15,7 @@ import 'package:path/path.dart';
 import 'package:background_fetch/background_fetch.dart';
 import 'package:photoprism/api/api.dart';
 import 'package:photoprism/model/photoprism_model.dart';
+import 'package:photo_manager/photo_manager.dart' as photolib;
 
 class PhotoprismUploader {
   PhotoprismUploader(this.photoprismModel) {
@@ -87,17 +89,8 @@ class PhotoprismUploader {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     photoprismModel.autoUploadEnabled =
         prefs.getBool('autoUploadEnabled') ?? false;
-    photoprismModel.autoUploadFolder =
-        prefs.getString('uploadFolder') ?? '/storage/emulated/0/DCIM/Camera';
     photoprismModel.autoUploadLastTimeCheckedForPhotos =
         prefs.getString('autoUploadLastTimeActive') ?? 'Never';
-    photoprismModel.notify();
-  }
-
-  Future<void> setUploadFolder(String autoUploadFolderNew) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    prefs.setString('uploadFolder', autoUploadFolderNew);
-    photoprismModel.autoUploadFolder = autoUploadFolderNew;
     photoprismModel.notify();
   }
 
@@ -176,14 +169,23 @@ class PhotoprismUploader {
   }
 
   static Future<void> getPhotosToUpload(PhotoprismModel model) async {
-    if (FileSystemEntity.typeSync(model.autoUploadFolder) !=
-        FileSystemEntityType.notFound) {
-      final Directory dir = Directory(model.autoUploadFolder);
-      List<FileSystemEntity> entries = dir.listSync(recursive: false).toList();
-      entries = filterForJpgFiles(entries);
-      entries = filterForNonUploadedFiles(entries, model);
-      model.photosToUpload =
-          entries.map((FileSystemEntity e) => e.path).toSet();
+    if (!model.autoUploadEnabled) {
+      return;
+    }
+
+    if (await photolib.PhotoManager.requestPermission()) {
+      final List<photolib.AssetPathEntity> albums =
+          await photolib.PhotoManager.getAssetPathList(
+              type: photolib.RequestType.image);
+      final Set<String> photosToUpload = <String>{};
+      for (final photolib.AssetPathEntity album in albums) {
+        if (model.albumsToUpload.contains(album.id)) {
+          List<photolib.AssetEntity> entries = await album.assetList;
+          entries = filterForNonUploadedFiles(entries, model);
+          photosToUpload.addAll(entries.map((photolib.AssetEntity e) => e.id));
+        }
+      }
+      model.photosToUpload = photosToUpload;
     }
   }
 
@@ -197,8 +199,13 @@ class PhotoprismUploader {
             requiresCharging: false,
             requiresStorageNotLow: false,
             requiresDeviceIdle: false,
-            requiredNetworkType: BackgroundFetchConfig.NETWORK_TYPE_NONE),
-        () async => backgroundUpload()).then((int status) {
+            requiredNetworkType: NetworkType.NONE), (String taskId) async {
+      try {
+        backgroundUpload();
+      } finally {
+        BackgroundFetch.finish(taskId);
+      }
+    }).then((int status) {
       print('[BackgroundFetch] configure success: $status');
     }).catchError((Object e) {
       print('[BackgroundFetch] configure ERROR: $e');
@@ -210,82 +217,90 @@ class PhotoprismUploader {
 
     if (!photoprismModel.autoUploadEnabled) {
       print('Auto upload disabled.');
-      BackgroundFetch.finish();
       return;
     }
 
     if (photoprismModel.photoprismUrl == 'https://demo.photoprism.org') {
       print('Auto upload disabled for demo page!');
-      BackgroundFetch.finish();
       return;
     }
 
     setAutoUploadLastTimeActive();
-    for (final String path in photoprismModel.photosToUpload) {
+
+    final List<photolib.AssetPathEntity> albumList =
+        await photolib.PhotoManager.getAssetPathList(
+            type: photolib.RequestType.image);
+    for (final photolib.AssetPathEntity album in albumList) {
+      if (photoprismModel.albumsToUpload.contains(album.id)) {
+        await uploadPhotosFromAlbum(album);
+      }
+    }
+
+    print('All new photos uploaded.');
+  }
+
+  Future<void> uploadPhotosFromAlbum(photolib.AssetPathEntity album) async {
+    final Map<String, photolib.AssetEntity> assets =
+        await getPhotoAssetsAsMap(album.id);
+    for (final String id in photoprismModel.photosToUpload) {
       if (!photoprismModel.autoUploadEnabled) {
         print('automatic photo upload was disabled, breaking');
         break;
       }
 
-      print('########## Upload new photo ##########');
-      final String filehash = sha1.convert(await readFileByte(path)).toString();
-
-      if (await Api.isPhotoOnServer(photoprismModel, filehash)) {
-        saveAndSetAlreadyUploadedPhotos(
-            photoprismModel, photoprismModel.alreadyUploadedPhotos..add(path));
+      if (!assets.containsKey(id)) {
         continue;
       }
 
-      print('Uploading ' + path);
-      await uploadPhotoAuto(path);
+      print('########## Upload new photo ##########');
+      String filename = await assets[id].titleAsync;
 
-      final int status = await Api.importPhotos(photoprismModel.photoprismUrl,
-          photoprismModel, sha1.convert(await readFileByte(path)).toString());
+      Uint8List imageBytes = await assets[id].originBytes;
+
+      final String fileExtension = filename.toLowerCase().split('.').last;
+      if (fileExtension == 'jpg' || fileExtension == 'jpeg') {
+        // JPGs are supported natively by PhotoPrism
+      } else if (fileExtension == 'heic' || fileExtension == 'png') {
+        imageBytes =
+            Uint8List.fromList(await FlutterImageCompress.compressWithList(
+          imageBytes,
+          minHeight: assets[id].height,
+          minWidth: assets[id].width,
+          quality: 90,
+          format: CompressFormat.jpeg,
+          keepExif: true,
+        ));
+        filename = filename.substring(0, filename.length - 4) + 'jpg';
+      } else {
+        saveAndSetPhotosUploadFailed(
+            photoprismModel, photoprismModel.photosUploadFailed..add(id));
+        continue;
+      }
+
+      final String filehash = sha1.convert(imageBytes).toString();
+
+      if (await Api.isPhotoOnServer(photoprismModel, filehash)) {
+        saveAndSetAlreadyUploadedPhotos(
+            photoprismModel, photoprismModel.alreadyUploadedPhotos..add(id));
+        continue;
+      }
+
+      print('Uploading $filename');
+      await Api.upload(photoprismModel, filehash, filename, imageBytes);
+
+      final int status = await Api.importPhotos(
+          photoprismModel.photoprismUrl, photoprismModel, filehash);
 
       // add uploaded photo to shared pref
       if (status == 0) {
         saveAndSetAlreadyUploadedPhotos(
-            photoprismModel, photoprismModel.alreadyUploadedPhotos..add(path));
+            photoprismModel, photoprismModel.alreadyUploadedPhotos..add(id));
         print('############################################');
         continue;
       }
       saveAndSetPhotosUploadFailed(
-          photoprismModel, photoprismModel.photosUploadFailed..add(path));
+          photoprismModel, photoprismModel.photosUploadFailed..add(id));
     }
-    print('All new photos uploaded.');
-
-    BackgroundFetch.finish();
-  }
-
-  static Future<Uint8List> readFileByte(String filePath) async {
-    final Uri myUri = Uri.parse(filePath);
-    final File imageFile = File.fromUri(myUri);
-    Uint8List bytes;
-    await imageFile.readAsBytes().then((Uint8List value) {
-      bytes = Uint8List.fromList(value);
-    }).catchError((Object onError) {
-      print('Exception Error while reading image from path:' +
-          onError.toString());
-    });
-    return bytes;
-  }
-
-  Future<int> uploadPhotoAuto(String path) async {
-    final List<FileItem> fileToUpload = <FileItem>[
-      FileItem(
-          filename: basename(path), savedDir: dirname(path), fieldname: 'files')
-    ];
-
-    await uploader.enqueue(
-        url: photoprismModel.photoprismUrl + '/api/v1/upload/mobile',
-        files: fileToUpload,
-        method: UploadMethod.POST,
-        showNotification: false,
-        tag: 'upload 1',
-        headers: photoprismModel.photoprismHttpBasicAuth.getAuthHeader());
-    print('Waiting uploadPhoto()');
-    uploadFinishedCompleter = Completer<int>();
-    return uploadFinishedCompleter.future;
   }
 
   static Future<void> saveAndSetAlreadyUploadedPhotos(
@@ -305,28 +320,23 @@ class PhotoprismUploader {
     await getPhotosToUpload(model);
   }
 
-  static List<FileSystemEntity> filterForJpgFiles(
-      List<FileSystemEntity> entries) {
-    final List<FileSystemEntity> filteredEntries = <FileSystemEntity>[];
-    for (final FileSystemEntity entry in entries) {
-      if (entry.path.length > 3 &&
-          (entry.path.substring(entry.path.length - 4) == '.jpg' ||
-              entry.path.substring(entry.path.length - 4) == '.JPG')) {
-        filteredEntries.add(entry);
-      }
-    }
-    return filteredEntries;
+  static Future<void> saveAndSetAlbumsToUpload(
+      PhotoprismModel model, Set<String> albumsToUpload) async {
+    model.albumsToUpload = albumsToUpload;
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setStringList('albumsToUpload', albumsToUpload.toList());
+    await getPhotosToUpload(model);
   }
 
-  static List<FileSystemEntity> filterForNonUploadedFiles(
-      List<FileSystemEntity> entries, PhotoprismModel model,
+  static List<photolib.AssetEntity> filterForNonUploadedFiles(
+      List<photolib.AssetEntity> entries, PhotoprismModel model,
       {bool checkServer = false}) {
-    final List<FileSystemEntity> filteredEntries = <FileSystemEntity>[];
-    for (final FileSystemEntity entry in entries) {
-      if (model.alreadyUploadedPhotos.contains(entry.path)) {
+    final List<photolib.AssetEntity> filteredEntries = <photolib.AssetEntity>[];
+    for (final photolib.AssetEntity entry in entries) {
+      if (model.alreadyUploadedPhotos.contains(entry.id)) {
         continue;
       }
-      if (model.photosUploadFailed.contains(entry.path)) {
+      if (model.photosUploadFailed.contains(entry.id)) {
         continue;
       }
       filteredEntries.add(entry);
@@ -336,5 +346,21 @@ class PhotoprismUploader {
 
   static Future<void> clearFailedUploadList(PhotoprismModel model) async {
     await PhotoprismUploader.saveAndSetPhotosUploadFailed(model, <String>{});
+  }
+
+  static Future<Map<String, photolib.AssetEntity>> getPhotoAssetsAsMap(
+      String id) async {
+    final List<photolib.AssetPathEntity> list =
+        await photolib.PhotoManager.getAssetPathList(
+            type: photolib.RequestType.image);
+
+    for (final photolib.AssetPathEntity album in list) {
+      if (album.id == id) {
+        return Map<String, photolib.AssetEntity>.fromEntries(
+            (await album.assetList).map((photolib.AssetEntity asset) =>
+                MapEntry<String, photolib.AssetEntity>(asset.id, asset)));
+      }
+    }
+    return <String, photolib.AssetEntity>{};
   }
 }

@@ -1,19 +1,17 @@
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:photoprism/common/photoprism_uploader.dart';
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:photoprism/widgets/http_auth_dialog.dart';
+import 'package:photoprism/widgets/multi_select_dialog.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-import '../model/photoprism_model.dart';
-import 'auto_upload_queue.dart';
+import 'package:photo_manager/photo_manager.dart' as photolib;
+import 'package:photoprism/pages/auto_upload_queue.dart';
 
 class SettingsPage extends StatelessWidget {
   final TextEditingController _urlTextFieldController = TextEditingController();
-  final TextEditingController _uploadFolderTextFieldController =
-      TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -68,17 +66,16 @@ class SettingsPage extends StatelessWidget {
               secondary: const Icon(Icons.cloud_upload),
               value: model.autoUploadEnabled,
               onChanged: (bool newState) async {
-                final PermissionHandler _permissionHandler =
-                    PermissionHandler();
-                final Map<PermissionGroup, PermissionStatus> result =
-                    await _permissionHandler.requestPermissions(
-                        <PermissionGroup>[PermissionGroup.storage]);
-
-                if (result[PermissionGroup.storage] ==
-                    PermissionStatus.granted) {
+                final bool result =
+                    await photolib.PhotoManager.requestPermission();
+                if (result) {
                   model.photoprismUploader.setAutoUpload(newState);
+                  if (newState) {
+                    configureAlbumsToUpload(context);
+                  }
                 } else {
-                  print('Not authorized.');
+                  model.photoprismMessage
+                      .showMessage('Permission to photo library denied!');
                 }
               },
             ),
@@ -86,21 +83,21 @@ class SettingsPage extends StatelessWidget {
               title: Text('''
 Warning: Auto upload is still under development.
 Use it at your own risk!
-Only Android is supported at this moment.
                   '''),
             ),
-            ListTile(
-              title: const Text('Upload folder'),
-              subtitle: Text(model.autoUploadFolder),
-              leading: Container(
-                width: 10,
-                alignment: Alignment.center,
-                child: Icon(Icons.folder),
+            if (model.autoUploadEnabled)
+              ListTile(
+                title: const Text('Albums to upload'),
+                subtitle: _albumsToUploadText(),
+                leading: Container(
+                  width: 10,
+                  alignment: Alignment.center,
+                  child: Icon(Icons.folder),
+                ),
+                onTap: () {
+                  configureAlbumsToUpload(context);
+                },
               ),
-              onTap: () {
-                getUploadFolder(context);
-              },
-            ),
             if (model.autoUploadEnabled)
               ListTile(
                 title:
@@ -138,6 +135,18 @@ Only Android is supported at this moment.
               ),
             if (model.autoUploadEnabled)
               ListTile(
+                title: const Text('Trigger auto upload manually'),
+                leading: Container(
+                  width: 10,
+                  alignment: Alignment.center,
+                  child: Icon(Icons.sync),
+                ),
+                onTap: () {
+                  model.photoprismUploader.backgroundUpload();
+                },
+              ),
+            if (model.autoUploadEnabled)
+              ListTile(
                 title: const Text('Show upload queue'),
                 leading: Container(
                   width: 10,
@@ -149,7 +158,7 @@ Only Android is supported at this moment.
                   Navigator.push<void>(
                     context,
                     MaterialPageRoute<void>(
-                        builder: (BuildContext ctx) => FileList(
+                        builder: (BuildContext ctx) => FileList(model,
                             files: model.photosToUpload.toList(),
                             title: 'Auto upload queue')),
                   );
@@ -168,7 +177,7 @@ Only Android is supported at this moment.
                   Navigator.push<void>(
                     context,
                     MaterialPageRoute<void>(
-                        builder: (BuildContext ctx) => FileList(
+                        builder: (BuildContext ctx) => FileList(model,
                             files: model.alreadyUploadedPhotos.toList(),
                             title: 'Uploaded photos list')),
                   );
@@ -187,7 +196,7 @@ Only Android is supported at this moment.
                   Navigator.push<void>(
                     context,
                     MaterialPageRoute<void>(
-                        builder: (BuildContext ctx) => FileList(
+                        builder: (BuildContext ctx) => FileList(model,
                             files: model.photosUploadFailed.toList(),
                             title: 'Failed uploads list')),
                   );
@@ -204,8 +213,43 @@ Only Android is supported at this moment.
         Provider.of<PhotoprismModel>(context), <String>{});
   }
 
-  Future<void> getUploadFolder(BuildContext context) async {
-    _settingsDisplayUploadFolderDialog(context);
+  Future<void> configureAlbumsToUpload(BuildContext context) async {
+    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
+
+    if (!await photolib.PhotoManager.requestPermission()) {
+      model.photoprismMessage
+          .showMessage('Permission to photo library denied!');
+      return;
+    }
+
+    final List<photolib.AssetPathEntity> assets =
+        await photolib.PhotoManager.getAssetPathList();
+    assets.sort((photolib.AssetPathEntity a, photolib.AssetPathEntity b) =>
+        b.assetCount.compareTo(a.assetCount));
+
+    final Set<String> result = await showDialog(
+        context: context,
+        builder: (BuildContext context) => MultiSelectDialog(
+            titles: assets
+                .map((photolib.AssetPathEntity asset) => asset.name)
+                .toList(),
+            subtitles: assets
+                .map((photolib.AssetPathEntity asset) =>
+                    '${asset.assetCount} Elements')
+                .toList(),
+            ids: assets
+                .map((photolib.AssetPathEntity asset) => asset.id)
+                .toList(),
+            selected: model.albumsToUpload.toList()));
+
+    if (result == null) {
+      return;
+    }
+    if (!const SetEquality<String>().equals(result, model.albumsToUpload)) {
+      print('album selection updated');
+      PhotoprismUploader.saveAndSetAlbumsToUpload(model, result);
+      PhotoprismUploader.getPhotosToUpload(model);
+    }
   }
 
   Future<void> _settingsDisplayUrlDialog(BuildContext context) async {
@@ -241,51 +285,12 @@ Only Android is supported at this moment.
         });
   }
 
-  Future<void> _settingsDisplayUploadFolderDialog(BuildContext context) async {
-    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
-    _uploadFolderTextFieldController.text = model.autoUploadFolder;
-
-    return showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: const Text('Enter upload folder path'),
-            content: TextField(
-              controller: _uploadFolderTextFieldController,
-              decoration: const InputDecoration(
-                  hintText: '/storage/emulated/0/DCIM/Camera'),
-            ),
-            actions: <Widget>[
-              FlatButton(
-                child: const Text('Cancel'),
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-              ),
-              FlatButton(
-                child: const Text('Save'),
-                onPressed: () {
-                  setNewUploadFolder(
-                      context, _uploadFolderTextFieldController.text);
-                },
-              )
-            ],
-          );
-        });
-  }
-
   Future<void> setNewPhotoprismUrl(BuildContext context, String url) async {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
     Navigator.of(context).pop();
     await model.photoprismCommonHelper.setPhotoprismUrl(url);
     model.photoprismRemoteConfigLoader.loadApplicationColor();
     emptyCache(context);
-  }
-
-  Future<void> setNewUploadFolder(BuildContext context, String path) async {
-    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
-    Navigator.of(context).pop();
-    await model.photoprismUploader.setUploadFolder(path);
   }
 
   static Future<void> emptyCache(BuildContext context) async {
@@ -304,4 +309,24 @@ Only Android is supported at this moment.
     model.albums = null;
     await DefaultCacheManager().emptyCache();
   }
+
+  Widget _albumsToUploadText() => FutureBuilder<List<photolib.AssetPathEntity>>(
+      future: photolib.PhotoManager.getAssetPathList(),
+      builder: (BuildContext context,
+          AsyncSnapshot<List<photolib.AssetPathEntity>> snapshot) {
+        if (snapshot.data == null) {
+          return const Text('');
+        }
+        final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
+        String selectedAlbums = '';
+        for (final photolib.AssetPathEntity album in snapshot.data) {
+          if (model.albumsToUpload.contains(album.id)) {
+            selectedAlbums += '${album.name}, ';
+          }
+        }
+        if (selectedAlbums.isEmpty) {
+          return const Text('none');
+        }
+        return Text(selectedAlbums.substring(0, selectedAlbums.length - 2));
+      });
 }

@@ -79,6 +79,12 @@ class PhotoprismCommonHelper {
           Provider.of<PhotoprismModel>(context),
           sp.getStringList('photosUploadFailed').toSet());
     }
+
+    if (sp.containsKey('albumsToUpload')) {
+      PhotoprismUploader.saveAndSetAlbumsToUpload(
+          Provider.of<PhotoprismModel>(context),
+          sp.getStringList('albumsToUpload').toSet());
+    }
   }
 
   Future<void> loadPhotoprismUrl() async {

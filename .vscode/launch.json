@@ -5,10 +5,18 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Flutter",
+      "name": "Flutter Android",
       "request": "launch",
       "type": "dart",
-      "args": ["--flavor", "dev"]
-    }
+      "args": [
+        "--flavor",
+        "dev"
+      ]
+    },
+    {
+      "name": "Flutter iOS",
+      "request": "launch",
+      "type": "dart",
+    },
   ]
 }
