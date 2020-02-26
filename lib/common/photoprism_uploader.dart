@@ -226,20 +226,41 @@ class PhotoprismUploader {
     }
 
     setAutoUploadLastTimeActive();
+
+    final List<photolib.AssetPathEntity> albumList =
+        await photolib.PhotoManager.getAssetPathList(
+            type: photolib.RequestType.image);
+    for (final photolib.AssetPathEntity album in albumList) {
+      if (photoprismModel.albumsToUpload.contains(album.id)) {
+        await uploadPhotosFromAlbum(album);
+      }
+    }
+
+    print('All new photos uploaded.');
+  }
+
+  Future<void> uploadPhotosFromAlbum(photolib.AssetPathEntity album) async {
     final Map<String, photolib.AssetEntity> assets =
-        await getAllPhotoAssetsAsMap();
+        await getPhotoAssetsAsMap(album.id);
     for (final String id in photoprismModel.photosToUpload) {
       if (!photoprismModel.autoUploadEnabled) {
         print('automatic photo upload was disabled, breaking');
         break;
       }
 
+      if (!assets.containsKey(id)) {
+        continue;
+      }
+
       print('########## Upload new photo ##########');
-      String filename = (await assets[id].file).uri.pathSegments.last;
+      String filename = await assets[id].titleAsync;
 
       Uint8List imageBytes = await assets[id].originBytes;
 
-      if (filename.toLowerCase().split('.').last == 'heic') {
+      final String fileExtension = filename.toLowerCase().split('.').last;
+      if (fileExtension == 'jpg' || fileExtension == 'jpeg') {
+        // JPGs are supported natively by PhotoPrism
+      } else if (fileExtension == 'heic' || fileExtension == 'png') {
         imageBytes =
             Uint8List.fromList(await FlutterImageCompress.compressWithList(
           imageBytes,
@@ -250,6 +271,10 @@ class PhotoprismUploader {
           keepExif: true,
         ));
         filename = filename.substring(0, filename.length - 4) + 'jpg';
+      } else {
+        saveAndSetPhotosUploadFailed(
+            photoprismModel, photoprismModel.photosUploadFailed..add(id));
+        continue;
       }
 
       final String filehash = sha1.convert(imageBytes).toString();
@@ -276,7 +301,6 @@ class PhotoprismUploader {
       saveAndSetPhotosUploadFailed(
           photoprismModel, photoprismModel.photosUploadFailed..add(id));
     }
-    print('All new photos uploaded.');
   }
 
   static Future<void> saveAndSetAlreadyUploadedPhotos(
@@ -324,18 +348,19 @@ class PhotoprismUploader {
     await PhotoprismUploader.saveAndSetPhotosUploadFailed(model, <String>{});
   }
 
-  static Future<Map<String, photolib.AssetEntity>>
-      getAllPhotoAssetsAsMap() async {
+  static Future<Map<String, photolib.AssetEntity>> getPhotoAssetsAsMap(
+      String id) async {
     final List<photolib.AssetPathEntity> list =
         await photolib.PhotoManager.getAssetPathList(
             type: photolib.RequestType.image);
-    final Map<String, photolib.AssetEntity> assets =
-        <String, photolib.AssetEntity>{};
+
     for (final photolib.AssetPathEntity album in list) {
-      assets.addEntries((await album.assetList).map(
-          (photolib.AssetEntity asset) =>
-              MapEntry<String, photolib.AssetEntity>(asset.id, asset)));
+      if (album.id == id) {
+        return Map<String, photolib.AssetEntity>.fromEntries(
+            (await album.assetList).map((photolib.AssetEntity asset) =>
+                MapEntry<String, photolib.AssetEntity>(asset.id, asset)));
+      }
     }
-    return assets;
+    return <String, photolib.AssetEntity>{};
   }
 }

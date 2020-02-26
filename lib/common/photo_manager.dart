@@ -65,7 +65,9 @@ class PhotoManager {
 
   static int getPhotosCount(BuildContext context, int albumId) {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
-    if (albumId == null && model.momentsTime != null) {
+    if (albumId == null &&
+        model.momentsTime != null &&
+        model.momentsTime.isNotEmpty) {
       return model.momentsTime
           .map((MomentsTime v) => v.count)
           .reduce((int v, int e) => v + e);

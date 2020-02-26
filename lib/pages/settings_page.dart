@@ -158,7 +158,7 @@ Use it at your own risk!
                   Navigator.push<void>(
                     context,
                     MaterialPageRoute<void>(
-                        builder: (BuildContext ctx) => FileList(
+                        builder: (BuildContext ctx) => FileList(model,
                             files: model.photosToUpload.toList(),
                             title: 'Auto upload queue')),
                   );
@@ -177,7 +177,7 @@ Use it at your own risk!
                   Navigator.push<void>(
                     context,
                     MaterialPageRoute<void>(
-                        builder: (BuildContext ctx) => FileList(
+                        builder: (BuildContext ctx) => FileList(model,
                             files: model.alreadyUploadedPhotos.toList(),
                             title: 'Uploaded photos list')),
                   );
@@ -196,7 +196,7 @@ Use it at your own risk!
                   Navigator.push<void>(
                     context,
                     MaterialPageRoute<void>(
-                        builder: (BuildContext ctx) => FileList(
+                        builder: (BuildContext ctx) => FileList(model,
                             files: model.photosUploadFailed.toList(),
                             title: 'Failed uploads list')),
                   );
