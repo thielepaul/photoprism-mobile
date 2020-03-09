@@ -42,6 +42,27 @@ class Api {
     }
   }
 
+  static Future<List<Album>> searchAlbums(
+      PhotoprismModel model, String query) async {
+    try {
+      final http.Response response = await httpAuth(
+          model,
+          () => http.get(
+              model.photoprismUrl + '/api/v1/albums?count=1000&q=$query',
+              headers: model.photoprismAuth.getAuthHeaders())) as http.Response;
+      if (response.statusCode != 200) {
+        return null;
+      }
+      return json
+          .decode(response.body)
+          .map<Album>(
+              (dynamic value) => Album.fromJson(value as Map<String, dynamic>))
+          .toList() as List<Album>;
+    } catch (_) {
+      return null;
+    }
+  }
+
   static Future<int> renameAlbum(
       String albumId, String newAlbumName, PhotoprismModel model) async {
     final String body = '{"AlbumName":"' + newAlbumName + '"}';
@@ -165,7 +186,7 @@ class Api {
     }
   }
 
-  static Future<int> importPhotos(
+  static Future<bool> importPhotos(
       String photoprismUrl, PhotoprismModel model, String fileHash) async {
     try {
       final http.Response response = await httpAuth(
@@ -173,20 +194,10 @@ class Api {
           () => http.post(photoprismUrl + '/api/v1/import/upload/$fileHash',
               body: '{}',
               headers: model.photoprismAuth.getAuthHeaders())) as http.Response;
-      if (response.statusCode == 200) {
-        if (await Api.isPhotoOnServer(model, fileHash)) {
-          print('Photo found in PhotoPrism');
-          return 0;
-        } else {
-          print('Photo could not be added to PhotoPrism');
-          return 3;
-        }
-      } else {
-        return 2;
-      }
+      return response.statusCode == 200;
     } catch (ex) {
       print(ex);
-      return 1;
+      return false;
     }
   }
 
@@ -284,14 +295,21 @@ class Api {
             .toList());
   }
 
-  static Future<bool> isPhotoOnServer(
+  static Future<String> getUuidFromHash(
       PhotoprismModel model, String filehash) async {
     final http.Response response = await httpAuth(
         model,
-        () => http.get(
-            model.photoprismUrl + '/api/v1/thumbnails/$filehash/tile_50',
+        () => http.get(model.photoprismUrl + '/api/v1/files/$filehash',
             headers: model.photoprismAuth.getAuthHeaders())) as http.Response;
-    return response.statusCode == 200;
+    if (response.statusCode != 200) {
+      return '';
+    }
+    final Map<String, dynamic> parsed =
+        json.decode(response.body) as Map<String, dynamic>;
+    if (parsed.containsKey('PhotoUUID')) {
+      return parsed['PhotoUUID'] as String;
+    }
+    return parsed['Photo']['PhotoUUID'] as String;
   }
 
   static Future<bool> upload(PhotoprismModel model, String fileId,

@@ -4,12 +4,14 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
+import 'package:device_info/device_info.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:flutter_uploader/flutter_uploader.dart';
 import 'package:intl/intl.dart';
 import 'package:photoprism/common/photo_manager.dart';
+import 'package:photoprism/model/album.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path/path.dart';
 import 'package:background_fetch/background_fetch.dart';
@@ -65,6 +67,8 @@ class PhotoprismUploader {
   Completer<int> uploadFinishedCompleter;
   Completer<int> manualUploadFinishedCompleter;
   FlutterUploader uploader;
+  String deviceName = '';
+  Map<String, Album> deviceAlbums = <String, Album>{};
 
   Future<void> setAutoUpload(bool autoUploadEnabledNew) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -228,6 +232,16 @@ class PhotoprismUploader {
 
     setAutoUploadLastTimeActive();
 
+    deviceName = await getDeviceName();
+    final List<Album> deviceAlbumList =
+        await Api.searchAlbums(photoprismModel, deviceName);
+    if (deviceAlbumList == null) {
+      print('Error: album search failed');
+      return;
+    }
+    deviceAlbums = Map<String, Album>.fromEntries(deviceAlbumList
+        .map((Album album) => MapEntry<String, Album>(album.name, album)));
+
     final List<photolib.AssetPathEntity> albumList =
         await photolib.PhotoManager.getAssetPathList(
             type: photolib.RequestType.image);
@@ -241,6 +255,18 @@ class PhotoprismUploader {
   }
 
   Future<void> uploadPhotosFromAlbum(photolib.AssetPathEntity album) async {
+    String albumId;
+    final String albumName = '$deviceName – ${album.name}';
+    if (deviceAlbums.containsKey(albumName)) {
+      albumId = deviceAlbums[albumName].id;
+    } else {
+      albumId = await Api.createAlbum(albumName, photoprismModel);
+      if (albumId == '-1') {
+        print('Error: album creation failed');
+        return;
+      }
+    }
+
     final Map<String, photolib.AssetEntity> assets =
         await getPhotoAssetsAsMap(album.id);
     for (final String id in photoprismModel.photosToUpload) {
@@ -271,7 +297,7 @@ class PhotoprismUploader {
           format: CompressFormat.jpeg,
           keepExif: true,
         ));
-        filename = filename.substring(0, filename.length - 4) + 'jpg';
+        filename += '.jpg';
       } else {
         saveAndSetPhotosUploadFailed(
             photoprismModel, photoprismModel.photosUploadFailed..add(id));
@@ -280,28 +306,40 @@ class PhotoprismUploader {
 
       final String filehash = sha1.convert(imageBytes).toString();
 
-      if (await Api.isPhotoOnServer(photoprismModel, filehash)) {
-        saveAndSetAlreadyUploadedPhotos(
-            photoprismModel, photoprismModel.alreadyUploadedPhotos..add(id));
+      if (await isPhotoOnServerAndAddToAlbum(
+          photoprismModel, id, filehash, albumId)) {
         continue;
       }
 
       print('Uploading $filename');
       await Api.upload(photoprismModel, filehash, filename, imageBytes);
 
-      final int status = await Api.importPhotos(
-          photoprismModel.photoprismUrl, photoprismModel, filehash);
-
       // add uploaded photo to shared pref
-      if (status == 0) {
-        saveAndSetAlreadyUploadedPhotos(
-            photoprismModel, photoprismModel.alreadyUploadedPhotos..add(id));
-        print('############################################');
-        continue;
+      if (await Api.importPhotos(
+          photoprismModel.photoprismUrl, photoprismModel, filehash)) {
+        if (await isPhotoOnServerAndAddToAlbum(
+            photoprismModel, id, filehash, albumId)) {
+          continue;
+        }
       }
       saveAndSetPhotosUploadFailed(
           photoprismModel, photoprismModel.photosUploadFailed..add(id));
+      print('############################################');
     }
+  }
+
+  static Future<bool> isPhotoOnServerAndAddToAlbum(
+      PhotoprismModel model, String id, String filehash, String albumId) async {
+    final String photoUUID = await Api.getUuidFromHash(model, filehash);
+    if (photoUUID.isEmpty) {
+      return false;
+    }
+    if (await Api.addPhotosToAlbum(albumId, <String>[photoUUID], model) != 0) {
+      return false;
+    }
+    saveAndSetAlreadyUploadedPhotos(
+        model, model.alreadyUploadedPhotos..add(id));
+    return true;
   }
 
   static Future<void> saveAndSetAlreadyUploadedPhotos(
@@ -363,5 +401,17 @@ class PhotoprismUploader {
       }
     }
     return <String, photolib.AssetEntity>{};
+  }
+
+  static Future<String> getDeviceName() async {
+    final DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+    if (Platform.isAndroid) {
+      final AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
+      return androidInfo.model;
+    } else if (Platform.isIOS) {
+      final IosDeviceInfo iosInfo = await deviceInfo.iosInfo;
+      return iosInfo.name;
+    }
+    return '';
   }
 }
