@@ -10,13 +10,13 @@
 - Remove photos from album
 - Archive photos
 - Manual photo upload
-- Automatic photo upload (only Android (not tested), iOS will be added soon): Automatic photo upload supports only .jpg files at this moment
+- Automatic photo upload (experimental)
 - Share photos with other apps
 - Use PhotoPrism instances behind HTTP Basic Authentication
+- Support for password protected photoprism instances
 
 ## Planned features
 - Archived photos view
-- Support for password protected photoprism instances
 - Improve cache management
 - Improve auto uploader
 - View meta data
@@ -25,7 +25,6 @@
 If you like the app and the project, please give us a star on GitHub. This keeps us motivated. We are also happy about every bug and ideas for improving the app.
 
 ## Installation
-**Hint**: At this moment only photoprism servers without password protection are supported.
 ### Android
 - The latest .apk file can be downloaded [here](https://github.com/photoprism/photoprism-mobile/releases/download/latest/photoprism.apk).
 
