@@ -46,7 +46,7 @@ dependencies:
   device_info: ^0.4.1+5
   draggable_scrollbar:
     git:
-      url: git://github.com/Miolin/flutter-draggable-scrollbar.git
+      url: git://github.com/thielepaul/flutter-draggable-scrollbar.git
 
 dev_dependencies:
   flutter_test:
