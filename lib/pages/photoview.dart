@@ -29,8 +29,9 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
   Map<int, Photo> photos;
   bool photoViewIsScrolling = false;
   bool showAppBar = true;
+  bool dragging = false;
   Key globalKeyPhotoView = GlobalKey();
-  bool photoViewMultiTouch = false;
+  int photoViewTouchCount = 0;
   AnimationController animationController;
   AnimationController backgroundAnimationController;
   Animation<double> animation;
@@ -63,8 +64,8 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
 
   bool isZoomed(BuildContext context) {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
-    return model.photoViewScaleState == PhotoViewScaleState.initial &&
-        !photoViewMultiTouch;
+    return model.photoViewScaleState != PhotoViewScaleState.initial ||
+        (photoViewTouchCount > 1 && !photoViewIsScrolling);
   }
 
   void toggleAppBar(BuildContext context) {
@@ -77,9 +78,15 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
     });
   }
 
-  void setPhotoViewMultiTouch(bool multiTouch) {
+  void setTouchCount(int multiTouch) {
     setState(() {
-      photoViewMultiTouch = multiTouch;
+      photoViewTouchCount = multiTouch;
+    });
+  }
+
+  void setDragging(bool value) {
+    setState(() {
+      dragging = value;
     });
   }
 
@@ -131,11 +138,6 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
             Provider.of<PhotoprismModel>(context)
                 .photoprismCommonHelper
                 .setPhotoViewScaleState(scaleState);
-            if (scaleState == PhotoViewScaleState.zoomedOut) {
-              backgroundAnimationController.reverse();
-            } else {
-              backgroundAnimationController.forward();
-            }
           },
           backgroundDecoration: BoxDecoration(color: Colors.transparent),
         ));
@@ -172,8 +174,8 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
       height: MediaQuery.of(context).size.height,
       child: PageView.builder(
         physics: isZoomed(context)
-            ? const BouncingScrollPhysics()
-            : const NeverScrollableScrollPhysics(),
+            ? const NeverScrollableScrollPhysics()
+            : const BouncingScrollPhysics(),
         itemBuilder: (BuildContext context, int index) {
           if (PhotoManager.getPhotos(context, widget.albumId)[index] == null) {
             PhotoManager.loadPhoto(context, index, widget.albumId);
@@ -221,9 +223,10 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
   }
 
   Widget dismissibleIfNotZoomed(Widget child) {
-    if (isZoomed(context)) {
+    if (!isZoomed(context)) {
       return Draggable<Widget>(
         onDragStarted: () {
+          setDragging(true);
           backgroundAnimationController.reverse();
         },
         onDragEnd: (DraggableDetails details) {
@@ -234,6 +237,7 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
             });
             animateAndPop(context);
           } else {
+            setDragging(false);
             backgroundAnimationController.forward();
           }
         },
@@ -249,14 +253,10 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
 
   Widget multiTouchListener(Widget child) => Listener(
       onPointerDown: (PointerDownEvent e) {
-        if (e.device == 1 && !photoViewIsScrolling) {
-          setPhotoViewMultiTouch(true);
-        }
+        setTouchCount(photoViewTouchCount + 1);
       },
       onPointerUp: (PointerUpEvent e) {
-        if (e.device == 1 && !photoViewIsScrolling) {
-          setPhotoViewMultiTouch(false);
-        }
+        setTouchCount(photoViewTouchCount - 1);
       },
       child: child);
   @override
@@ -283,7 +283,7 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
                     ),
                     onTap: () => toggleAppBar(context)),
               )),
-              if (showAppBar)
+              if (showAppBar && !dragging)
                 Positioned(
                     top: 0.0,
                     left: 0.0,
