@@ -90,6 +90,9 @@ class MainPage extends StatelessWidget {
         ],
         currentIndex: model.selectedPageIndex,
         onTap: (int index) {
+          if (index != 0) {
+            model.gridController.clear();
+          }
           _pageController.jumpToPage(index);
           model.photoprismCommonHelper.setSelectedPageIndex(index);
         },
