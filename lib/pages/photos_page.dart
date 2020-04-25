@@ -1,7 +1,9 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:drag_select_grid_view/drag_select_grid_view.dart';
+import 'package:esys_flutter_share/esys_flutter_share.dart';
 import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
+import 'package:photoprism/api/api.dart';
 import 'package:photoprism/common/album_manager.dart';
 import 'package:photoprism/common/hexcolor.dart';
 import 'package:photoprism/common/photo_manager.dart';
@@ -49,6 +51,24 @@ class PhotosPage extends StatelessWidget {
                 );
               });
         });
+  }
+
+  static Future<void> _sharePhotos(BuildContext context) async {
+    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
+    final Map<String, List<int>> photos = <String, List<int>>{};
+    model.photoprismLoadingScreen
+        .showLoadingScreen('Preparing photos for sharing...');
+    for (final int index in model.gridController.selection.selectedIndexes) {
+      final List<int> bytes =
+          await Api.downloadPhoto(model, model.photos[index].fileHash);
+      if (bytes == null) {
+        model.photoprismLoadingScreen.hideLoadingScreen();
+        return;
+      }
+      photos[model.photos[index].fileHash + '.jpg'] = bytes;
+    }
+    model.photoprismLoadingScreen.hideLoadingScreen();
+    Share.files('Photoprism Photos', photos, 'image/jpg');
   }
 
   static Future<void> addPhotosToAlbum(
@@ -131,6 +151,13 @@ class PhotosPage extends StatelessWidget {
                 tooltip: 'Add to album',
                 onPressed: () {
                   _selectAlbumBottomSheet(context);
+                },
+              ),
+              IconButton(
+                icon: const Icon(Icons.share),
+                tooltip: 'Share photos',
+                onPressed: () {
+                  _sharePhotos(context);
                 },
               ),
             ]

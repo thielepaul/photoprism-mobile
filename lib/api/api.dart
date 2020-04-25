@@ -355,4 +355,21 @@ class Api {
     }
     return false;
   }
+
+  static Future<List<int>> downloadPhoto(
+      PhotoprismModel model, String fileHash) async {
+    final http.Response response = await Api.httpAuth(
+        model,
+        () => http.get(
+            Uri.parse(model.photoprismUrl + '/api/v1/download/' + fileHash),
+            headers: model.photoprismAuth.getAuthHeaders())) as http.Response;
+
+    if (response.statusCode == 200) {
+      return response.bodyBytes;
+    } else {
+      model.photoprismMessage
+          .showMessage('Error while sharing: No connection to server!');
+    }
+    return null;
+  }
 }

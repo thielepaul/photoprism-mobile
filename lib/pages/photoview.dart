@@ -7,7 +7,6 @@ import 'package:photoprism/api/api.dart';
 import 'package:photoprism/common/photo_manager.dart';
 import 'package:photoprism/model/photo.dart';
 import 'package:provider/provider.dart';
-import 'package:http/http.dart' as http;
 
 import '../model/photoprism_model.dart';
 
@@ -315,20 +314,12 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
 
   Future<void> sharePhoto(int index, BuildContext context) async {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
-    final http.Response response = await Api.httpAuth(
-        model,
-        () => http.get(
-            Uri.parse(
-                photoprismUrl + '/api/v1/download/' + photos[index].fileHash),
-            headers: model.photoprismAuth.getAuthHeaders())) as http.Response;
+    final List<int> photoBytes =
+        await Api.downloadPhoto(model, photos[index].fileHash);
 
-    if (response.statusCode == 200) {
+    if (photoBytes != null) {
       await Share.file('Photoprism Photo', photos[index].fileHash + '.jpg',
-          response.bodyBytes, 'image/jpg');
-    } else {
-      Provider.of<PhotoprismModel>(context)
-          .photoprismMessage
-          .showMessage('Error while sharing: No connection to server!');
+          photoBytes, 'image/jpg');
     }
   }
 }
