@@ -1,0 +1,61 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "pub get",
+            "type": "process",
+            "command": "flutter",
+            "args": [
+                "pub",
+                "get"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "test",
+            "type": "process",
+            "command": "flutter",
+            "args": [
+                "test"
+            ],
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            },
+            "problemMatcher": []
+        },
+        // The following two tasks require a `key.jks` at the project root and
+        // the correspoding password in the `KEY_PASSWORD` environment variable.
+        // A new key can be generated with keytool:
+        // keytool -genkey -v -keystore /tmp/key.jks -keyalg RSA -keysize 2048 -validity 10000 -alias key
+        {
+            "label": "build",
+            "type": "process",
+            "command": "flutter",
+            "args": [
+                "build",
+                "apk",
+                "--no-shrink",
+                "--flavor",
+                "prod"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "install",
+            "type": "process",
+            "command": "adb",
+            "args": [
+                "install",
+                "build/app/outputs/apk/prod/release/app-prod-release.apk"
+            ],
+            "problemMatcher": []
+        }
+    ]
+}
