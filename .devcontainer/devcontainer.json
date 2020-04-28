@@ -1,0 +1,20 @@
+{
+    "name": "Flutter",
+    "image": "cirrusci/flutter:stable",
+    "runArgs": [
+        "--privileged"
+    ],
+    "extensions": [
+        "dart-code.flutter",
+    ],
+    "mounts": [
+        "src=${localEnv:HOME}/.ssh,dst=/home/cirrus/.ssh,type=bind",
+        "src=${localEnv:HOME}/.gitconfig,dst=/home/cirrus/.gitconfig,type=bind",
+        "src=/dev/bus/usb,dst=/dev/bus/usb,type=bind",
+    ],
+    "settings": {
+        "editor.formatOnSave": true,
+        "editor.formatOnType": true,
+        "editor.formatOnPaste": true,
+    }
+}
