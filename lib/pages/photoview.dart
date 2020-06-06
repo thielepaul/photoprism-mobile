@@ -123,9 +123,9 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
           filterQuality: FilterQuality.medium,
           imageProvider: CachedNetworkImageProvider(
             photoprismUrl +
-                '/api/v1/thumbnails/' +
-                photos[index].fileHash +
-                '/fit_1920',
+                '/api/v1/t/' +
+                photos[index].hash +
+                '/static/fit_1920',
             headers: Provider.of<PhotoprismModel>(context)
                 .photoprismAuth
                 .getAuthHeaders(),
@@ -315,10 +315,10 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
   Future<void> sharePhoto(int index, BuildContext context) async {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
     final List<int> photoBytes =
-        await Api.downloadPhoto(model, photos[index].fileHash);
+        await Api.downloadPhoto(model, photos[index].hash);
 
     if (photoBytes != null) {
-      await Share.file('Photoprism Photo', photos[index].fileHash + '.jpg',
+      await Share.file('Photoprism Photo', photos[index].hash + '.jpg',
           photoBytes, 'image/jpg');
     }
   }

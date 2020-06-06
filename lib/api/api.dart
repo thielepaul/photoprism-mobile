@@ -258,6 +258,7 @@ class Api {
             model.photoprismUrl +
                 '/api/v1/photos' +
                 '?count=100' +
+                '&photo=true' +
                 '&offset=' +
                 offset.toString() +
                 '&album=' +
@@ -282,6 +283,7 @@ class Api {
             model.photoprismUrl +
                 '/api/v1/albums' +
                 '?count=1000' +
+                '&type=album' +
                 '&offset=' +
                 offset.toString(),
             headers: model.photoprismAuth.getAuthHeaders())) as http.Response;

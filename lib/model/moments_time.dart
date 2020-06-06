@@ -3,9 +3,9 @@ class MomentsTime {
 
   factory MomentsTime.fromJson(Map<String, dynamic> json) {
     return MomentsTime(
-      year: json['PhotoYear'].toInt() as int,
-      month: json['PhotoMonth'].toInt() as int,
-      count: json['Count'].toInt() as int,
+      year: json['Year'].toInt() as int,
+      month: json['Month'].toInt() as int,
+      count: json['PhotoCount'].toInt() as int,
     );
   }
 
@@ -14,8 +14,8 @@ class MomentsTime {
   int count;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'PhotoYear': year,
-        'PhotoMonth': month,
-        'Count': count,
+        'Year': year,
+        'Month': month,
+        'PhotoCount': count,
       };
 }

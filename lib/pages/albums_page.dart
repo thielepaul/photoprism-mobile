@@ -18,7 +18,7 @@ class AlbumsPage extends StatelessWidget {
       return model.photoprismUrl +
           '/api/v1/albums/' +
           model.albums[index].id +
-          '/thumbnail/tile_500';
+          '/t/static/tile_500';
     } else {
       return 'https://raw.githubusercontent.com/photoprism/photoprism-mobile/master/assets/emptyAlbum.jpg';
     }
