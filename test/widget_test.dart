@@ -91,9 +91,9 @@ void main() {
   testWidgets('album test', (WidgetTester tester) async {
     SharedPreferences.setMockInitialValues(<String, String>{
       'albums':
-          '{"0":{"AlbumUUID":"00000000-0000-0000-0000-000000000000","AlbumName":"New Album 1", "AlbumCount": 2},"1":{"AlbumUUID":"00000000-0000-0000-0000-000000000001","AlbumName":"New Album 2", "AlbumCount": 0}}',
+          '{"0":{"UID":"00000000-0000-0000-0000-000000000000","Title":"New Album 1", "PhotoCount": 2},"1":{"UID":"00000000-0000-0000-0000-000000000001","Title":"New Album 2", "PhotoCount": 0}}',
       'photos0':
-          '{"0":{"FileHash":"0", "PhotoUUID":"00000000-0000-0000-0000-000000000000", "FileAspectRatio":1}, "1":{"FileHash":"1", "PhotoUUID":"00000000-0000-0000-0000-000000000000", "FileAspectRatio":1}}'
+          '{"0":{"Hash":"0", "UID":"00000000-0000-0000-0000-000000000000", "Width":1920, "Height":1080}, "1":{"Hash":"1", "UID":"00000000-0000-0000-0000-000000000000", "Width":1920, "Height":1080}}'
     });
 
     await tester.pumpWidget(
@@ -115,11 +115,11 @@ void main() {
 
   testWidgets('photoview test', (WidgetTester tester) async {
     SharedPreferences.setMockInitialValues(<String, String>{
-      'momentsTime': '[{"PhotoYear":0, "PhotoMonth":0, "Count":3}]',
+      'momentsTime': '[{"Year":0, "Month":0, "PhotoCount":3}]',
       'albumList':
-          '{"0":{"AlbumUUID":"00000000-0000-0000-0000-000000000000","AlbumName":"New Album 1"}}',
+          '{"0":{"UID":"00000000-0000-0000-0000-000000000000","Title":"New Album 1"}}',
       'photosList':
-          '{"0":{"FileHash":"0", "PhotoUUID":"00000000-0000-0000-0000-000000000000", "FileAspectRatio":1}, "1":{"FileHash":"1", "PhotoUUID":"00000000-0000-0000-0000-000000000000", "FileAspectRatio":1}, "2":{"FileHash":"2", "PhotoUUID":"00000000-0000-0000-0000-000000000000", "FileAspectRatio":1}}'
+          '{"0":{"Hash":"0", "UID":"00000000-0000-0000-0000-000000000000", "Width":1920, "Height":1080}, "1":{"Hash":"1", "UID":"00000000-0000-0000-0000-000000000000", "Width":1920, "Height":1080}, "2":{"Hash":"2", "UID":"00000000-0000-0000-0000-000000000000", "Width":1920, "Height":1080}}'
     });
 
     await tester.pumpWidget(
