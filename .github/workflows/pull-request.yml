@@ -12,6 +12,7 @@ jobs:
           java-version: "12.x"
       - uses: subosito/flutter-action@v1
         with:
+          flutter-version: "1.12.13"
           channel: "stable"
       - run: flutter format --dry-run --set-exit-if-changed lib
       - run: flutter analyze
