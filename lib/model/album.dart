@@ -5,9 +5,9 @@ class Album {
 
   factory Album.fromJson(Map<String, dynamic> json) {
     return Album(
-      id: json['AlbumUUID'] as String,
-      name: json['AlbumName'] as String,
-      imageCount: json['AlbumCount'] as int,
+      id: json['UID'] as String,
+      name: json['Title'] as String,
+      imageCount: json['PhotoCount'] as int,
     );
   }
 
@@ -17,8 +17,8 @@ class Album {
   Map<int, Photo> photos = <int, Photo>{};
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'AlbumUUID': id,
-        'AlbumName': name,
-        'AlbumCount': imageCount,
+        'UID': id,
+        'Title': name,
+        'PhotoCount': imageCount,
       };
 }

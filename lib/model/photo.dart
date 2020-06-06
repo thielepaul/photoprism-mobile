@@ -1,21 +1,26 @@
 class Photo {
-  Photo({this.fileHash, this.photoUUID, this.aspectRatio});
+  Photo({this.hash, this.uid, this.width, this.height});
 
   factory Photo.fromJson(Map<String, dynamic> json) {
     return Photo(
-      fileHash: json['FileHash'] as String,
-      photoUUID: json['PhotoUUID'] as String,
-      aspectRatio: json['FileAspectRatio'].toDouble() as double,
+      hash: json['Hash'] as String,
+      uid: json['UID'] as String,
+      width: json['Width'].toDouble() as double,
+      height: json['Height'].toDouble() as double,
     );
   }
 
-  final String fileHash;
-  final String photoUUID;
-  final double aspectRatio;
+  final String hash;
+  final String uid;
+  final double width;
+  final double height;
+
+  double get aspectRatio => width / height;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'FileHash': fileHash,
-        'PhotoUUID': photoUUID,
-        'FileAspectRatio': aspectRatio,
+        'Hash': hash,
+        'UID': uid,
+        'Width': width,
+        'Height': height
       };
 }

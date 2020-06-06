@@ -24,8 +24,8 @@ class PhotosPage extends StatelessWidget {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
     final List<String> selectedPhotos = model
         .gridController.selection.selectedIndexes
-        .map<String>((int element) =>
-            PhotoManager.getPhotos(context, null)[element].photoUUID)
+        .map<String>(
+            (int element) => PhotoManager.getPhotos(context, null)[element].uid)
         .toList();
 
     PhotoManager.archivePhotos(context, selectedPhotos);
@@ -60,12 +60,12 @@ class PhotosPage extends StatelessWidget {
         .showLoadingScreen('Preparing photos for sharing...');
     for (final int index in model.gridController.selection.selectedIndexes) {
       final List<int> bytes =
-          await Api.downloadPhoto(model, model.photos[index].fileHash);
+          await Api.downloadPhoto(model, model.photos[index].hash);
       if (bytes == null) {
         model.photoprismLoadingScreen.hideLoadingScreen();
         return;
       }
-      photos[model.photos[index].fileHash + '.jpg'] = bytes;
+      photos[model.photos[index].hash + '.jpg'] = bytes;
     }
     model.photoprismLoadingScreen.hideLoadingScreen();
     Share.files('Photoprism Photos', photos, 'image/jpg');
@@ -78,8 +78,8 @@ class PhotosPage extends StatelessWidget {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
     final List<String> selectedPhotos = model
         .gridController.selection.selectedIndexes
-        .map<String>((int element) =>
-            PhotoManager.getPhotos(context, null)[element].photoUUID)
+        .map<String>(
+            (int element) => PhotoManager.getPhotos(context, null)[element].uid)
         .toList();
 
     model.gridController.clear();
