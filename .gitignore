@@ -38,3 +38,4 @@ lib/generated_plugin_registrant.dart
 
 # signing keystore
 key.jks
+key.pass
