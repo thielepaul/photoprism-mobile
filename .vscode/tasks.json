@@ -24,28 +24,25 @@
                 "kind": "test",
                 "isDefault": true
             },
-            "problemMatcher": []
+            "problemMatcher": [],
+            "dependsOn": [
+                "pub get"
+            ]
         },
-        // The following two tasks require a `key.jks` at the project root and
-        // the correspoding password in the `KEY_PASSWORD` environment variable.
-        // A new key can be generated with keytool:
-        // keytool -genkey -v -keystore /tmp/key.jks -keyalg RSA -keysize 2048 -validity 10000 -alias key
         {
             "label": "build",
-            "type": "process",
-            "command": "flutter",
-            "args": [
-                "build",
-                "apk",
-                "--no-shrink",
-                "--flavor",
-                "prod"
-            ],
+            "type": "shell",
+            "command": "KEY_PASSWORD=$(cat key.pass) flutter build apk --no-shrink --flavor prod",
             "group": {
                 "kind": "build",
                 "isDefault": true
             },
-            "problemMatcher": []
+            "problemMatcher": [],
+            "dependsOn": [
+                "pub get",
+                "generate-key-store",
+                "restart adb in docker container"
+            ]
         },
         {
             "label": "install",
@@ -55,7 +52,38 @@
                 "install",
                 "build/app/outputs/apk/prod/release/app-prod-release.apk"
             ],
+            "problemMatcher": [],
+            "dependsOn": [
+                "build"
+            ]
+        },
+        {
+            "label": "generate-key-store",
+            "type": "shell",
+            "command": "test -f key.jks && echo 'INFO: file key.jks exists, doing nothing' || keytool -genkey -v -keystore key.jks -keyalg RSA -keysize 2048 -validity 10000 -alias key -dname CN=Dev -storepass $(cat key.pass) -keypass $(cat key.pass)",
+            "problemMatcher": [],
+            "dependsOn": [
+                "generate-key-store-password"
+            ]
+        },
+        {
+            "label": "generate-key-store-password",
+            "type": "shell",
+            "command": "test -f key.pass && echo 'INFO: file key.pass exists, doing nothing' || openssl rand -base64 32 > key.pass",
             "problemMatcher": []
+        },
+        {
+            "label": "restart adb in docker container",
+            "type": "shell",
+            "command": "adb devices -l | grep -q 'device ' || (test -f /usr/bin/restart-adb && restart-adb)",
+            "problemMatcher": []
+        },
+        {
+            "label": "prepare debug",
+            "dependsOn": [
+                "pub get",
+                "restart adb in docker container"
+            ]
         }
     ]
 }
