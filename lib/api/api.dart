@@ -37,7 +37,7 @@ class Api {
 
   static Future<String> createAlbum(
       String albumName, PhotoprismModel model) async {
-    final String body = '{"AlbumName":"' + albumName + '"}';
+    final String body = '{"Title":"' + albumName + '"}';
 
     try {
       final http.Response response = await httpAuth(
@@ -48,7 +48,7 @@ class Api {
 
       if (response.statusCode == 200) {
         final dynamic bodyjson = json.decode(response.body);
-        return bodyjson['AlbumUUID'].toString();
+        return bodyjson['UID'].toString();
       } else {
         return '-1';
       }
@@ -80,7 +80,7 @@ class Api {
 
   static Future<int> renameAlbum(
       String albumId, String newAlbumName, PhotoprismModel model) async {
-    final String body = '{"AlbumName":"' + newAlbumName + '"}';
+    final String body = '{"Title":"' + newAlbumName + '"}';
 
     try {
       final http.Response response = await httpAuth(
@@ -323,10 +323,10 @@ class Api {
     }
     final Map<String, dynamic> parsed =
         json.decode(response.body) as Map<String, dynamic>;
-    if (parsed.containsKey('PhotoUUID')) {
-      return parsed['PhotoUUID'] as String;
+    if (parsed.containsKey('PhotoUID')) {
+      return parsed['PhotoUID'] as String;
     }
-    return parsed['Photo']['PhotoUUID'] as String;
+    return parsed['Photo']['UID'] as String;
   }
 
   static Future<bool> upload(PhotoprismModel model, String fileId,
