@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
 import 'package:photoprism/model/album.dart';
+import 'package:photoprism/model/config.dart';
 import 'package:photoprism/model/moments_time.dart';
 import 'package:photoprism/model/photo.dart';
 import 'package:photoprism/model/photoprism_model.dart';
@@ -15,6 +16,20 @@ class Api {
     if ((response as http.BaseResponse).statusCode == 401) {
       if (await getNewSession(model)) {
         response = await call();
+      }
+    }
+    return response;
+  }
+
+  static Future<dynamic> httpWithDownloadToken(
+      PhotoprismModel model, Function call) async {
+    if (model.config == null) {
+      await getConfig(model);
+    }
+    dynamic response = await httpAuth(model, call);
+    if ((response as http.BaseResponse).statusCode == 403) {
+      if (await getConfig(model)) {
+        response = await httpAuth(model, call);
       }
     }
     return response;
@@ -360,10 +375,11 @@ class Api {
 
   static Future<List<int>> downloadPhoto(
       PhotoprismModel model, String fileHash) async {
-    final http.Response response = await Api.httpAuth(
+    final http.Response response = await Api.httpWithDownloadToken(
         model,
         () => http.get(
-            Uri.parse(model.photoprismUrl + '/api/v1/download/' + fileHash),
+            Uri.parse(
+                '${model.photoprismUrl}/api/v1/dl/$fileHash?t=${model.config.downloadToken}'),
             headers: model.photoprismAuth.getAuthHeaders())) as http.Response;
 
     if (response.statusCode == 200) {
@@ -373,5 +389,19 @@ class Api {
           .showMessage('Error while sharing: No connection to server!');
     }
     return null;
+  }
+
+  static Future<bool> getConfig(PhotoprismModel model) async {
+    final http.Response response = await httpAuth(
+        model,
+        () => http.get(model.photoprismUrl + '/api/v1/config',
+            headers: model.photoprismAuth.getAuthHeaders())) as http.Response;
+    if (response.statusCode != 200) {
+      model.config = null;
+      return false;
+    }
+    model.config =
+        Config.fromJson(json.decode(response.body) as Map<String, dynamic>);
+    return true;
   }
 }

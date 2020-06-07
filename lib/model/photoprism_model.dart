@@ -8,6 +8,7 @@ import 'package:photoprism/common/photoprism_message.dart';
 import 'package:photoprism/common/photoprism_common_helper.dart';
 import 'package:photoprism/common/photoprism_uploader.dart';
 import 'package:photoprism/model/album.dart';
+import 'package:photoprism/model/config.dart';
 import 'package:photoprism/model/photo.dart';
 import 'package:photoprism/model/moments_time.dart';
 import 'package:synchronized/synchronized.dart';
@@ -18,6 +19,7 @@ class PhotoprismModel extends ChangeNotifier {
   }
   // general
   String photoprismUrl = 'https://demo.photoprism.org';
+  Config config;
   List<MomentsTime> momentsTime;
   Map<int, Photo> photos;
   Map<int, Album> albums;
