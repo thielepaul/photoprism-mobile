@@ -357,17 +357,14 @@ class Api {
       return false;
     }
 
-    final http.Response response = await httpAuth(
-            model,
-            () => http.post(model.photoprismUrl + '/api/v1/session',
-                headers: model.photoprismAuth.getAuthHeaders(),
-                body:
-                    '{"email":"${model.photoprismAuth.user}", "password":"${model.photoprismAuth.password}"}'))
-        as http.Response;
+    final http.Response response = await http.post(
+        model.photoprismUrl + '/api/v1/session',
+        headers: model.photoprismAuth.getAuthHeaders(),
+        body:
+            '{"username":"${model.photoprismAuth.user}", "password":"${model.photoprismAuth.password}"}');
     if (response.statusCode == 200 &&
-        response.headers.containsKey('x-session-token')) {
-      await model.photoprismAuth
-          .setSessionToken(response.headers['x-session-token']);
+        response.headers.containsKey('x-session-id')) {
+      await model.photoprismAuth.setSessionId(response.headers['x-session-id']);
       return true;
     }
     return false;

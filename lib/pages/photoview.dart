@@ -125,7 +125,7 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
             photoprismUrl +
                 '/api/v1/t/' +
                 photos[index].hash +
-                '/static/fit_1920',
+                '/public/fit_1920',
             headers: Provider.of<PhotoprismModel>(context)
                 .photoprismAuth
                 .getAuthHeaders(),

@@ -15,7 +15,7 @@ class PhotoprismAuth {
   bool enabled = false;
   String user = 'admin';
   String password = '';
-  String sessionToken = '';
+  String sessionId = '';
   bool httpBasicEnabled = false;
   String httpBasicUser = '';
   String httpBasicPassword = '';
@@ -48,7 +48,7 @@ class PhotoprismAuth {
     final String sessionTokenStored =
         await secureStorage.read(key: 'sessionToken');
     if (sessionTokenStored != null) {
-      sessionToken = sessionTokenStored;
+      sessionId = sessionTokenStored;
     }
 
     final String passwordStored = await secureStorage.read(key: 'password');
@@ -93,10 +93,10 @@ class PhotoprismAuth {
     await secureStorage.write(key: 'password', value: password);
   }
 
-  Future<void> setSessionToken(String value) async {
-    sessionToken = value;
+  Future<void> setSessionId(String value) async {
+    sessionId = value;
     model.notify();
-    await secureStorage.write(key: 'sessionToken', value: sessionToken);
+    await secureStorage.write(key: 'sessionToken', value: sessionId);
   }
 
   Map<String, String> getAuthHeaders() {
@@ -106,7 +106,7 @@ class PhotoprismAuth {
           utf8.fuse(base64).encode('$httpBasicUser:$httpBasicPassword');
     }
     if (enabled) {
-      headers['X-Session-Token'] = sessionToken;
+      headers['X-Session-ID'] = sessionId;
     }
     return headers;
   }
