@@ -8,8 +8,11 @@
         "dart-code.flutter",
     ],
     "mounts": [
+        // comment out the following line if .ssh folder does not exist in your home directory or if you do not want to mount it to the container
         "src=${localEnv:HOME}/.ssh,dst=/home/cirrus/.ssh,type=bind",
+        // comment out the following line if .gitconfig file does not exist in your home directory or if you do not want to mount it to the container
         "src=${localEnv:HOME}/.gitconfig,dst=/home/cirrus/.gitconfig,type=bind",
+        // comment out the following line if you do not want to connect your device to the container via USB (for debugging)
         "src=/dev/bus/usb,dst=/dev/bus/usb,type=bind",
     ],
     "settings": {
