@@ -1,4 +1,4 @@
-FROM cirrusci/flutter:v1.12.13-hotfix.9
+FROM cirrusci/flutter:1.17.4
 RUN sudo chmod -R 777 /opt/android-sdk-linux
 RUN sudo bash -c "echo 'adb kill-server && sudo /opt/android-sdk-linux/platform-tools/adb start-server' > /usr/bin/restart-adb" && \
     sudo chmod +x /usr/bin/restart-adb
