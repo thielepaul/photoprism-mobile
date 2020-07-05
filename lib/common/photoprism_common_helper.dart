@@ -8,6 +8,7 @@ import 'package:photo_view/photo_view.dart';
 import 'package:photoprism/common/photo_manager.dart';
 import 'package:photoprism/common/album_manager.dart';
 import 'package:photoprism/common/photoprism_uploader.dart';
+import 'package:photoprism/main.dart';
 import 'package:photoprism/model/album.dart';
 import 'package:photoprism/model/moments_time.dart';
 import 'package:photoprism/model/photo.dart';
@@ -30,60 +31,102 @@ class PhotoprismCommonHelper {
     final SharedPreferences sp = await SharedPreferences.getInstance();
 
     if (sp.containsKey('photos')) {
-      final Map<int, Photo> photos = json
-              .decode(sp.getString('photos'))
-              .map<int, Photo>((String key, dynamic value) =>
-                  MapEntry<int, Photo>(int.parse(key),
-                      Photo.fromJson(value as Map<String, dynamic>)))
-          as Map<int, Photo>;
-      PhotoManager.saveAndSetPhotos(context, photos, null);
+      try {
+        final Map<int, Photo> photos = json
+                .decode(sp.getString('photos'))
+                .map<int, Photo>((String key, dynamic value) =>
+                    MapEntry<int, Photo>(int.parse(key),
+                        Photo.fromJson(value as Map<String, dynamic>)))
+            as Map<int, Photo>;
+        PhotoManager.saveAndSetPhotos(context, photos, null, false);
+      } catch (_) {
+        sp.remove('photos');
+      }
     }
 
     if (sp.containsKey('momentsTime')) {
-      final List<MomentsTime> momentsTime = json
-          .decode(sp.getString('momentsTime'))
-          .map<MomentsTime>((dynamic value) =>
-              MomentsTime.fromJson(value as Map<String, dynamic>))
-          .toList() as List<MomentsTime>;
-      PhotoManager.saveAndSetMomentsTime(context, momentsTime);
+      try {
+        final List<MomentsTime> momentsTime = json
+            .decode(sp.getString('momentsTime'))
+            .map<MomentsTime>((dynamic value) =>
+                MomentsTime.fromJson(value as Map<String, dynamic>))
+            .toList() as List<MomentsTime>;
+        PhotoManager.saveAndSetMomentsTime(context, momentsTime);
+      } catch (_) {
+        sp.remove('momentsTime');
+      }
     }
 
     if (sp.containsKey('albums')) {
-      final Map<int, Album> albums = json
-              .decode(sp.getString('albums'))
-              .map<int, Album>((String key, dynamic value) =>
-                  MapEntry<int, Album>(int.parse(key),
-                      Album.fromJson(value as Map<String, dynamic>)))
-          as Map<int, Album>;
+      Map<int, Album> albums;
+      try {
+        albums = json.decode(sp.getString('albums')).map<int, Album>(
+                (String key, dynamic value) => MapEntry<int, Album>(
+                    int.parse(key),
+                    Album.fromJson(value as Map<String, dynamic>)))
+            as Map<int, Album>;
+      } catch (_) {
+        sp.remove('albums');
+      }
       for (final int albumId in albums.keys) {
         if (sp.containsKey('photos' + albumId.toString())) {
-          albums[albumId].photos = json
-                  .decode(sp.getString('photos' + albumId.toString()))
-                  .map<int, Photo>((String key, dynamic value) =>
-                      MapEntry<int, Photo>(int.parse(key),
-                          Photo.fromJson(value as Map<String, dynamic>)))
-              as Map<int, Photo>;
+          try {
+            albums[albumId].photos = json
+                    .decode(sp.getString('photos' + albumId.toString()))
+                    .map<int, Photo>((String key, dynamic value) =>
+                        MapEntry<int, Photo>(int.parse(key),
+                            Photo.fromJson(value as Map<String, dynamic>)))
+                as Map<int, Photo>;
+          } catch (_) {
+            sp.remove('photos' + albumId.toString());
+          }
         }
       }
       AlbumManager.saveAndSetAlbums(context, albums);
     }
 
+    if (sp.containsKey('videos')) {
+      try {
+        final Map<int, Photo> photos = json
+                .decode(sp.getString('videos'))
+                .map<int, Photo>((String key, dynamic value) =>
+                    MapEntry<int, Photo>(int.parse(key),
+                        Photo.fromJson(value as Map<String, dynamic>)))
+            as Map<int, Photo>;
+        PhotoManager.saveAndSetPhotos(context, photos, null, true);
+      } catch (_) {
+        sp.remove('videos');
+      }
+    }
+
     if (sp.containsKey('alreadyUploadedPhotos')) {
-      PhotoprismUploader.saveAndSetAlreadyUploadedPhotos(
-          Provider.of<PhotoprismModel>(context),
-          sp.getStringList('alreadyUploadedPhotos').toSet());
+      try {
+        PhotoprismUploader.saveAndSetAlreadyUploadedPhotos(
+            Provider.of<PhotoprismModel>(context),
+            sp.getStringList('alreadyUploadedPhotos').toSet());
+      } catch (_) {
+        sp.remove('alreadyUploadedPhotos');
+      }
     }
 
     if (sp.containsKey('photosUploadFailed')) {
-      PhotoprismUploader.saveAndSetPhotosUploadFailed(
-          Provider.of<PhotoprismModel>(context),
-          sp.getStringList('photosUploadFailed').toSet());
+      try {
+        PhotoprismUploader.saveAndSetPhotosUploadFailed(
+            Provider.of<PhotoprismModel>(context),
+            sp.getStringList('photosUploadFailed').toSet());
+      } catch (_) {
+        sp.remove('photosUploadFailed');
+      }
     }
 
     if (sp.containsKey('albumsToUpload')) {
-      PhotoprismUploader.saveAndSetAlbumsToUpload(
-          Provider.of<PhotoprismModel>(context),
-          sp.getStringList('albumsToUpload').toSet());
+      try {
+        PhotoprismUploader.saveAndSetAlbumsToUpload(
+            Provider.of<PhotoprismModel>(context),
+            sp.getStringList('albumsToUpload').toSet());
+      } catch (_) {
+        sp.remove('albumsToUpload');
+      }
     }
   }
 
@@ -101,7 +144,7 @@ class PhotoprismCommonHelper {
     prefs.setString('url', url);
   }
 
-  void setSelectedPageIndex(int index) {
+  void setSelectedPageIndex(PageIndex index) {
     photoprismModel.selectedPageIndex = index;
     photoprismModel.notify();
   }

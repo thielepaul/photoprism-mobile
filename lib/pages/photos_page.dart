@@ -9,6 +9,7 @@ import 'package:photoprism/common/hexcolor.dart';
 import 'package:photoprism/common/photo_manager.dart';
 import 'package:photoprism/common/transparent_route.dart';
 import 'package:photoprism/model/moments_time.dart';
+import 'package:photoprism/model/photo.dart';
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:photoprism/pages/photoview.dart';
 import 'package:draggable_scrollbar/draggable_scrollbar.dart';
@@ -16,22 +17,25 @@ import 'package:photoprism/widgets/selectable_tile.dart';
 import 'package:provider/provider.dart';
 
 class PhotosPage extends StatelessWidget {
-  const PhotosPage({Key key, this.albumId}) : super(key: key);
+  const PhotosPage({Key key, this.albumId, this.videosPage = false})
+      : super(key: key);
 
   final int albumId;
+  final bool videosPage;
 
-  static Future<void> archiveSelectedPhotos(BuildContext context) async {
+  static Future<void> archiveSelectedPhotos(
+      BuildContext context, bool videosPage) async {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
     final List<String> selectedPhotos = model
         .gridController.selection.selectedIndexes
-        .map<String>(
-            (int element) => PhotoManager.getPhotos(context, null)[element].uid)
+        .map<String>((int element) =>
+            PhotoManager.getPhotos(context, null, videosPage)[element].uid)
         .toList();
 
     PhotoManager.archivePhotos(context, selectedPhotos);
   }
 
-  static void _selectAlbumBottomSheet(BuildContext context) {
+  static void _selectAlbumBottomSheet(BuildContext context, bool videosPage) {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
     if (model.albums == null) {
       AlbumManager.loadAlbums(context, 0);
@@ -46,7 +50,7 @@ class PhotosPage extends StatelessWidget {
                 return ListTile(
                   title: Text(model.albums[index].name),
                   onTap: () {
-                    addPhotosToAlbum(index, context);
+                    addPhotosToAlbum(index, context, videosPage);
                   },
                 );
               });
@@ -72,14 +76,14 @@ class PhotosPage extends StatelessWidget {
   }
 
   static Future<void> addPhotosToAlbum(
-      int albumId, BuildContext context) async {
+      int albumId, BuildContext context, bool videosPage) async {
     Navigator.pop(context);
 
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
     final List<String> selectedPhotos = model
         .gridController.selection.selectedIndexes
-        .map<String>(
-            (int element) => PhotoManager.getPhotos(context, null)[element].uid)
+        .map<String>((int element) =>
+            PhotoManager.getPhotos(context, null, videosPage)[element].uid)
         .toList();
 
     model.gridController.clear();
@@ -100,9 +104,9 @@ class PhotosPage extends StatelessWidget {
   Widget displayPhotoIfUrlLoaded(BuildContext context, int index) {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
     final String imageUrl =
-        PhotoManager.getPhotoThumbnailUrl(context, index, albumId);
+        PhotoManager.getPhotoThumbnailUrl(context, index, albumId, videosPage);
     if (imageUrl == null) {
-      PhotoManager.loadPhoto(context, index, albumId);
+      PhotoManager.loadPhoto(context, index, albumId, videosPage);
       return Container(
         color: Colors.grey[300],
       );
@@ -120,7 +124,7 @@ class PhotosPage extends StatelessWidget {
     );
   }
 
-  static AppBar appBar(BuildContext context) {
+  static AppBar appBar(BuildContext context, bool videosPage) {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
 
     return AppBar(
@@ -143,14 +147,14 @@ class PhotosPage extends StatelessWidget {
                 icon: const Icon(Icons.archive),
                 tooltip: 'Archive photos',
                 onPressed: () {
-                  archiveSelectedPhotos(context);
+                  archiveSelectedPhotos(context, videosPage);
                 },
               ),
               IconButton(
                 icon: const Icon(Icons.add),
                 tooltip: 'Add to album',
                 onPressed: () {
-                  _selectAlbumBottomSheet(context);
+                  _selectAlbumBottomSheet(context, videosPage);
                 },
               ),
               IconButton(
@@ -189,13 +193,19 @@ class PhotosPage extends StatelessWidget {
             .photoprismCommonHelper
             .getGridController();
 
-    final int tileCount = PhotoManager.getPhotosCount(context, albumId);
+    final int tileCount = videosPage
+        ? PhotoManager.getVideosCount(context)
+        : PhotoManager.getPhotosCount(context, albumId);
 
     //if (Photos.getPhotoList(context, albumId).length == 0) {
     //  return IconButton(onPressed: () => {}, icon: Icon(Icons.add));
     //}
     return RefreshIndicator(child: OrientationBuilder(
         builder: (BuildContext context, Orientation orientation) {
+      if (videosPage && model.config == null) {
+        Api.loadConfig(model);
+        return const Text('', key: ValueKey<String>('videosGridView'));
+      }
       if (albumId == null && model.momentsTime == null) {
         PhotoManager.loadMomentsTime(context);
         return const Text('', key: ValueKey<String>('photosGridView'));
@@ -234,7 +244,8 @@ class PhotosPage extends StatelessWidget {
                         context,
                         TransparentRoute(
                           builder: (BuildContext context) =>
-                              FullscreenPhotoGallery(index, albumId),
+                              FullscreenPhotoGallery(
+                                  index, albumId, videosPage),
                         ));
                   },
                   child: Hero(
@@ -242,19 +253,19 @@ class PhotosPage extends StatelessWidget {
                     createRectTween: (Rect begin, Rect end) {
                       return RectTween(begin: begin, end: end);
                     },
-                    child: displayPhotoIfUrlLoaded(
-                      context,
-                      index,
-                    ),
+                    child: displayPhotoIfUrlLoaded(context, index),
                   ));
             }),
       );
     }), onRefresh: () async {
-      if (albumId == null) {
-        return await PhotoManager.loadMomentsTime(context, forceReload: true);
-      } else {
+      if (albumId != null) {
         await AlbumManager.loadAlbums(context, 0,
             forceReload: true, loadPhotosForAlbumId: albumId);
+      } else if (videosPage) {
+        PhotoManager.saveAndSetPhotos(context, <int, Photo>{}, null, true);
+        await Api.loadConfig(model);
+      } else {
+        return await PhotoManager.loadMomentsTime(context, forceReload: true);
       }
     });
   }

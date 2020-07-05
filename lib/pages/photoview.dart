@@ -7,14 +7,17 @@ import 'package:photoprism/api/api.dart';
 import 'package:photoprism/common/photo_manager.dart';
 import 'package:photoprism/model/photo.dart';
 import 'package:provider/provider.dart';
+import 'package:video_player/video_player.dart';
 
 import '../model/photoprism_model.dart';
 
 class FullscreenPhotoGallery extends StatefulWidget {
-  const FullscreenPhotoGallery(this.currentPhotoIndex, this.albumId);
+  const FullscreenPhotoGallery(
+      this.currentPhotoIndex, this.albumId, this.videosPage);
 
   final int albumId;
   final int currentPhotoIndex;
+  final bool videosPage;
 
   @override
   _FullscreenPhotoGalleryState createState() => _FullscreenPhotoGalleryState();
@@ -37,6 +40,7 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
   Animation<double> backgroundAnimation;
   GlobalKey previewKey = GlobalKey();
   Offset photoPosition = const Offset(0, 0);
+  VideoPlayerController videoController;
 
   @override
   void initState() {
@@ -114,37 +118,86 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
             .animate(animationController);
       }
     }
+
+    final Widget photoChild = PhotoView(
+      filterQuality: FilterQuality.medium,
+      imageProvider: CachedNetworkImageProvider(
+        photoprismUrl + '/api/v1/t/' + photos[index].hash + '/public/fit_1920',
+        headers: Provider.of<PhotoprismModel>(context)
+            .photoprismAuth
+            .getAuthHeaders(),
+      ),
+      initialScale: PhotoViewComputedScale.contained,
+      minScale: PhotoViewComputedScale.contained,
+      maxScale: PhotoViewComputedScale.contained * 2,
+      scaleStateChangedCallback: (PhotoViewScaleState scaleState) {
+        Provider.of<PhotoprismModel>(context)
+            .photoprismCommonHelper
+            .setPhotoViewScaleState(scaleState);
+      },
+      backgroundDecoration: BoxDecoration(color: Colors.transparent),
+    );
+
+    final Widget videoChild =
+        (videoController != null && videoController.value.initialized)
+            ? AspectRatio(
+                aspectRatio: videoController.value.aspectRatio,
+                child: VideoPlayer(videoController),
+              )
+            : Container();
+
     return _AnimatedFullScreenPhoto(
         orientation: photos[index].aspectRatio >= 1
             ? Orientation.landscape
             : Orientation.portrait,
         animation: animation,
-        child: PhotoView(
-          filterQuality: FilterQuality.medium,
-          imageProvider: CachedNetworkImageProvider(
-            photoprismUrl +
-                '/api/v1/t/' +
-                photos[index].hash +
-                '/public/fit_1920',
-            headers: Provider.of<PhotoprismModel>(context)
-                .photoprismAuth
-                .getAuthHeaders(),
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
+          body: Center(
+            child: videoController != null && videoController.value.isPlaying
+                ? videoChild
+                : photoChild,
           ),
-          initialScale: PhotoViewComputedScale.contained,
-          minScale: PhotoViewComputedScale.contained,
-          maxScale: PhotoViewComputedScale.contained * 2,
-          scaleStateChangedCallback: (PhotoViewScaleState scaleState) {
-            Provider.of<PhotoprismModel>(context)
-                .photoprismCommonHelper
-                .setPhotoViewScaleState(scaleState);
-          },
-          backgroundDecoration: BoxDecoration(color: Colors.transparent),
+          floatingActionButton: photos[index].isVideo
+              ? FloatingActionButton(
+                  onPressed: () {
+                    final String url = photoprismUrl +
+                        '/api/v1/videos/' +
+                        photos[index].videoHash +
+                        '/public/mp4';
+                    if (videoController == null ||
+                        videoController.dataSource != url) {
+                      videoController = VideoPlayerController.network(url)
+                        ..initialize().then((_) {
+                          videoController.setLooping(true);
+                          setState(() {
+                            videoController.play();
+                          });
+                        });
+                    } else {
+                      setState(() {
+                        if (videoController.value.isPlaying) {
+                          videoController.pause();
+                        } else {
+                          videoController.seekTo(const Duration());
+                          videoController.play();
+                        }
+                      });
+                    }
+                  },
+                  child: Icon(
+                    videoController != null && videoController.value.isPlaying
+                        ? Icons.pause
+                        : Icons.play_arrow,
+                  ),
+                )
+              : null,
         ));
   }
 
-  Widget getPreview(int index) {
-    final String imageUrl =
-        PhotoManager.getPhotoThumbnailUrl(context, index, widget.albumId);
+  Widget getPreview(int index, bool videosPage) {
+    final String imageUrl = PhotoManager.getPhotoThumbnailUrl(
+        context, index, widget.albumId, videosPage);
     return Container(
         width: MediaQuery.of(context).size.width,
         height: MediaQuery.of(context).size.height,
@@ -176,8 +229,11 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
             ? const NeverScrollableScrollPhysics()
             : const BouncingScrollPhysics(),
         itemBuilder: (BuildContext context, int index) {
-          if (PhotoManager.getPhotos(context, widget.albumId)[index] == null) {
-            PhotoManager.loadPhoto(context, index, widget.albumId);
+          if (PhotoManager.getPhotos(
+                  context, widget.albumId, widget.videosPage)[index] ==
+              null) {
+            PhotoManager.loadPhoto(
+                context, index, widget.albumId, widget.videosPage);
             return Container();
           }
 
@@ -191,7 +247,7 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
                     child: (Provider.of<PhotoprismModel>(context)
                                 .photoViewScaleState !=
                             PhotoViewScaleState.zoomedOut)
-                        ? getPreview(index)
+                        ? getPreview(index, widget.videosPage)
                         : Container()),
                 Positioned(
                     left: photoPosition.dx,
@@ -231,6 +287,9 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
         onDragEnd: (DraggableDetails details) {
           if (details.offset.dy.abs() >
               MediaQuery.of(context).size.height / 4) {
+            if (videoController != null) {
+              videoController.pause();
+            }
             setState(() {
               photoPosition = details.offset;
             });
@@ -261,7 +320,7 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
   @override
   Widget build(BuildContext context) {
     photoprismUrl = Provider.of<PhotoprismModel>(context).photoprismUrl;
-    photos = PhotoManager.getPhotos(context, widget.albumId);
+    photos = PhotoManager.getPhotos(context, widget.albumId, widget.videosPage);
     currentPhotoIndex = widget.currentPhotoIndex;
 
     return WillPopScope(

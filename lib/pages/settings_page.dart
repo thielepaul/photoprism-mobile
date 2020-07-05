@@ -2,6 +2,7 @@ import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:photoprism/common/photoprism_uploader.dart';
+import 'package:photoprism/model/photo.dart';
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:photoprism/widgets/auth_dialog.dart';
 import 'package:photoprism/widgets/multi_select_dialog.dart';
@@ -299,6 +300,7 @@ Use it at your own risk!
     final SharedPreferences sp = await SharedPreferences.getInstance();
     sp.remove('momentsTime');
     sp.remove('photos');
+    sp.remove('videos');
     sp.remove('albums');
     if (model.albums != null) {
       for (final int albumId in model.albums.keys) {
@@ -306,8 +308,10 @@ Use it at your own risk!
       }
     }
     model.photos = null;
+    model.videos = <int, Photo>{};
     model.momentsTime = null;
     model.albums = null;
+    model.config = null;
     await DefaultCacheManager().emptyCache();
   }
 

@@ -1,26 +1,27 @@
+import 'package:photoprism/model/file.dart';
+
 class Photo {
-  Photo({this.hash, this.uid, this.width, this.height});
+  Photo({this.uid, this.files});
 
   factory Photo.fromJson(Map<String, dynamic> json) {
     return Photo(
-      hash: json['Hash'] as String,
-      uid: json['UID'] as String,
-      width: json['Width'].toDouble() as double,
-      height: json['Height'].toDouble() as double,
-    );
+        uid: json['UID'] as String,
+        files: json['Files']
+            .map<File>(
+                (dynamic json) => File.fromJson(json as Map<String, dynamic>))
+            .toList() as List<File>);
   }
 
-  final String hash;
   final String uid;
-  final double width;
-  final double height;
-
-  double get aspectRatio => width / height;
+  final List<File> files;
+  String get hash => files.where((File file) => file.type == 'jpg').first.hash;
+  double get aspectRatio =>
+      files.where((File file) => file.type == 'jpg').first.aspectRatio;
+  bool get isVideo => files.any((File file) => file.isVideo);
+  String get videoHash => files.where((File file) => file.isVideo).first.hash;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'Hash': hash,
         'UID': uid,
-        'Width': width,
-        'Height': height
+        'Files': files,
       };
 }

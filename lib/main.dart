@@ -8,6 +8,8 @@ import 'package:photoprism/model/photoprism_model.dart';
 // use this for debugging animations
 // import 'package:flutter/scheduler.dart' show timeDilation;
 
+enum PageIndex { Photos, Videos, Albums, Settings }
+
 void main() {
   // use this for debugging animations
   // timeDilation = 10.0;
@@ -36,6 +38,8 @@ class PhotoprismApp extends StatelessWidget {
         textSelectionColor: applicationColor,
         textSelectionHandleColor: applicationColor,
         cursorColor: applicationColor,
+        floatingActionButtonTheme: FloatingActionButtonThemeData(
+            backgroundColor: applicationColor, foregroundColor: Colors.white),
         inputDecorationTheme: InputDecorationTheme(
             focusedBorder: UnderlineInputBorder(
                 borderSide: BorderSide(color: applicationColor))),
@@ -64,11 +68,18 @@ class MainPage extends StatelessWidget {
     }
 
     return Scaffold(
-      appBar: model.selectedPageIndex == 0 ? PhotosPage.appBar(context) : null,
+      appBar: model.selectedPageIndex == PageIndex.Photos ||
+              model.selectedPageIndex == PageIndex.Videos
+          ? PhotosPage.appBar(
+              context, model.selectedPageIndex == PageIndex.Videos)
+          : null,
       body: PageView(
           controller: _pageController,
           children: <Widget>[
-            const PhotosPage(albumId: null),
+            const PhotosPage(),
+            const PhotosPage(
+              videosPage: true,
+            ),
             const AlbumsPage(),
             SettingsPage(),
           ],
@@ -80,6 +91,10 @@ class MainPage extends StatelessWidget {
             title: Text('Photos'),
           ),
           BottomNavigationBarItem(
+            icon: Icon(Icons.video_library),
+            title: Text('Videos'),
+          ),
+          BottomNavigationBarItem(
             icon: Icon(Icons.photo_album),
             title: Text('Albums'),
           ),
@@ -88,14 +103,16 @@ class MainPage extends StatelessWidget {
             title: Text('Settings'),
           ),
         ],
-        currentIndex: model.selectedPageIndex,
+        currentIndex: model.selectedPageIndex.index,
         onTap: (int index) {
           if (index != 0) {
             model.photoprismCommonHelper.getGridController()..clear();
           }
           _pageController.jumpToPage(index);
-          model.photoprismCommonHelper.setSelectedPageIndex(index);
+          model.photoprismCommonHelper
+              .setSelectedPageIndex(PageIndex.values[index]);
         },
+        type: BottomNavigationBarType.fixed,
       ),
     );
   }
