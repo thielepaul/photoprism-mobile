@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
+import 'package:photoprism/common/photo_manager.dart';
 import 'package:photoprism/model/album.dart';
 import 'package:photoprism/model/config.dart';
 import 'package:photoprism/model/moments_time.dart';
@@ -24,11 +25,11 @@ class Api {
   static Future<dynamic> httpWithDownloadToken(
       PhotoprismModel model, Function call) async {
     if (model.config == null) {
-      await getConfig(model);
+      await loadConfig(model);
     }
     dynamic response = await httpAuth(model, call);
     if ((response as http.BaseResponse).statusCode == 403) {
-      if (await getConfig(model)) {
+      if (await loadConfig(model)) {
         response = await httpAuth(model, call);
       }
     }
@@ -257,7 +258,8 @@ class Api {
   }
 
   static Future<Map<int, Photo>> loadPhotos(
-      BuildContext context, int albumId, int offset) async {
+      BuildContext context, int albumId, int offset,
+      {bool videosOnly = false}) async {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
 
     String albumIdUrlParam = '';
@@ -267,13 +269,15 @@ class Api {
       albumIdUrlParam = model.albums[albumId].id;
     }
 
+    final String type = videosOnly ? '&video=true' : '&photo=true';
     final http.Response response = await httpAuth(
         model,
         () => http.get(
             model.photoprismUrl +
                 '/api/v1/photos' +
                 '?count=100' +
-                '&photo=true' +
+                '&merged=true' +
+                type +
                 '&offset=' +
                 offset.toString() +
                 '&album=' +
@@ -388,7 +392,7 @@ class Api {
     return null;
   }
 
-  static Future<bool> getConfig(PhotoprismModel model) async {
+  static Future<bool> loadConfig(PhotoprismModel model) async {
     final http.Response response = await httpAuth(
         model,
         () => http.get(model.photoprismUrl + '/api/v1/config',
@@ -397,8 +401,8 @@ class Api {
       model.config = null;
       return false;
     }
-    model.config =
-        Config.fromJson(json.decode(response.body) as Map<String, dynamic>);
+    model.setConfig(
+        Config.fromJson(json.decode(response.body) as Map<String, dynamic>));
     return true;
   }
 }

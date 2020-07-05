@@ -7,6 +7,7 @@ import 'package:photoprism/common/photoprism_loading_screen.dart';
 import 'package:photoprism/common/photoprism_message.dart';
 import 'package:photoprism/common/photoprism_common_helper.dart';
 import 'package:photoprism/common/photoprism_uploader.dart';
+import 'package:photoprism/main.dart';
 import 'package:photoprism/model/album.dart';
 import 'package:photoprism/model/config.dart';
 import 'package:photoprism/model/photo.dart';
@@ -23,6 +24,7 @@ class PhotoprismModel extends ChangeNotifier {
   List<MomentsTime> momentsTime;
   Map<int, Photo> photos;
   Map<int, Album> albums;
+  Map<int, Photo> videos = <int, Photo>{};
   Lock photoLoadingLock = Lock();
   Lock albumLoadingLock = Lock();
   bool _dataFromCacheLoaded = false;
@@ -40,7 +42,7 @@ class PhotoprismModel extends ChangeNotifier {
 
   // runtime data
   bool isLoading = false;
-  int selectedPageIndex = 0;
+  PageIndex selectedPageIndex = PageIndex.Photos;
   DragSelectGridViewController gridController = DragSelectGridViewController();
   ScrollController scrollController = ScrollController();
   PhotoViewScaleState photoViewScaleState = PhotoViewScaleState.initial;
@@ -48,7 +50,7 @@ class PhotoprismModel extends ChangeNotifier {
 
   // helpers
   PhotoprismUploader photoprismUploader;
-  PhotoprismRemoteConfigLoader photoprismRemoteConfigLoader;
+  PhotoprismRemoteSettingsLoader photoprismRemoteConfigLoader;
   PhotoprismCommonHelper photoprismCommonHelper;
   PhotoprismLoadingScreen photoprismLoadingScreen;
   PhotoprismMessage photoprismMessage;
@@ -57,7 +59,7 @@ class PhotoprismModel extends ChangeNotifier {
   Future<void> initialize() async {
     photoprismLoadingScreen = PhotoprismLoadingScreen(this);
     photoprismUploader = PhotoprismUploader(this);
-    photoprismRemoteConfigLoader = PhotoprismRemoteConfigLoader(this);
+    photoprismRemoteConfigLoader = PhotoprismRemoteSettingsLoader(this);
     photoprismCommonHelper = PhotoprismCommonHelper(this);
     photoprismMessage = PhotoprismMessage(this);
     photoprismAuth = PhotoprismAuth(this);
@@ -66,6 +68,11 @@ class PhotoprismModel extends ChangeNotifier {
     await photoprismAuth.initialized;
     photoprismRemoteConfigLoader.loadApplicationColor();
     gridController.addListener(notifyListeners);
+  }
+
+  void setConfig(Config newValue) {
+    config = newValue;
+    notifyListeners();
   }
 
   void setMomentsTime(List<MomentsTime> newValue) {
@@ -83,6 +90,11 @@ class PhotoprismModel extends ChangeNotifier {
     if (notify) {
       notifyListeners();
     }
+  }
+
+  void setVideos(Map<int, Photo> newValue) {
+    videos = newValue;
+    notifyListeners();
   }
 
   set alreadyUploadedPhotos(Set<String> newValue) {

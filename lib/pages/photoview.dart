@@ -11,10 +11,12 @@ import 'package:provider/provider.dart';
 import '../model/photoprism_model.dart';
 
 class FullscreenPhotoGallery extends StatefulWidget {
-  const FullscreenPhotoGallery(this.currentPhotoIndex, this.albumId);
+  const FullscreenPhotoGallery(
+      this.currentPhotoIndex, this.albumId, this.videosOnly);
 
   final int albumId;
   final int currentPhotoIndex;
+  final bool videosOnly;
 
   @override
   _FullscreenPhotoGalleryState createState() => _FullscreenPhotoGalleryState();
@@ -142,9 +144,9 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
         ));
   }
 
-  Widget getPreview(int index) {
-    final String imageUrl =
-        PhotoManager.getPhotoThumbnailUrl(context, index, widget.albumId);
+  Widget getPreview(int index, bool videosOnly) {
+    final String imageUrl = PhotoManager.getPhotoThumbnailUrl(
+        context, index, widget.albumId, videosOnly);
     return Container(
         width: MediaQuery.of(context).size.width,
         height: MediaQuery.of(context).size.height,
@@ -176,8 +178,11 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
             ? const NeverScrollableScrollPhysics()
             : const BouncingScrollPhysics(),
         itemBuilder: (BuildContext context, int index) {
-          if (PhotoManager.getPhotos(context, widget.albumId)[index] == null) {
-            PhotoManager.loadPhoto(context, index, widget.albumId);
+          if (PhotoManager.getPhotos(
+                  context, widget.albumId, widget.videosOnly)[index] ==
+              null) {
+            PhotoManager.loadPhoto(
+                context, index, widget.albumId, widget.videosOnly);
             return Container();
           }
 
@@ -191,7 +196,7 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
                     child: (Provider.of<PhotoprismModel>(context)
                                 .photoViewScaleState !=
                             PhotoViewScaleState.zoomedOut)
-                        ? getPreview(index)
+                        ? getPreview(index, widget.videosOnly)
                         : Container()),
                 Positioned(
                     left: photoPosition.dx,
@@ -261,7 +266,7 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
   @override
   Widget build(BuildContext context) {
     photoprismUrl = Provider.of<PhotoprismModel>(context).photoprismUrl;
-    photos = PhotoManager.getPhotos(context, widget.albumId);
+    photos = PhotoManager.getPhotos(context, widget.albumId, widget.videosOnly);
     currentPhotoIndex = widget.currentPhotoIndex;
 
     return WillPopScope(

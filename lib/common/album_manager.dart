@@ -37,7 +37,8 @@ class AlbumManager {
     if (status == 0) {
       final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
       await loadAlbums(context, 0, forceReload: true);
-      await PhotoManager.saveAndSetPhotos(context, <int, Photo>{}, albumId);
+      await PhotoManager.saveAndSetPhotos(
+          context, <int, Photo>{}, albumId, false);
       await model.photoprismLoadingScreen.hideLoadingScreen();
       model.photoprismMessage
           .showMessage('Adding photos to album successfull.');
@@ -64,6 +65,7 @@ class AlbumManager {
           context,
           PhotoManager.getPhotoIndexInScrollView(context, loadPhotosForAlbumId),
           loadPhotosForAlbumId,
+          false,
           forceReload: true);
     }
     return;

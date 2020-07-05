@@ -6,8 +6,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/services.dart' show rootBundle;
 
-class PhotoprismRemoteConfigLoader {
-  PhotoprismRemoteConfigLoader(this.photoprismModel);
+class PhotoprismRemoteSettingsLoader {
+  PhotoprismRemoteSettingsLoader(this.photoprismModel);
   PhotoprismModel photoprismModel;
 
   Future<void> loadApplicationColor() async {
