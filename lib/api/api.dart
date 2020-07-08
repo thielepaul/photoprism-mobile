@@ -373,6 +373,18 @@ class Api {
     return false;
   }
 
+  static Future<List<int>> downloadVideo(
+      PhotoprismModel model, Photo photo) async {
+    final http.Response response = await http.get(videoUrl(model, photo));
+    if (response.statusCode == 200) {
+      return response.bodyBytes;
+    } else {
+      model.photoprismMessage
+          .showMessage('Error while sharing: No connection to server!');
+    }
+    return null;
+  }
+
   static Future<List<int>> downloadPhoto(
       PhotoprismModel model, String fileHash) async {
     final http.Response response = await Api.httpWithDownloadToken(
@@ -403,5 +415,12 @@ class Api {
     model.setConfig(
         Config.fromJson(json.decode(response.body) as Map<String, dynamic>));
     return true;
+  }
+
+  static String videoUrl(PhotoprismModel model, Photo photo) {
+    return model.photoprismUrl +
+        '/api/v1/videos/' +
+        photo.videoHash +
+        '/public/mp4';
   }
 }

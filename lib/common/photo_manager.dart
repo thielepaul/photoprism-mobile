@@ -76,8 +76,15 @@ class PhotoManager {
     model.setMomentsTime(moments);
   }
 
-  static int getPhotosCount(BuildContext context, int albumId) {
+  static int getPhotosCount(
+      BuildContext context, int albumId, bool videosPage) {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
+    if (videosPage) {
+      if (model.config != null) {
+        return model.config.countVideos;
+      }
+      return 0;
+    }
     if (albumId == null &&
         model.momentsTime != null &&
         model.momentsTime.isNotEmpty) {
@@ -175,7 +182,7 @@ class PhotoManager {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
     try {
       final double currentPhoto =
-          PhotoManager.getPhotosCount(context, albumId) *
+          PhotoManager.getPhotosCount(context, albumId, false) *
               model.scrollController.offset /
               (model.scrollController.position.maxScrollExtent -
                   model.scrollController.position.minScrollExtent);
@@ -186,13 +193,5 @@ class PhotoManager {
     } catch (_) {
       return 0;
     }
-  }
-
-  static int getVideosCount(BuildContext context) {
-    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
-    if (model.config != null) {
-      return model.config.countVideos;
-    }
-    return 0;
   }
 }

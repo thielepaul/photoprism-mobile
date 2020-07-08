@@ -43,7 +43,17 @@ class PhotoprismModel extends ChangeNotifier {
   // runtime data
   bool isLoading = false;
   PageIndex selectedPageIndex = PageIndex.Photos;
-  DragSelectGridViewController gridController = DragSelectGridViewController();
+  DragSelectGridViewController _gridController = DragSelectGridViewController();
+  DragSelectGridViewController get gridController {
+    try {
+      _gridController.addListener(notify);
+    } catch (_) {
+      _gridController = DragSelectGridViewController();
+      _gridController.addListener(notify);
+    }
+    return _gridController;
+  }
+
   ScrollController scrollController = ScrollController();
   PhotoViewScaleState photoViewScaleState = PhotoViewScaleState.initial;
   BuildContext context;

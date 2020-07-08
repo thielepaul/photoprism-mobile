@@ -109,8 +109,7 @@ class _AnimatedSelectableTile extends AnimatedWidget {
         ),
       );
     } else if (Provider.of<PhotoprismModel>(context)
-        .photoprismCommonHelper
-        .getGridController()
+        .gridController
         .selection
         .isSelecting) {
       return Positioned(

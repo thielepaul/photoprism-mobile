@@ -63,6 +63,20 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
         backgroundAnimationController.forward();
       });
     });
+
+    pageController.addListener(() {
+      if (videoController != null) {
+        videoController.pause();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    if (videoController != null) {
+      videoController.dispose();
+    }
+    super.dispose();
   }
 
   bool isZoomed(BuildContext context) {
@@ -94,6 +108,8 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
   }
 
   Widget photoview(int index) {
+    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
+
     currentPhotoIndex = index;
     if (photos[index].aspectRatio >= 1) {
       if (MediaQuery.of(context).size.width <=
@@ -123,17 +139,13 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
       filterQuality: FilterQuality.medium,
       imageProvider: CachedNetworkImageProvider(
         photoprismUrl + '/api/v1/t/' + photos[index].hash + '/public/fit_1920',
-        headers: Provider.of<PhotoprismModel>(context)
-            .photoprismAuth
-            .getAuthHeaders(),
+        headers: model.photoprismAuth.getAuthHeaders(),
       ),
       initialScale: PhotoViewComputedScale.contained,
       minScale: PhotoViewComputedScale.contained,
       maxScale: PhotoViewComputedScale.contained * 2,
       scaleStateChangedCallback: (PhotoViewScaleState scaleState) {
-        Provider.of<PhotoprismModel>(context)
-            .photoprismCommonHelper
-            .setPhotoViewScaleState(scaleState);
+        model.photoprismCommonHelper.setPhotoViewScaleState(scaleState);
       },
       backgroundDecoration: BoxDecoration(color: Colors.transparent),
     );
@@ -146,6 +158,9 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
               )
             : Container();
 
+    final String videoUrl =
+        photos[index].isVideo ? Api.videoUrl(model, photos[index]) : '';
+
     return _AnimatedFullScreenPhoto(
         orientation: photos[index].aspectRatio >= 1
             ? Orientation.landscape
@@ -154,21 +169,25 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
         child: Scaffold(
           backgroundColor: Colors.transparent,
           body: Center(
-            child: videoController != null && videoController.value.isPlaying
+            child: videoController != null &&
+                    videoController.value.isPlaying &&
+                    videoController.dataSource == videoUrl
                 ? videoChild
                 : photoChild,
           ),
           floatingActionButton: photos[index].isVideo
               ? FloatingActionButton(
                   onPressed: () {
-                    final String url = photoprismUrl +
-                        '/api/v1/videos/' +
-                        photos[index].videoHash +
-                        '/public/mp4';
                     if (videoController == null ||
-                        videoController.dataSource != url) {
-                      videoController = VideoPlayerController.network(url)
+                        videoController.dataSource != videoUrl) {
+                      if (videoController != null) {
+                        videoController.dispose();
+                      }
+                      model.photoprismLoadingScreen
+                          .showLoadingScreen('loading video');
+                      videoController = VideoPlayerController.network(videoUrl)
                         ..initialize().then((_) {
+                          model.photoprismLoadingScreen.hideLoadingScreen();
                           videoController.setLooping(true);
                           setState(() {
                             videoController.play();
@@ -255,7 +274,8 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
                     child: photoview(index)),
               ]));
         },
-        itemCount: PhotoManager.getPhotosCount(context, widget.albumId),
+        itemCount: PhotoManager.getPhotosCount(
+            context, widget.albumId, widget.videosPage),
         controller: pageController,
       ));
 
@@ -287,9 +307,6 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
         onDragEnd: (DraggableDetails details) {
           if (details.offset.dy.abs() >
               MediaQuery.of(context).size.height / 4) {
-            if (videoController != null) {
-              videoController.pause();
-            }
             setState(() {
               photoPosition = details.offset;
             });
@@ -362,7 +379,15 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
                           onPressed: () {
                             sharePhoto(currentPhotoIndex, context);
                           },
-                        )
+                        ),
+                        if (photos[currentPhotoIndex].isVideo)
+                          IconButton(
+                            icon: const Icon(Icons.video_library),
+                            tooltip: 'Share video',
+                            onPressed: () {
+                              shareVideo(currentPhotoIndex, context);
+                            },
+                          )
                       ],
                       backgroundColor: Colors.transparent,
                     ))
@@ -379,6 +404,16 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
     if (photoBytes != null) {
       await Share.file('Photoprism Photo', photos[index].hash + '.jpg',
           photoBytes, 'image/jpg');
+    }
+  }
+
+  Future<void> shareVideo(int index, BuildContext context) async {
+    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
+    final List<int> videoBytes = await Api.downloadVideo(model, photos[index]);
+
+    if (videoBytes != null) {
+      await Share.file('Photoprism Video', photos[index].hash + '.mp4',
+          videoBytes, 'video/mp4');
     }
   }
 }

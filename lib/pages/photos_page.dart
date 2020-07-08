@@ -189,13 +189,10 @@ class PhotosPage extends StatelessWidget {
     final ScrollController _scrollController = model.scrollController;
 
     final DragSelectGridViewController gridController =
-        Provider.of<PhotoprismModel>(context)
-            .photoprismCommonHelper
-            .getGridController();
+        Provider.of<PhotoprismModel>(context).gridController;
 
-    final int tileCount = videosPage
-        ? PhotoManager.getVideosCount(context)
-        : PhotoManager.getPhotosCount(context, albumId);
+    final int tileCount =
+        PhotoManager.getPhotosCount(context, albumId, videosPage);
 
     //if (Photos.getPhotoList(context, albumId).length == 0) {
     //  return IconButton(onPressed: () => {}, icon: Icon(Icons.add));

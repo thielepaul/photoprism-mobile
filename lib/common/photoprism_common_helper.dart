@@ -2,7 +2,6 @@
 
 import 'dart:convert';
 
-import 'package:drag_select_grid_view/drag_select_grid_view.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photoprism/common/photo_manager.dart';
@@ -158,16 +157,5 @@ class PhotoprismCommonHelper {
   void setPhotoViewScaleState(PhotoViewScaleState scaleState) {
     photoprismModel.photoViewScaleState = scaleState;
     photoprismModel.notify();
-  }
-
-  DragSelectGridViewController getGridController() {
-    try {
-      photoprismModel.gridController.addListener(photoprismModel.notify);
-    } catch (_) {
-      print('gridcontroller has no listeners');
-      photoprismModel.gridController = DragSelectGridViewController();
-      photoprismModel.gridController.addListener(photoprismModel.notify);
-    }
-    return photoprismModel.gridController;
   }
 }
