@@ -18,6 +18,7 @@ class _AuthDialogState extends State<AuthDialog> {
     _httpBasicUserController = TextEditingController();
     _httpBasicPasswordController = TextEditingController();
     httpBasicEnabled = model.photoprismAuth.httpBasicEnabled;
+    _userController = TextEditingController();
     _passwordController = TextEditingController();
     enabled = model.photoprismAuth.enabled;
   }
@@ -26,6 +27,7 @@ class _AuthDialogState extends State<AuthDialog> {
   TextEditingController _httpBasicUserController;
   TextEditingController _httpBasicPasswordController;
   bool httpBasicEnabled;
+  TextEditingController _userController;
   TextEditingController _passwordController;
   bool enabled;
 
@@ -37,6 +39,7 @@ class _AuthDialogState extends State<AuthDialog> {
       model.photoprismAuth
           .setHttpBasicPassword(_httpBasicPasswordController.text);
       model.photoprismAuth.setEnabled(enabled);
+      model.photoprismAuth.setUser(_userController.text);
       model.photoprismAuth.setPassword(_passwordController.text);
       model.photoprismRemoteConfigLoader.loadApplicationColor();
       await SettingsPage.emptyCache(context);
@@ -45,6 +48,7 @@ class _AuthDialogState extends State<AuthDialog> {
 
     _httpBasicUserController.text = model.photoprismAuth.httpBasicUser;
     _httpBasicPasswordController.text = model.photoprismAuth.httpBasicPassword;
+    _userController.text = model.photoprismAuth.user;
     _passwordController.text = model.photoprismAuth.password;
 
     return AlertDialog(
@@ -61,6 +65,15 @@ class _AuthDialogState extends State<AuthDialog> {
             },
             value: enabled,
           ),
+          Visibility(
+              visible: enabled,
+              child: ListTile(
+                  subtitle: const Text('user'),
+                  title: TextField(
+                    key: const ValueKey<String>('user'),
+                    controller: _userController,
+                    decoration: const InputDecoration(hintText: 'user'),
+                  ))),
           Visibility(
               visible: enabled,
               child: ListTile(

@@ -51,6 +51,11 @@ class PhotoprismAuth {
       sessionId = sessionTokenStored;
     }
 
+    final String userStored = await secureStorage.read(key: 'user');
+    if (userStored != null) {
+      user = userStored;
+    }
+
     final String passwordStored = await secureStorage.read(key: 'password');
     if (passwordStored != null) {
       password = passwordStored;
@@ -85,6 +90,12 @@ class PhotoprismAuth {
     model.notify();
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setBool('authEnabled', enabled);
+  }
+
+  Future<void> setUser(String value) async {
+    user = value;
+    model.notify();
+    await secureStorage.write(key: 'user', value: user);
   }
 
   Future<void> setPassword(String value) async {
