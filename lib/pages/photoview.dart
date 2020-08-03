@@ -136,6 +136,18 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
     }
 
     final Widget photoChild = PhotoView(
+      loadingBuilder: (BuildContext context, ImageChunkEvent event) =>
+          CachedNetworkImage(
+        httpHeaders: Provider.of<PhotoprismModel>(context)
+            .photoprismAuth
+            .getAuthHeaders(),
+        width: MediaQuery.of(context).size.height * photos[index].aspectRatio,
+        height: MediaQuery.of(context).size.width / photos[index].aspectRatio,
+        fit: BoxFit.contain,
+        alignment: Alignment.center,
+        imageUrl: PhotoManager.getPhotoThumbnailUrl(
+            context, index, widget.albumId, widget.videosPage),
+      ),
       filterQuality: FilterQuality.medium,
       imageProvider: CachedNetworkImageProvider(
         photoprismUrl + '/api/v1/t/' + photos[index].hash + '/public/fit_1920',
