@@ -7,7 +7,6 @@ import 'package:crypto/crypto.dart';
 import 'package:device_info/device_info.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:flutter_uploader/flutter_uploader.dart';
 import 'package:intl/intl.dart';
 import 'package:photoprism/common/photo_manager.dart';
@@ -180,8 +179,7 @@ class PhotoprismUploader {
 
     if (await photolib.PhotoManager.requestPermission()) {
       final List<photolib.AssetPathEntity> albums =
-          await photolib.PhotoManager.getAssetPathList(
-              type: photolib.RequestType.image);
+          await photolib.PhotoManager.getAssetPathList();
       final Set<String> photosToUpload = <String>{};
       for (final photolib.AssetPathEntity album in albums) {
         if (model.albumsToUpload.contains(album.id)) {
@@ -243,8 +241,7 @@ class PhotoprismUploader {
         .map((Album album) => MapEntry<String, Album>(album.name, album)));
 
     final List<photolib.AssetPathEntity> albumList =
-        await photolib.PhotoManager.getAssetPathList(
-            type: photolib.RequestType.image);
+        await photolib.PhotoManager.getAssetPathList();
     for (final photolib.AssetPathEntity album in albumList) {
       if (photoprismModel.albumsToUpload.contains(album.id)) {
         await uploadPhotosFromAlbum(album);
@@ -280,29 +277,9 @@ class PhotoprismUploader {
       }
 
       print('########## Upload new photo ##########');
-      String filename = await assets[id].titleAsync;
+      final String filename = await assets[id].titleAsync;
 
-      Uint8List imageBytes = await assets[id].originBytes;
-
-      final String fileExtension = filename.toLowerCase().split('.').last;
-      if (fileExtension == 'jpg' || fileExtension == 'jpeg') {
-        // JPGs are supported natively by PhotoPrism
-      } else if (fileExtension == 'heic' || fileExtension == 'png') {
-        imageBytes =
-            Uint8List.fromList(await FlutterImageCompress.compressWithList(
-          imageBytes,
-          minHeight: assets[id].height,
-          minWidth: assets[id].width,
-          quality: 90,
-          format: CompressFormat.jpeg,
-          keepExif: true,
-        ));
-        filename += '.jpg';
-      } else {
-        saveAndSetPhotosUploadFailed(
-            photoprismModel, photoprismModel.photosUploadFailed..add(id));
-        continue;
-      }
+      final Uint8List imageBytes = await assets[id].originBytes;
 
       final String filehash = sha1.convert(imageBytes).toString();
 
@@ -390,8 +367,7 @@ class PhotoprismUploader {
   static Future<Map<String, photolib.AssetEntity>> getPhotoAssetsAsMap(
       String id) async {
     final List<photolib.AssetPathEntity> list =
-        await photolib.PhotoManager.getAssetPathList(
-            type: photolib.RequestType.image);
+        await photolib.PhotoManager.getAssetPathList();
 
     for (final photolib.AssetPathEntity album in list) {
       if (album.id == id) {
