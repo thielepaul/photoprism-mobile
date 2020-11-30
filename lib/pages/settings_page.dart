@@ -143,7 +143,8 @@ class SettingsPage extends StatelessWidget {
                   child: const Icon(Icons.sync),
                 ),
                 onTap: () {
-                  model.photoprismUploader.runAutoUploadBackgroundRoutine(model);
+                  model.photoprismUploader
+                      .runAutoUploadBackgroundRoutine(model);
                 },
               ),
             if (model.autoUploadEnabled)
