@@ -13,5 +13,7 @@
   "add_to_album": "Add to album",
   "share_photos": "Share photos",
   "cancel": "Cancel",
-  "save": "Save"
+  "save": "Save",
+  "show_log": "Show log",
+  "clear_log": "Clear log"
 }

@@ -66,6 +66,8 @@ class Api {
               model.photoprismUrl + '/api/v1/albums?count=1000&q=$query',
               headers: model.photoprismAuth.getAuthHeaders())) as http.Response;
       if (response.statusCode != 200) {
+        print('searchAlbums: Statuscode not 200. Instead: ' +
+            response.statusCode.toString());
         return null;
       }
       return json

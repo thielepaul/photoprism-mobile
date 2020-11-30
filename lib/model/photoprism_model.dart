@@ -1,5 +1,6 @@
 import 'package:drag_select_grid_view/drag_select_grid_view.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photoprism/common/photoprism_auth.dart';
 import 'package:photoprism/common/photoprism_remote_config_loader.dart';
@@ -12,6 +13,7 @@ import 'package:photoprism/model/album.dart';
 import 'package:photoprism/model/config.dart';
 import 'package:photoprism/model/photo.dart';
 import 'package:photoprism/model/moments_time.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:synchronized/synchronized.dart';
 
 class PhotoprismModel extends ChangeNotifier {
@@ -28,6 +30,7 @@ class PhotoprismModel extends ChangeNotifier {
   Lock photoLoadingLock = Lock();
   Lock albumLoadingLock = Lock();
   bool _dataFromCacheLoaded = false;
+  List<String> log;
 
   // theming
   String applicationColor = '#424242';
@@ -67,17 +70,52 @@ class PhotoprismModel extends ChangeNotifier {
   PhotoprismAuth photoprismAuth;
 
   Future<void> initialize() async {
+    loadLog();
     photoprismLoadingScreen = PhotoprismLoadingScreen(this);
+    photoprismAuth = PhotoprismAuth(this);
     photoprismUploader = PhotoprismUploader(this);
     photoprismRemoteConfigLoader = PhotoprismRemoteSettingsLoader(this);
     photoprismCommonHelper = PhotoprismCommonHelper(this);
     photoprismMessage = PhotoprismMessage(this);
-    photoprismAuth = PhotoprismAuth(this);
 
     await photoprismCommonHelper.loadPhotoprismUrl();
     await photoprismAuth.initialized;
     photoprismRemoteConfigLoader.loadApplicationColor();
     gridController.addListener(notifyListeners);
+  }
+
+  Future<void> loadLog() async {
+    final SharedPreferences sp = await SharedPreferences.getInstance();
+    final List<String> logList = sp.getStringList('photoprism_log');
+
+    if (logList == null) {
+      log = <String>[];
+    }
+    else {
+      log = logList;
+    }
+    notifyListeners();
+    return 0;
+  }
+
+  Future<void> addLogEntry(String type, String message) async {
+    final DateTime now = DateTime.now();
+    final String currentTime = DateFormat('yyyyMMdd-kk:mm:ss').format(now);
+    log.insert(0, currentTime.toString() + ' [' + type + ']\n' + message);
+    print(currentTime.toString() + ' [' + type + '] ' + message);
+    final SharedPreferences sp = await SharedPreferences.getInstance();
+    sp.setStringList('photoprism_log', log);
+    notifyListeners();
+    return 0;
+  }
+
+  Future<void> clearLog() async {
+    final SharedPreferences sp = await SharedPreferences.getInstance();
+    sp.setStringList('photoprism_log', null);
+
+    log = <String>[];
+    notifyListeners();
+    return 0;
   }
 
   void setConfig(Config newValue) {

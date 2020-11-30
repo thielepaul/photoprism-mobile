@@ -12,6 +12,8 @@ import 'package:photo_manager/photo_manager.dart' as photolib;
 import 'package:photoprism/pages/auto_upload_queue.dart';
 import 'package:easy_localization/easy_localization.dart';
 
+import 'log_view.dart';
+
 class SettingsPage extends StatelessWidget {
   final TextEditingController _urlTextFieldController = TextEditingController();
 
@@ -141,7 +143,7 @@ class SettingsPage extends StatelessWidget {
                   child: const Icon(Icons.sync),
                 ),
                 onTap: () {
-                  model.photoprismUploader.backgroundUpload();
+                  model.photoprismUploader.backgroundUpload(model);
                 },
               ),
             if (model.autoUploadEnabled)
@@ -201,6 +203,20 @@ class SettingsPage extends StatelessWidget {
                   );
                 },
               ),
+            ListTile(
+                title: const Text('show_log').tr(),
+                leading: Container(
+                  width: 10,
+                  alignment: Alignment.center,
+                  child: const Icon(Icons.text_snippet),
+                ),
+                onTap: () {
+                  Navigator.push<void>(
+                    context,
+                    MaterialPageRoute<void>(
+                        builder: (BuildContext ctx) => LogView(ctx)),
+                  );
+                }),
             const AboutListTile()
           ],
         )));

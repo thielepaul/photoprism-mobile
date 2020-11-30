@@ -21,7 +21,7 @@ import 'package:photo_manager/photo_manager.dart' as photolib;
 class PhotoprismUploader {
   PhotoprismUploader(this.photoprismModel) {
     loadPreferences();
-    initPlatformState();
+    initPlatformState(photoprismModel);
     getPhotosToUpload(photoprismModel);
 
     uploader = FlutterUploader();
@@ -192,7 +192,7 @@ class PhotoprismUploader {
     }
   }
 
-  Future<void> initPlatformState() async {
+  Future<void> initPlatformState(PhotoprismModel model) async {
     BackgroundFetch.configure(
         BackgroundFetchConfig(
             minimumFetchInterval: 15,
@@ -204,63 +204,78 @@ class PhotoprismUploader {
             requiresDeviceIdle: false,
             requiredNetworkType: NetworkType.NONE), (String taskId) async {
       try {
-        backgroundUpload();
+        backgroundUpload(model);
       } finally {
         BackgroundFetch.finish(taskId);
       }
     }).then((int status) {
       print('[BackgroundFetch] configure success: $status');
+      model.addLogEntry('AutoUploader', 'Configuring done.');
     }).catchError((Object e) {
       print('[BackgroundFetch] configure ERROR: $e');
     });
   }
 
-  Future<void> backgroundUpload() async {
-    print('[BackgroundFetch] Event received');
+  Future<void> backgroundUpload(PhotoprismModel model) async {
+    model.addLogEntry('AutoUploader', 'Starting autoupload routine.');
 
     if (!photoprismModel.autoUploadEnabled) {
-      print('Auto upload disabled.');
+      model.addLogEntry(
+          'AutoUploader', 'Auto upload disabled. Stopping autoupload routine.');
       return;
     }
 
     if (photoprismModel.photoprismUrl == 'https://demo.photoprism.org') {
-      print('Auto upload disabled for demo page!');
+      model.addLogEntry('AutoUploader',
+          'Auto upload disabled for demo page! Stopping autoupload routine.');
       return;
     }
 
     setAutoUploadLastTimeActive();
 
     deviceName = await getDeviceName();
+    model.addLogEntry('AutoUploader', 'Getting device name: ' + deviceName);
+
     final List<Album> deviceAlbumList =
         await Api.searchAlbums(photoprismModel, deviceName);
     if (deviceAlbumList == null) {
-      print('Error: album search failed');
+      model.addLogEntry('AutoUploader', 'ERROR: Album search failed. Stopping autoupload routine.');
       return;
     }
+
     deviceAlbums = Map<String, Album>.fromEntries(deviceAlbumList
         .map((Album album) => MapEntry<String, Album>(album.name, album)));
 
     final List<photolib.AssetPathEntity> albumList =
         await photolib.PhotoManager.getAssetPathList();
+
     for (final photolib.AssetPathEntity album in albumList) {
       if (photoprismModel.albumsToUpload.contains(album.id)) {
-        await uploadPhotosFromAlbum(album);
+        await uploadPhotosFromAlbum(album, model);
       }
     }
 
-    print('All new photos uploaded.');
+    model.addLogEntry('AutoUploader', 'Autoupload routine finished.');
   }
 
-  Future<void> uploadPhotosFromAlbum(photolib.AssetPathEntity album) async {
+  Future<void> uploadPhotosFromAlbum(
+      photolib.AssetPathEntity album, PhotoprismModel model) async {
+    model.addLogEntry('AutoUploader', 'Creating album for mobile uploads.');
     String albumId;
     final String albumName = '$deviceName – ${album.name}';
     if (deviceAlbums.containsKey(albumName)) {
+      model.addLogEntry(
+          'AutoUploader', 'Album '' + albumName + '' already exists.');
       albumId = deviceAlbums[albumName].id;
     } else {
       albumId = await Api.createAlbum(albumName, photoprismModel);
       if (albumId == '-1') {
-        print('Error: album creation failed');
+        model.addLogEntry('AutoUploader',
+            'ERROR: Album creation of '' + albumName + '' failed.');
         return;
+      } else {
+        model.addLogEntry(
+            'AutoUploader', "Album creation '" + albumName + "' successful.");
       }
     }
 
@@ -276,19 +291,23 @@ class PhotoprismUploader {
         continue;
       }
 
-      print('########## Upload new photo ##########');
       final String filename = await assets[id].titleAsync;
-
       final Uint8List imageBytes = await assets[id].originBytes;
-
       final String filehash = sha1.convert(imageBytes).toString();
+
+      model.addLogEntry('AutoUploader', "Next photo: '" + filename + "'.");
 
       if (await isPhotoOnServerAndAddToAlbum(
           photoprismModel, id, filehash, albumId)) {
+        model.addLogEntry(
+            'AutoUploader',
+            "Photo was already uploaded and added to album '" +
+                albumName +
+                "'. Skipping uploading and importing.");
         continue;
       }
 
-      print('Uploading $filename');
+      model.addLogEntry('AutoUploader', "Uploading photo '" + filename + "'.");
       await Api.upload(photoprismModel, filehash, filename, imageBytes);
 
       // add uploaded photo to shared pref
@@ -296,12 +315,16 @@ class PhotoprismUploader {
           photoprismModel.photoprismUrl, photoprismModel, filehash)) {
         if (await isPhotoOnServerAndAddToAlbum(
             photoprismModel, id, filehash, albumId)) {
+          model.addLogEntry(
+              'AutoUploader', 'Photo was imported and added to album.');
           continue;
         }
+      } else {
+        model.addLogEntry('AutoUploader', 'Photo could not be imported.');
       }
+      model.addLogEntry('AutoUploader', 'Adding photo to failed upload list.');
       saveAndSetPhotosUploadFailed(
           photoprismModel, photoprismModel.photosUploadFailed..add(id));
-      print('############################################');
     }
   }
 

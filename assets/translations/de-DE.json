@@ -13,5 +13,7 @@
   "add_to_album": "Zu Album hinzufügen",
   "share_photos": "Fotos teilen",
   "cancel": "Abbrechen",
-  "save": "Speichern"
+  "save": "Speichern",
+  "show_log": "Log anzeigen",
+  "clear_log": "Log löschen"
 }
