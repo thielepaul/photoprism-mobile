@@ -1,27 +1,43 @@
 import 'dart:io';
 
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:easy_localization/easy_localization.dart';
 
+import 'package:photoprism/main.dart';
+import 'package:photoprism/model/photoprism_model.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class TestHttpOverrides extends HttpOverrides {}
+
+Future<void> pumpPhotoPrism(WidgetTester tester) async {
+  return await tester.pumpWidget(
+    EasyLocalization(
+        supportedLocales: const <Locale>[
+          Locale('en', 'US'),
+          Locale('de', 'DE')
+        ],
+        path: 'assets/translations',
+        fallbackLocale: const Locale('en', 'US'),
+        child: ChangeNotifierProvider<PhotoprismModel>(
+          create: (BuildContext context) => PhotoprismModel(),
+          child: PhotoprismApp(),
+        )),
+  );
+}
 
 void main() {
   setUp(() {
     HttpOverrides.global = TestHttpOverrides();
   });
-/*
+
   testWidgets('bottom navigation bar switches between pages',
       (WidgetTester tester) async {
     SharedPreferences.setMockInitialValues(<String, String>{'test': 'test'});
 
-    await tester.pumpWidget(Localizations(
-      locale: Locale('en'),
-      child: ChangeNotifierProvider<PhotoprismModel>(
-        create: (BuildContext context) => PhotoprismModel(),
-        child: PhotoprismApp(),
-      ),
-    ));
-    await tester.pump();
+    await pumpPhotoPrism(tester);
+    await tester.pumpAndSettle();
     expect(
         find.byKey(const ValueKey<String>('photosGridView')), findsOneWidget);
 
@@ -44,13 +60,8 @@ void main() {
       (WidgetTester tester) async {
     SharedPreferences.setMockInitialValues(<String, String>{'test': 'test'});
 
-    await tester.pumpWidget(
-      ChangeNotifierProvider<PhotoprismModel>(
-        create: (BuildContext context) => PhotoprismModel(),
-        child: PhotoprismApp(),
-      ),
-    );
-    await tester.pump();
+    await pumpPhotoPrism(tester);
+    await tester.pumpAndSettle();
     await tester.tap(find.byIcon(Icons.settings));
     await tester.pump();
     expect(find.text('Photoprism URL'), findsOneWidget);
@@ -92,13 +103,9 @@ void main() {
           '{"0":{"Hash":"0", "UID":"00000000-0000-0000-0000-000000000000", "Width":1920, "Height":1080}, "1":{"Hash":"1", "UID":"00000000-0000-0000-0000-000000000000", "Width":1920, "Height":1080}}'
     });
 
-    await tester.pumpWidget(
-      ChangeNotifierProvider<PhotoprismModel>(
-        create: (BuildContext context) => PhotoprismModel(),
-        child: PhotoprismApp(),
-      ),
-    );
-    await tester.pump();
+    await tester.pumpWidget(const Text('Test'));
+    await pumpPhotoPrism(tester);
+    await tester.pumpAndSettle();
     await tester.tap(find.byIcon(Icons.photo_album));
     await tester.pump();
     expect(find.text('New Album 1'), findsOneWidget);
@@ -118,18 +125,13 @@ void main() {
           '{"0":{"Hash":"0", "UID":"00000000-0000-0000-0000-000000000000", "Width":1920, "Height":1080}, "1":{"Hash":"1", "UID":"00000000-0000-0000-0000-000000000000", "Width":1920, "Height":1080}, "2":{"Hash":"2", "UID":"00000000-0000-0000-0000-000000000000", "Width":1920, "Height":1080}}'
     });
 
-    await tester.pumpWidget(
-      ChangeNotifierProvider<PhotoprismModel>(
-        create: (BuildContext context) => PhotoprismModel(),
-        child: PhotoprismApp(),
-      ),
-    );
-    await tester.pump();
+    await pumpPhotoPrism(tester);
+    await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey<String>('PhotoTile')), findsNWidgets(3));
 
     await tester.tap(find.byKey(const ValueKey<String>('PhotoTile')).first);
     // await tester.pump();
     // await tester.pump();
     // expect(find.byKey(ValueKey("PhotoView")), findsOneWidget);
-  });*/
+  });
 }

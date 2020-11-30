@@ -20,5 +20,11 @@
       "preLaunchTask": "prepare debug",
       "type": "dart",
     },
+    {
+      "name": "Widget Tests",
+      "type": "dart",
+      "request": "launch",
+      "program": "${workspaceRoot}/test/widget_test.dart",
+    }
   ]
 }

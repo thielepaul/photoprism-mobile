@@ -16,8 +16,10 @@ void main() {
   // timeDilation = 10.0;
   runApp(
     EasyLocalization(
-        // ignore: prefer_const_literals_to_create_immutables, always_specify_types
-        supportedLocales: [const Locale('en', 'US'), const Locale('de', 'DE')],
+        supportedLocales: const <Locale>[
+          Locale('en', 'US'),
+          Locale('de', 'DE')
+        ],
         path: 'assets/translations',
         fallbackLocale: const Locale('en', 'US'),
         child: ChangeNotifierProvider<PhotoprismModel>(
