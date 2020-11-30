@@ -90,8 +90,7 @@ class PhotoprismModel extends ChangeNotifier {
 
     if (logList == null) {
       log = <String>[];
-    }
-    else {
+    } else {
       log = logList;
     }
     notifyListeners();

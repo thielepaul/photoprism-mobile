@@ -239,7 +239,8 @@ class PhotoprismUploader {
     final List<Album> deviceAlbumList =
         await Api.searchAlbums(photoprismModel, deviceName);
     if (deviceAlbumList == null) {
-      model.addLogEntry('AutoUploader', 'ERROR: Album search failed. Stopping autoupload routine.');
+      model.addLogEntry('AutoUploader',
+          'ERROR: Album search failed. Stopping autoupload routine.');
       return;
     }
 
@@ -265,13 +266,13 @@ class PhotoprismUploader {
     final String albumName = '$deviceName – ${album.name}';
     if (deviceAlbums.containsKey(albumName)) {
       model.addLogEntry(
-          'AutoUploader', 'Album '' + albumName + '' already exists.');
+          'AutoUploader', 'Album ' ' + albumName + ' ' already exists.');
       albumId = deviceAlbums[albumName].id;
     } else {
       albumId = await Api.createAlbum(albumName, photoprismModel);
       if (albumId == '-1') {
         model.addLogEntry('AutoUploader',
-            'ERROR: Album creation of '' + albumName + '' failed.');
+            'ERROR: Album creation of ' ' + albumName + ' ' failed.');
         return;
       } else {
         model.addLogEntry(
