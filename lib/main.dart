@@ -16,9 +16,10 @@ void main() {
   // timeDilation = 10.0;
   runApp(
     EasyLocalization(
-        supportedLocales: [Locale('en', 'US'), Locale('de', 'DE')],
+        // ignore: prefer_const_literals_to_create_immutables, always_specify_types
+        supportedLocales: [const Locale('en', 'US'), const Locale('de', 'DE')],
         path: 'assets/translations',
-        fallbackLocale: Locale('en', 'US'),
+        fallbackLocale: const Locale('en', 'US'),
         child: ChangeNotifierProvider<PhotoprismModel>(
           create: (BuildContext context) => PhotoprismModel(),
           child: PhotoprismApp(),
@@ -95,13 +96,13 @@ class MainPage extends StatelessWidget {
       bottomNavigationBar: BottomNavigationBar(
         items: <BottomNavigationBarItem>[
           BottomNavigationBarItem(
-              icon: Icon(Icons.photo), label: 'photos'.tr()),
+              icon: const Icon(Icons.photo), label: 'photos'.tr()),
           BottomNavigationBarItem(
-              icon: Icon(Icons.video_library), label: 'videos'.tr()),
+              icon: const Icon(Icons.video_library), label: 'videos'.tr()),
           BottomNavigationBarItem(
-              icon: Icon(Icons.photo_album), label: 'albums'.tr()),
+              icon: const Icon(Icons.photo_album), label: 'albums'.tr()),
           BottomNavigationBarItem(
-              icon: Icon(Icons.settings), label: 'settings'.tr()),
+              icon: const Icon(Icons.settings), label: 'settings'.tr()),
         ],
         currentIndex: model.selectedPageIndex.index,
         onTap: (int index) {

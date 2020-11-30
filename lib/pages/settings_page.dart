@@ -33,18 +33,18 @@ class SettingsPage extends StatelessWidget {
               leading: Container(
                 width: 10,
                 alignment: Alignment.center,
-                child: Icon(Icons.public),
+                child: const Icon(Icons.public),
               ),
               onTap: () {
                 _settingsDisplayUrlDialog(context);
               },
             ),
             ListTile(
-              title: Text('authentication').tr(),
+              title: const Text('authentication').tr(),
               leading: Container(
                 width: 10,
                 alignment: Alignment.center,
-                child: Icon(Icons.vpn_key),
+                child: const Icon(Icons.vpn_key),
               ),
               onTap: () => showDialog<void>(
                   context: context,
@@ -53,11 +53,11 @@ class SettingsPage extends StatelessWidget {
                       )),
             ),
             ListTile(
-              title: Text('empty_cache').tr(),
+              title: const Text('empty_cache').tr(),
               leading: Container(
                 width: 10,
                 alignment: Alignment.center,
-                child: Icon(Icons.delete),
+                child: const Icon(Icons.delete),
               ),
               onTap: () {
                 emptyCache(context);
@@ -82,16 +82,16 @@ class SettingsPage extends StatelessWidget {
               },
             ),
             ListTile(
-              title: Text('warning_autoupload').tr(),
+              title: const Text('warning_autoupload').tr(),
             ),
             if (model.autoUploadEnabled)
               ListTile(
-                title: Text('albums_to_upload').tr(),
+                title: const Text('albums_to_upload').tr(),
                 subtitle: _albumsToUploadText(),
                 leading: Container(
                   width: 10,
                   alignment: Alignment.center,
-                  child: Icon(Icons.folder),
+                  child: const Icon(Icons.folder),
                 ),
                 onTap: () {
                   configureAlbumsToUpload(context);
@@ -99,12 +99,13 @@ class SettingsPage extends StatelessWidget {
               ),
             if (model.autoUploadEnabled)
               ListTile(
-                title: Text('last_time_checked_for_photos_to_be_uploaded').tr(),
+                title: const Text('last_time_checked_for_photos_to_be_uploaded')
+                    .tr(),
                 subtitle: Text(model.autoUploadLastTimeCheckedForPhotos),
                 leading: Container(
                   width: 10,
                   alignment: Alignment.center,
-                  child: Icon(Icons.sync),
+                  child: const Icon(Icons.sync),
                 ),
               ),
             if (model.autoUploadEnabled)
@@ -113,7 +114,7 @@ class SettingsPage extends StatelessWidget {
                 leading: Container(
                   width: 10,
                   alignment: Alignment.center,
-                  child: Icon(Icons.delete_sweep),
+                  child: const Icon(Icons.delete_sweep),
                 ),
                 onTap: () {
                   deleteUploadInfo(context);
@@ -125,7 +126,7 @@ class SettingsPage extends StatelessWidget {
                 leading: Container(
                   width: 10,
                   alignment: Alignment.center,
-                  child: Icon(Icons.refresh),
+                  child: const Icon(Icons.refresh),
                 ),
                 onTap: () {
                   PhotoprismUploader.clearFailedUploadList(model);
@@ -137,7 +138,7 @@ class SettingsPage extends StatelessWidget {
                 leading: Container(
                   width: 10,
                   alignment: Alignment.center,
-                  child: Icon(Icons.sync),
+                  child: const Icon(Icons.sync),
                 ),
                 onTap: () {
                   model.photoprismUploader.backgroundUpload();
@@ -149,7 +150,7 @@ class SettingsPage extends StatelessWidget {
                 leading: Container(
                   width: 10,
                   alignment: Alignment.center,
-                  child: Icon(Icons.sort),
+                  child: const Icon(Icons.sort),
                 ),
                 trailing: Text(model.photosToUpload.length.toString()),
                 onTap: () {
@@ -168,7 +169,7 @@ class SettingsPage extends StatelessWidget {
                 leading: Container(
                   width: 10,
                   alignment: Alignment.center,
-                  child: Icon(Icons.sort),
+                  child: const Icon(Icons.sort),
                 ),
                 trailing: Text(model.alreadyUploadedPhotos.length.toString()),
                 onTap: () {
@@ -187,7 +188,7 @@ class SettingsPage extends StatelessWidget {
                 leading: Container(
                   width: 10,
                   alignment: Alignment.center,
-                  child: Icon(Icons.warning),
+                  child: const Icon(Icons.warning),
                 ),
                 trailing: Text(model.photosUploadFailed.length.toString()),
                 onTap: () {

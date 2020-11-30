@@ -159,7 +159,7 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
       scaleStateChangedCallback: (PhotoViewScaleState scaleState) {
         model.photoprismCommonHelper.setPhotoViewScaleState(scaleState);
       },
-      backgroundDecoration: BoxDecoration(color: Colors.transparent),
+      backgroundDecoration: const BoxDecoration(color: Colors.transparent),
     );
 
     final Widget videoChild =

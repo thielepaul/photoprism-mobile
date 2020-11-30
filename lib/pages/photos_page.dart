@@ -121,7 +121,7 @@ class PhotosPage extends StatelessWidget {
         color: Colors.grey[300],
       ),
       errorWidget: (BuildContext context, String url, Object error) =>
-          Icon(Icons.error),
+          const Icon(Icons.error),
     );
   }
 
@@ -171,7 +171,7 @@ class PhotosPage extends StatelessWidget {
                 itemBuilder: (BuildContext context) => <PopupMenuEntry<int>>[
                   PopupMenuItem<int>(
                     value: 0,
-                    child: Text('upload_photo').tr(),
+                    child: const Text('upload_photo').tr(),
                   )
                 ],
                 onSelected: (int choice) {

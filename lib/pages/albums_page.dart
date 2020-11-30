@@ -99,7 +99,7 @@ class AlbumsPage extends StatelessWidget {
                                 Container(color: Colors.grey),
                             errorWidget: (BuildContext context, String url,
                                     Object error) =>
-                                Icon(Icons.error),
+                                const Icon(Icons.error),
                           ),
                           footer: GestureDetector(
                             child: GridTileBar(
