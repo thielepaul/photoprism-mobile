@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:provider/provider.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class LogView extends StatelessWidget {
   LogView(BuildContext context)
@@ -14,7 +15,7 @@ class LogView extends StatelessWidget {
         appBar: AppBar(title: const Text('Log'), actions: <Widget>[
           IconButton(
             icon: const Icon(Icons.cleaning_services_rounded),
-            tooltip: 'clear_log'.trim(),
+            tooltip: 'clear_log'.tr(),
             onPressed: () {
               _model.clearLog();
             },
@@ -28,7 +29,7 @@ class LogView extends StatelessWidget {
                 _model.log[index],
                 style: DefaultTextStyle.of(context)
                     .style
-                    .apply(fontSizeFactor: 0.8),
+                    .apply(fontSizeFactor: 0.9),
               ),
             );
           },

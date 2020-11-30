@@ -63,6 +63,7 @@ class PhotoprismAuth {
 
     Api.getNewSession(model);
     model.notify();
+    return 0;
   }
 
   Future<void> setHttpBasicEnabled(bool value) async {

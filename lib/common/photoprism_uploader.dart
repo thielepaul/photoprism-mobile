@@ -79,10 +79,10 @@ class PhotoprismUploader {
 
   Future<void> setAutoUploadLastTimeActive() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    // get time
+    // get current date and time
     final DateTime now = DateTime.now();
     final String currentTime = DateFormat('dd.MM.yyyy – kk:mm').format(now);
-    print(currentTime.toString());
+
     prefs.setString('autoUploadLastTimeActive', currentTime.toString());
     photoprismModel.autoUploadLastTimeCheckedForPhotos = currentTime.toString();
     photoprismModel.notify();
@@ -204,19 +204,22 @@ class PhotoprismUploader {
             requiresDeviceIdle: false,
             requiredNetworkType: NetworkType.NONE), (String taskId) async {
       try {
-        backgroundUpload(model);
+        runAutoUploadBackgroundRoutine(model);
       } finally {
         BackgroundFetch.finish(taskId);
       }
     }).then((int status) {
-      print('[BackgroundFetch] configure success: $status');
-      model.addLogEntry('AutoUploader', 'Configuring done.');
+      model.addLogEntry(
+          'AutoUploader',
+          'Configuration of auto uploader successful. Status: ' +
+              status.toString());
     }).catchError((Object e) {
-      print('[BackgroundFetch] configure ERROR: $e');
+      model.addLogEntry(
+          'AutoUploader', 'ERROR: Configuration of auto uploader failed.');
     });
   }
 
-  Future<void> backgroundUpload(PhotoprismModel model) async {
+  Future<void> runAutoUploadBackgroundRoutine(PhotoprismModel model) async {
     model.addLogEntry('AutoUploader', 'Starting autoupload routine.');
 
     if (!photoprismModel.autoUploadEnabled) {
@@ -227,52 +230,98 @@ class PhotoprismUploader {
 
     if (photoprismModel.photoprismUrl == 'https://demo.photoprism.org') {
       model.addLogEntry('AutoUploader',
-          'Auto upload disabled for demo page! Stopping autoupload routine.');
+          'Auto upload disabled for demo page. Stopping autoupload routine.');
       return;
     }
 
+    // Set date and time when background routine was run last time.
     setAutoUploadLastTimeActive();
 
-    deviceName = await getDeviceName();
+    deviceName = await getNameOfCurrentDevice(model);
     model.addLogEntry('AutoUploader', 'Getting device name: ' + deviceName);
 
-    final List<Album> deviceAlbumList =
-        await Api.searchAlbums(photoprismModel, deviceName);
-    if (deviceAlbumList == null) {
+    // Get list of albums from server which name is equal to current device name.
+    final int status = await getRemoteAlbumsWithDeviceName(model);
+    if (status == -1) {
       model.addLogEntry('AutoUploader',
           'ERROR: Album search failed. Stopping autoupload routine.');
       return;
+    } else {
+      model.addLogEntry('AutoUploader', 'Album search successful.');
+    }
+
+    final List<photolib.AssetPathEntity> albumList =
+        await photolib.PhotoManager.getAssetPathList();
+
+    String albumsString = '';
+    int albumsCount = 0;
+    for (final photolib.AssetPathEntity album in albumList) {
+      if (albumsString == '') {
+        albumsString += "'";
+        albumsString += album.name;
+        albumsString += "'";
+      } else {
+        albumsString += ', ';
+        albumsString += "'";
+        albumsString += album.name;
+        albumsString += "'";
+      }
+      albumsCount++;
+    }
+
+    model.addLogEntry(
+        'AutoUploader',
+        'Found ' +
+            albumsCount.toString() +
+            ' albums on device: ' +
+            albumsString);
+
+    // Iterate through albums on smartphone.
+    for (final photolib.AssetPathEntity album in albumList) {
+      // Check if album should be uploaded to server.
+      if (photoprismModel.albumsToUpload.contains(album.id)) {
+        model.addLogEntry('AutoUploader', "Next, uploading all new photos of album '" + album.name + "'.");
+        await uploadPhotosFromAlbum(album, model);
+      }
+      else {
+        model.addLogEntry('AutoUploader', "Skipping album '" + album.name + "' since it is not marked for uploading.");
+      }
+    }
+    model.addLogEntry('AutoUploader', 'Autoupload routine finished.');
+  }
+
+  Future<int> getRemoteAlbumsWithDeviceName(PhotoprismModel model) async {
+    // Get list of albums from server which name is the device name of the smartphone.
+    final List<Album> deviceAlbumList =
+        await Api.searchAlbums(photoprismModel, deviceName);
+    if (deviceAlbumList == null) {
+      return -1;
     }
 
     deviceAlbums = Map<String, Album>.fromEntries(deviceAlbumList
         .map((Album album) => MapEntry<String, Album>(album.name, album)));
 
-    final List<photolib.AssetPathEntity> albumList =
-        await photolib.PhotoManager.getAssetPathList();
-
-    for (final photolib.AssetPathEntity album in albumList) {
-      if (photoprismModel.albumsToUpload.contains(album.id)) {
-        await uploadPhotosFromAlbum(album, model);
-      }
-    }
-
-    model.addLogEntry('AutoUploader', 'Autoupload routine finished.');
+    return 0;
   }
 
   Future<void> uploadPhotosFromAlbum(
       photolib.AssetPathEntity album, PhotoprismModel model) async {
     model.addLogEntry('AutoUploader', 'Creating album for mobile uploads.');
+
     String albumId;
     final String albumName = '$deviceName – ${album.name}';
+
     if (deviceAlbums.containsKey(albumName)) {
-      model.addLogEntry(
-          'AutoUploader', 'Album ' ' + albumName + ' ' already exists.');
       albumId = deviceAlbums[albumName].id;
+      model.addLogEntry(
+          'AutoUploader', "Album '" + albumName + "' already exists in photoprism, album ID: '" + albumId + "'.");
     } else {
+      model.addLogEntry(
+          'AutoUploader', "Album '" + albumName + "' not found, will be created.");
       albumId = await Api.createAlbum(albumName, photoprismModel);
       if (albumId == '-1') {
         model.addLogEntry('AutoUploader',
-            'ERROR: Album creation of ' ' + albumName + ' ' failed.');
+            "ERROR: Album creation of ' " + albumName + "' failed.");
         return;
       } else {
         model.addLogEntry(
@@ -282,13 +331,15 @@ class PhotoprismUploader {
 
     final Map<String, photolib.AssetEntity> assets =
         await getPhotoAssetsAsMap(album.id);
+
     for (final String id in photoprismModel.photosToUpload) {
       if (!photoprismModel.autoUploadEnabled) {
-        print('automatic photo upload was disabled, breaking');
+        model.addLogEntry('AutoUploader', 'Automatic photo upload was disabled, stopping.');
         break;
       }
 
       if (!assets.containsKey(id)) {
+        model.addLogEntry('AutoUploader', "ERROR: Photo which should be uploaded with ID '" + id + "' was not found on the phone.");
         continue;
       }
 
@@ -296,7 +347,7 @@ class PhotoprismUploader {
       final Uint8List imageBytes = await assets[id].originBytes;
       final String filehash = sha1.convert(imageBytes).toString();
 
-      model.addLogEntry('AutoUploader', "Next photo: '" + filename + "'.");
+      model.addLogEntry('AutoUploader', "Next photo: '" + filename + "' and ID: '" + id + "'.");
 
       if (await isPhotoOnServerAndAddToAlbum(
           photoprismModel, id, filehash, albumId)) {
@@ -309,7 +360,14 @@ class PhotoprismUploader {
       }
 
       model.addLogEntry('AutoUploader', "Uploading photo '" + filename + "'.");
-      await Api.upload(photoprismModel, filehash, filename, imageBytes);
+      final bool status = await Api.upload(photoprismModel, filehash, filename, imageBytes);
+      if (status) {
+        model.addLogEntry('AutoUploader', "Uploading photo successful'.");
+      }
+      else {
+        model.addLogEntry('AutoUploader', "Uploading photo failed'. Skipping to next photo.");
+        continue;
+      }
 
       // add uploaded photo to shared pref
       if (await Api.importPhotos(
@@ -321,7 +379,7 @@ class PhotoprismUploader {
           continue;
         }
       } else {
-        model.addLogEntry('AutoUploader', 'Photo could not be imported.');
+        model.addLogEntry('AutoUploader', 'ERROR: Photo could not be imported.');
       }
       model.addLogEntry('AutoUploader', 'Adding photo to failed upload list.');
       saveAndSetPhotosUploadFailed(
@@ -403,7 +461,8 @@ class PhotoprismUploader {
     return <String, photolib.AssetEntity>{};
   }
 
-  static Future<String> getDeviceName() async {
+  // Returns the device name of the current device (smartphone).
+  static Future<String> getNameOfCurrentDevice(PhotoprismModel model) async {
     final DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
     if (Platform.isAndroid) {
       final AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
@@ -412,6 +471,8 @@ class PhotoprismUploader {
       final IosDeviceInfo iosInfo = await deviceInfo.iosInfo;
       return iosInfo.name;
     }
+    model.addLogEntry(
+        'AutoUploader', 'ERROR: Failed to get name of this device.');
     return '';
   }
 }

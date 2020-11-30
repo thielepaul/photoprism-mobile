@@ -72,14 +72,18 @@ class PhotoprismModel extends ChangeNotifier {
   Future<void> initialize() async {
     loadLog();
     photoprismLoadingScreen = PhotoprismLoadingScreen(this);
-    photoprismAuth = PhotoprismAuth(this);
-    photoprismUploader = PhotoprismUploader(this);
     photoprismRemoteConfigLoader = PhotoprismRemoteSettingsLoader(this);
     photoprismCommonHelper = PhotoprismCommonHelper(this);
     photoprismMessage = PhotoprismMessage(this);
 
+    photoprismAuth = PhotoprismAuth(this);
+
     await photoprismCommonHelper.loadPhotoprismUrl();
-    await photoprismAuth.initialized;
+    await photoprismAuth.initialize();
+
+    // uploader needs photoprismAuth to be initialized
+    photoprismUploader = PhotoprismUploader(this);
+
     photoprismRemoteConfigLoader.loadApplicationColor();
     gridController.addListener(notifyListeners);
   }
