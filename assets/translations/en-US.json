@@ -1,0 +1,17 @@
+{
+  "photos": "Photos",
+  "videos": "Videos",
+  "albums": "Albums",
+  "settings": "Settings",
+  "upload_photo": "Upload photo",
+  "authentication": "Authentication",
+  "empty_cache": "Empty cache",
+  "warning_autoupload": "Warning: Auto upload is still under development.\nUse it at your own risk!",
+  "albums_to_upload": "Albums to upload",
+  "last_time_checked_for_photos_to_be_uploaded": "Last time checked for photos to be uploaded",
+  "archive_photos": "Archive photos",
+  "add_to_album": "Add to album",
+  "share_photos": "Share photos",
+  "cancel": "Cancel",
+  "save": "Save"
+}

@@ -10,6 +10,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:photo_manager/photo_manager.dart' as photolib;
 import 'package:photoprism/pages/auto_upload_queue.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class SettingsPage extends StatelessWidget {
   final TextEditingController _urlTextFieldController = TextEditingController();
@@ -39,7 +40,7 @@ class SettingsPage extends StatelessWidget {
               },
             ),
             ListTile(
-              title: const Text('Authentication'),
+              title: Text('authentication').tr(),
               leading: Container(
                 width: 10,
                 alignment: Alignment.center,
@@ -52,7 +53,7 @@ class SettingsPage extends StatelessWidget {
                       )),
             ),
             ListTile(
-              title: const Text('Empty cache'),
+              title: Text('empty_cache').tr(),
               leading: Container(
                 width: 10,
                 alignment: Alignment.center,
@@ -80,15 +81,12 @@ class SettingsPage extends StatelessWidget {
                 }
               },
             ),
-            const ListTile(
-              title: Text('''
-Warning: Auto upload is still under development.
-Use it at your own risk!
-                  '''),
+            ListTile(
+              title: Text('warning_autoupload').tr(),
             ),
             if (model.autoUploadEnabled)
               ListTile(
-                title: const Text('Albums to upload'),
+                title: Text('albums_to_upload').tr(),
                 subtitle: _albumsToUploadText(),
                 leading: Container(
                   width: 10,
@@ -101,8 +99,7 @@ Use it at your own risk!
               ),
             if (model.autoUploadEnabled)
               ListTile(
-                title:
-                    const Text('Last time checked for photos to be uploaded'),
+                title: Text('last_time_checked_for_photos_to_be_uploaded').tr(),
                 subtitle: Text(model.autoUploadLastTimeCheckedForPhotos),
                 leading: Container(
                   width: 10,

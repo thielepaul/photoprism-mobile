@@ -1,0 +1,17 @@
+{
+  "photos": "Fotos",
+  "videos": "Videos",
+  "albums": "Alben",
+  "settings": "Einstellungen",
+  "upload_photo": "Foto hochladen",
+  "authentication": "Authentifizierung",
+  "empty_cache": "Cache leeren",
+  "warning_autoupload": "Warnung: Der automatische Upload befindet sich noch in der Entwicklung.\nVerwenden Sie diesen auf eigenes Risiko!",
+  "albums_to_upload": "Alben zum Hochladen",
+  "last_time_checked_for_photos_to_be_uploaded": "Zuletzt überprüft, ob Fotos hochgeladen werden sollen",
+  "archive_photos": "Fotos archivieren",
+  "add_to_album": "Zu Album hinzufügen",
+  "share_photos": "Fotos teilen",
+  "cancel": "Abbrechen",
+  "save": "Speichern"
+}

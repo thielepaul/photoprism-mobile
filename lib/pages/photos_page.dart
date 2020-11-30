@@ -15,6 +15,7 @@ import 'package:photoprism/pages/photoview.dart';
 import 'package:draggable_scrollbar/draggable_scrollbar.dart';
 import 'package:photoprism/widgets/selectable_tile.dart';
 import 'package:provider/provider.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class PhotosPage extends StatelessWidget {
   const PhotosPage({Key key, this.albumId, this.videosPage = false})
@@ -145,21 +146,21 @@ class PhotosPage extends StatelessWidget {
           ? <Widget>[
               IconButton(
                 icon: const Icon(Icons.archive),
-                tooltip: 'Archive photos',
+                tooltip: 'archive_photos'.tr(),
                 onPressed: () {
                   archiveSelectedPhotos(context, videosPage);
                 },
               ),
               IconButton(
                 icon: const Icon(Icons.add),
-                tooltip: 'Add to album',
+                tooltip: 'add_to_album'.tr(),
                 onPressed: () {
                   _selectAlbumBottomSheet(context, videosPage);
                 },
               ),
               IconButton(
                 icon: const Icon(Icons.share),
-                tooltip: 'Share photos',
+                tooltip: 'share_photos'.tr(),
                 onPressed: () {
                   _sharePhotos(context);
                 },
@@ -168,9 +169,9 @@ class PhotosPage extends StatelessWidget {
           : <Widget>[
               PopupMenuButton<int>(
                 itemBuilder: (BuildContext context) => <PopupMenuEntry<int>>[
-                  const PopupMenuItem<int>(
+                  PopupMenuItem<int>(
                     value: 0,
-                    child: Text('Upload photo'),
+                    child: Text('upload_photo').tr(),
                   )
                 ],
                 onSelected: (int choice) {

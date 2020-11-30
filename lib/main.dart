@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:photoprism/pages/albums_page.dart';
 import 'package:photoprism/pages/settings_page.dart';
@@ -14,10 +15,14 @@ void main() {
   // use this for debugging animations
   // timeDilation = 10.0;
   runApp(
-    ChangeNotifierProvider<PhotoprismModel>(
-      create: (BuildContext context) => PhotoprismModel(),
-      child: PhotoprismApp(),
-    ),
+    EasyLocalization(
+        supportedLocales: [Locale('en', 'US'), Locale('de', 'DE')],
+        path: 'assets/translations',
+        fallbackLocale: Locale('en', 'US'),
+        child: ChangeNotifierProvider<PhotoprismModel>(
+          create: (BuildContext context) => PhotoprismModel(),
+          child: PhotoprismApp(),
+        )),
   );
 }
 
@@ -29,6 +34,9 @@ class PhotoprismApp extends StatelessWidget {
 
     return MaterialApp(
       title: 'PhotoPrism',
+      localizationsDelegates: context.localizationDelegates,
+      supportedLocales: context.supportedLocales,
+      locale: context.locale,
       theme: ThemeData(
         primaryColor: applicationColor,
         accentColor: applicationColor,
@@ -85,23 +93,15 @@ class MainPage extends StatelessWidget {
           ],
           physics: const NeverScrollableScrollPhysics()),
       bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
+        items: <BottomNavigationBarItem>[
           BottomNavigationBarItem(
-            icon: Icon(Icons.photo),
-            title: Text('Photos'),
-          ),
+              icon: Icon(Icons.photo), label: 'photos'.tr()),
           BottomNavigationBarItem(
-            icon: Icon(Icons.video_library),
-            title: Text('Videos'),
-          ),
+              icon: Icon(Icons.video_library), label: 'videos'.tr()),
           BottomNavigationBarItem(
-            icon: Icon(Icons.photo_album),
-            title: Text('Albums'),
-          ),
+              icon: Icon(Icons.photo_album), label: 'albums'.tr()),
           BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            title: Text('Settings'),
-          ),
+              icon: Icon(Icons.settings), label: 'settings'.tr()),
         ],
         currentIndex: model.selectedPageIndex.index,
         onTap: (int index) {

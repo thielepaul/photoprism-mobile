@@ -14,7 +14,7 @@ description: An app for photoprism.
 version: 1.0.0+1
 
 environment:
-  sdk: ">=2.2.2 <3.0.0"
+  sdk: ">=2.8.0 <3.0.0"
 
 dependencies:
   flutter:
@@ -26,6 +26,7 @@ dependencies:
   flutter_uploader: ^1.2.0
   image_picker: ^0.6.1
   http: ^0.12.0
+  easy_localization: ^2.3.3
   shared_preferences: ^0.5.6
   photo_view: ^0.9.0
   cached_network_image: ^2.0.0-rc.1
@@ -39,7 +40,7 @@ dependencies:
   flushbar: ^1.9.1
   esys_flutter_share: ^1.0.2
   crypto: ^2.1.3
-  flutter_secure_storage: ^3.3.1
+  flutter_secure_storage: ^3.3.5
   photo_manager: ^0.5.8
   device_info: ^0.4.1+5
   video_player: '>=0.10.11+2 <2.0.0'
@@ -72,6 +73,7 @@ flutter:
 
   assets:
     - assets/themes.json
+    - assets/translations/
   # To add assets to your application, add an assets section, like this:
   # assets:
   #  - images/a_dot_burr.jpeg

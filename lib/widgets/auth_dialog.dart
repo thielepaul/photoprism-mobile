@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart';
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:photoprism/pages/settings_page.dart';
 import 'package:provider/provider.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class AuthDialog extends StatefulWidget {
   const AuthDialog({Key key, this.context}) : super(key: key);
@@ -52,7 +53,7 @@ class _AuthDialogState extends State<AuthDialog> {
     _passwordController.text = model.photoprismAuth.password;
 
     return AlertDialog(
-      title: const Text('Authentication'),
+      title: const Text('authentication').tr(),
       content: SingleChildScrollView(
           child: ListBody(
         children: <Widget>[
@@ -116,13 +117,13 @@ class _AuthDialogState extends State<AuthDialog> {
       )),
       actions: <Widget>[
         FlatButton(
-          child: const Text('Cancel'),
+          child: Text('cancel').tr(),
           onPressed: () {
             Navigator.of(context).pop();
           },
         ),
         FlatButton(
-          child: const Text('Save'),
+          child: Text('save').tr(),
           onPressed: () => saveAndPop(),
         )
       ],
