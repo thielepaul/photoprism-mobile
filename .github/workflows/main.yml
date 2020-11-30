@@ -17,10 +17,7 @@ jobs:
       - run: flutter format --dry-run --set-exit-if-changed lib
       - run: flutter analyze
       - run: flutter pub get
-      - run: flutter test --coverage --name="bottom navigation bar switches between pages"
-      - run: flutter test --coverage --name="clicking on photoprism URL opens dialog"
-      - run: flutter test --coverage --name="album test"
-      - run: flutter test --coverage --name="photoview test"
+      - run: flutter test --coverage
       - uses: codecov/codecov-action@v1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
