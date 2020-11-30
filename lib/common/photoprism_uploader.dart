@@ -280,11 +280,15 @@ class PhotoprismUploader {
     for (final photolib.AssetPathEntity album in albumList) {
       // Check if album should be uploaded to server.
       if (photoprismModel.albumsToUpload.contains(album.id)) {
-        model.addLogEntry('AutoUploader', "Next, uploading all new photos of album '" + album.name + "'.");
+        model.addLogEntry('AutoUploader',
+            "Next, uploading all new photos of album '" + album.name + "'.");
         await uploadPhotosFromAlbum(album, model);
-      }
-      else {
-        model.addLogEntry('AutoUploader', "Skipping album '" + album.name + "' since it is not marked for uploading.");
+      } else {
+        model.addLogEntry(
+            'AutoUploader',
+            "Skipping album '" +
+                album.name +
+                "' since it is not marked for uploading.");
       }
     }
     model.addLogEntry('AutoUploader', 'Autoupload routine finished.');
@@ -314,10 +318,15 @@ class PhotoprismUploader {
     if (deviceAlbums.containsKey(albumName)) {
       albumId = deviceAlbums[albumName].id;
       model.addLogEntry(
-          'AutoUploader', "Album '" + albumName + "' already exists in photoprism, album ID: '" + albumId + "'.");
+          'AutoUploader',
+          "Album '" +
+              albumName +
+              "' already exists in photoprism, album ID: '" +
+              albumId +
+              "'.");
     } else {
-      model.addLogEntry(
-          'AutoUploader', "Album '" + albumName + "' not found, will be created.");
+      model.addLogEntry('AutoUploader',
+          "Album '" + albumName + "' not found, will be created.");
       albumId = await Api.createAlbum(albumName, photoprismModel);
       if (albumId == '-1') {
         model.addLogEntry('AutoUploader',
@@ -334,12 +343,17 @@ class PhotoprismUploader {
 
     for (final String id in photoprismModel.photosToUpload) {
       if (!photoprismModel.autoUploadEnabled) {
-        model.addLogEntry('AutoUploader', 'Automatic photo upload was disabled, stopping.');
+        model.addLogEntry(
+            'AutoUploader', 'Automatic photo upload was disabled, stopping.');
         break;
       }
 
       if (!assets.containsKey(id)) {
-        model.addLogEntry('AutoUploader', "ERROR: Photo which should be uploaded with ID '" + id + "' was not found on the phone.");
+        model.addLogEntry(
+            'AutoUploader',
+            "ERROR: Photo which should be uploaded with ID '" +
+                id +
+                "' was not found on the phone.");
         continue;
       }
 
@@ -347,7 +361,8 @@ class PhotoprismUploader {
       final Uint8List imageBytes = await assets[id].originBytes;
       final String filehash = sha1.convert(imageBytes).toString();
 
-      model.addLogEntry('AutoUploader', "Next photo: '" + filename + "' and ID: '" + id + "'.");
+      model.addLogEntry('AutoUploader',
+          "Next photo: '" + filename + "' and ID: '" + id + "'.");
 
       if (await isPhotoOnServerAndAddToAlbum(
           photoprismModel, id, filehash, albumId)) {
@@ -360,12 +375,13 @@ class PhotoprismUploader {
       }
 
       model.addLogEntry('AutoUploader', "Uploading photo '" + filename + "'.");
-      final bool status = await Api.upload(photoprismModel, filehash, filename, imageBytes);
+      final bool status =
+          await Api.upload(photoprismModel, filehash, filename, imageBytes);
       if (status) {
         model.addLogEntry('AutoUploader', "Uploading photo successful'.");
-      }
-      else {
-        model.addLogEntry('AutoUploader', "Uploading photo failed'. Skipping to next photo.");
+      } else {
+        model.addLogEntry(
+            'AutoUploader', "Uploading photo failed'. Skipping to next photo.");
         continue;
       }
 
@@ -379,7 +395,8 @@ class PhotoprismUploader {
           continue;
         }
       } else {
-        model.addLogEntry('AutoUploader', 'ERROR: Photo could not be imported.');
+        model.addLogEntry(
+            'AutoUploader', 'ERROR: Photo could not be imported.');
       }
       model.addLogEntry('AutoUploader', 'Adding photo to failed upload list.');
       saveAndSetPhotosUploadFailed(
