@@ -1,0 +1,19 @@
+{
+  "photos": "Photos",
+  "videos": "Vidéos",
+  "albums": "Albums",
+  "settings": "Paramètres",
+  "upload_photo": "Téléverser photo",
+  "authentication": "Authentification",
+  "empty_cache": "Vider cache",
+  "warning_autoupload": "Attention: L'auto téléversement est toujours en développement. \nUtilisez à vos risques et périls!",
+  "albums_to_upload": "Albums à téléverser",
+  "last_time_checked_for_photos_to_be_uploaded": "Dernière vérification des photos à téléverser",
+  "archive_photos": "Archiver photos",
+  "add_to_album": "Ajouter à l'album",
+  "share_photos": "Partager photos",
+  "cancel": "Annuler",
+  "save": "Enregistrer",
+  "show_log": "Afficher log",
+  "clear_log": "Effacer log"
+}
