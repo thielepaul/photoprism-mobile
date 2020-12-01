@@ -168,7 +168,7 @@ class SettingsPage extends StatelessWidget {
               ),
             if (model.autoUploadEnabled)
               ListTile(
-                title: Text('show_uploaded_photos_list').tr(),
+                title: Text('show_uploaded_photos_list'.tr()),
                 leading: Container(
                   width: 10,
                   alignment: Alignment.center,
