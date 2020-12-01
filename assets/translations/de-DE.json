@@ -15,5 +15,15 @@
   "cancel": "Abbrechen",
   "save": "Speichern",
   "show_log": "Log anzeigen",
-  "clear_log": "Log löschen"
+  "clear_log": "Log löschen",
+  "auto_upload": "Automatisches Hochladen",
+  "create_album": "Album erstellen",
+  "enter_photoprism_url": "Photoprism URL eingeben",
+  "trigger_auto_upload_manually": "Automatischen Upload manuell auslösen",
+  "retry_all_failed_uploads": "Alle fehlgeschlagenen Uploads wiederholen",
+  "delete_already_uploaded_photos_info": "Löschen der Info über bereits hochgeladene Fotos",
+  "show_upload_queue": "Upload-Warteschlange anzeigen",
+  "show_uploaded_photos_list": "Liste der hochgeladenen Fotos anzeigen",
+  "show_failed_uploads_list": "Liste der fehlgeschlagenen Uploads anzeigen",
+  "select_albums_for_auto_upload": "Alben für den automatischen Upload auswählen"
 }

@@ -66,7 +66,7 @@ class SettingsPage extends StatelessWidget {
               },
             ),
             SwitchListTile(
-              title: const Text('Auto Upload'),
+              title: Text('auto_upload'.tr()),
               secondary: const Icon(Icons.cloud_upload),
               value: model.autoUploadEnabled,
               onChanged: (bool newState) async {
@@ -112,7 +112,7 @@ class SettingsPage extends StatelessWidget {
               ),
             if (model.autoUploadEnabled)
               ListTile(
-                title: const Text('Delete already uploaded photos info'),
+                title: Text('delete_already_uploaded_photos_info'.tr()),
                 leading: Container(
                   width: 10,
                   alignment: Alignment.center,
@@ -124,7 +124,7 @@ class SettingsPage extends StatelessWidget {
               ),
             if (model.autoUploadEnabled)
               ListTile(
-                title: const Text('Retry all failed uploads'),
+                title: Text('retry_all_failed_uploads'.tr()),
                 leading: Container(
                   width: 10,
                   alignment: Alignment.center,
@@ -136,7 +136,7 @@ class SettingsPage extends StatelessWidget {
               ),
             if (model.autoUploadEnabled)
               ListTile(
-                title: const Text('Trigger auto upload manually'),
+                title: Text('trigger_auto_upload_manually'.tr()),
                 leading: Container(
                   width: 10,
                   alignment: Alignment.center,
@@ -149,7 +149,7 @@ class SettingsPage extends StatelessWidget {
               ),
             if (model.autoUploadEnabled)
               ListTile(
-                title: const Text('Show upload queue'),
+                title: Text('show_upload_queue'.tr()),
                 leading: Container(
                   width: 10,
                   alignment: Alignment.center,
@@ -168,7 +168,7 @@ class SettingsPage extends StatelessWidget {
               ),
             if (model.autoUploadEnabled)
               ListTile(
-                title: const Text('Show uploaded photos list'),
+                title: Text('show_uploaded_photos_list').tr(),
                 leading: Container(
                   width: 10,
                   alignment: Alignment.center,
@@ -187,7 +187,7 @@ class SettingsPage extends StatelessWidget {
               ),
             if (model.autoUploadEnabled)
               ListTile(
-                title: const Text('Show failed uploads list'),
+                title: Text('show_failed_uploads_list'.tr()),
                 leading: Container(
                   width: 10,
                   alignment: Alignment.center,
@@ -277,7 +277,7 @@ class SettingsPage extends StatelessWidget {
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
-            title: const Text('Enter Photoprism URL'),
+            title: Text('enter_photoprism_url'.tr()),
             content: TextField(
               key: const ValueKey<String>('photoprismUrlTextField'),
               controller: _urlTextFieldController,
@@ -286,13 +286,13 @@ class SettingsPage extends StatelessWidget {
             ),
             actions: <Widget>[
               FlatButton(
-                child: const Text('Cancel'),
+                child: Text('cancel'.tr()),
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
               ),
               FlatButton(
-                child: const Text('Save'),
+                child: Text('save'.tr()),
                 onPressed: () {
                   setNewPhotoprismUrl(context, _urlTextFieldController.text);
                 },

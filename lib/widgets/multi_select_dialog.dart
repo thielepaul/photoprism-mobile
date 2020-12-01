@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class MultiSelectDialog extends StatefulWidget {
   const MultiSelectDialog(
@@ -21,7 +22,7 @@ class _MultiSelectDialogState extends State<MultiSelectDialog> {
 
   @override
   Widget build(BuildContext context) => AlertDialog(
-        title: const Text('Select albums for auto-upload'),
+        title: Text('select_albums_for_auto_upload'.tr()),
         content: Container(
             width: double.maxFinite,
             child: ListView.builder(
@@ -42,11 +43,11 @@ class _MultiSelectDialogState extends State<MultiSelectDialog> {
                         value: selected.contains(widget.ids[position])))),
         actions: <Widget>[
           FlatButton(
-            child: const Text('Cancel'),
+            child: Text('cancel'.tr()),
             onPressed: () => Navigator.of(context).pop(widget.selected.toSet()),
           ),
           FlatButton(
-            child: const Text('Save'),
+            child: Text('save'.tr()),
             onPressed: () => Navigator.of(context).pop(selected),
           )
         ],

@@ -6,6 +6,7 @@ import 'package:photoprism/common/hexcolor.dart';
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:photoprism/pages/album_detail_view.dart';
 import 'package:provider/provider.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class AlbumsPage extends StatelessWidget {
   const AlbumsPage({Key key}) : super(key: key);
@@ -26,7 +27,7 @@ class AlbumsPage extends StatelessWidget {
 
   Future<void> createAlbum(BuildContext context) async {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
-    model.photoprismLoadingScreen.showLoadingScreen('Creating album...');
+    model.photoprismLoadingScreen.showLoadingScreen('create_album'.tr() + '...');
     final String uuid = await Api.createAlbum('New album', model);
 
     if (uuid == '-1') {
@@ -57,7 +58,7 @@ class AlbumsPage extends StatelessWidget {
           actions: <Widget>[
             IconButton(
               icon: const Icon(Icons.add),
-              tooltip: 'Create album',
+              tooltip: 'create_album'.tr(),
               onPressed: () {
                 //model.photoprismAlbumManager.createAlbum();
                 createAlbum(context);
