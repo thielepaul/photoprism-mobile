@@ -144,7 +144,7 @@ class SettingsPage extends StatelessWidget {
                 ),
                 onTap: () {
                   model.photoprismUploader
-                      .runAutoUploadBackgroundRoutine(model);
+                      .runAutoUploadBackgroundRoutine(model, 'Manual');
                 },
               ),
             if (model.autoUploadEnabled)

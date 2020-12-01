@@ -204,7 +204,7 @@ class PhotoprismUploader {
             requiresDeviceIdle: false,
             requiredNetworkType: NetworkType.NONE), (String taskId) async {
       try {
-        runAutoUploadBackgroundRoutine(model);
+        runAutoUploadBackgroundRoutine(model, taskId);
       } finally {
         BackgroundFetch.finish(taskId);
       }
@@ -219,8 +219,10 @@ class PhotoprismUploader {
     });
   }
 
-  Future<void> runAutoUploadBackgroundRoutine(PhotoprismModel model) async {
-    model.addLogEntry('AutoUploader', 'Starting autoupload routine.');
+  Future<void> runAutoUploadBackgroundRoutine(
+      PhotoprismModel model, String taskId) async {
+    model.addLogEntry(
+        'AutoUploader', 'Starting autoupload routine. Task ID: ' + taskId);
 
     if (!photoprismModel.autoUploadEnabled) {
       model.addLogEntry(
