@@ -81,7 +81,7 @@ class PhotoprismUploader {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     // get current date and time
     final DateTime now = DateTime.now();
-    final String currentTime = DateFormat('dd.MM.yyyy – kk:mm').format(now);
+    final String currentTime = DateFormat('dd.MM.yyyy – HH:mm').format(now);
 
     prefs.setString('autoUploadLastTimeActive', currentTime.toString());
     photoprismModel.autoUploadLastTimeCheckedForPhotos = currentTime.toString();

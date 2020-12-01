@@ -103,7 +103,7 @@ class PhotoprismModel extends ChangeNotifier {
 
   Future<void> addLogEntry(String type, String message) async {
     final DateTime now = DateTime.now();
-    final String currentTime = DateFormat('yyyyMMdd-kk:mm:ss').format(now);
+    final String currentTime = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
     log.insert(0, currentTime.toString() + ' [' + type + ']\n' + message);
     print(currentTime.toString() + ' [' + type + '] ' + message);
     final SharedPreferences sp = await SharedPreferences.getInstance();
