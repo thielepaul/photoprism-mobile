@@ -18,7 +18,8 @@ void main() {
     EasyLocalization(
         supportedLocales: const <Locale>[
           Locale('en', 'US'),
-          Locale('de', 'DE')
+          Locale('de', 'DE'),
+          Locale('fr', 'FR')
         ],
         path: 'assets/translations',
         fallbackLocale: const Locale('en', 'US'),
