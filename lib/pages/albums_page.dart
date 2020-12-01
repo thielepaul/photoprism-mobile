@@ -27,7 +27,8 @@ class AlbumsPage extends StatelessWidget {
 
   Future<void> createAlbum(BuildContext context) async {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
-    model.photoprismLoadingScreen.showLoadingScreen('create_album'.tr() + '...');
+    model.photoprismLoadingScreen
+        .showLoadingScreen('create_album'.tr() + '...');
     final String uuid = await Api.createAlbum('New album', model);
 
     if (uuid == '-1') {
