@@ -36,28 +36,37 @@ class PhotoprismUploader {
     });
 
     uploader.result.listen((UploadTaskResponse result) async {
-      print('Upload finished.');
-      if (result.statusCode == 200) {
+      uploadsinProgress--;
+      if (result.statusCode != 200) {
+        failedUploads++;
+      }
+
+      if (uploadsinProgress == 0) {
+        print('Upload finished.');
         if (result.tag == 'manual') {
-          manualUploadFinishedCompleter.complete(0);
+          manualUploadFinishedCompleter.complete(failedUploads == 0 ? 0 : 1);
         } else {
           print('Auto upload success!');
-          uploadFinishedCompleter.complete(0);
+          uploadFinishedCompleter.complete(failedUploads == 0 ? 0 : 1);
         }
-      } else {
-        if (result.tag == 'manual') {
-          manualUploadFinishedCompleter.complete(2);
-        } else {
-          uploadFinishedCompleter.complete(2);
-        }
+        // clear out the failedUploads count manually, to make sure we're
+        // set up for the next upload
+        failedUploads = 0;
       }
     }, onError: (Object ex, StackTrace stacktrace) {
+      uploadsinProgress--;
+      failedUploads++;
       final UploadException exp = ex as UploadException;
 
-      if (exp.tag == 'manual') {
-        manualUploadFinishedCompleter.complete(1);
-      } else {
-        uploadFinishedCompleter.complete(1);
+      if (uploadsinProgress == 0) {
+        if (exp.tag == 'manual') {
+          manualUploadFinishedCompleter.complete(failedUploads == 0 ? 0 : 1);
+        } else {
+          uploadFinishedCompleter.complete(failedUploads == 0 ? 0 : 1);
+        }
+        // clear out the failedUploads count manually, to make sure we're
+        // set up for the next upload
+        failedUploads = 0;
       }
     });
   }
@@ -68,6 +77,8 @@ class PhotoprismUploader {
   FlutterUploader uploader;
   String deviceName = '';
   Map<String, Album> deviceAlbums = <String, Album>{};
+  int uploadsinProgress = 0;
+  int failedUploads = 0;
 
   Future<void> setAutoUpload(bool autoUploadEnabledNew) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -161,13 +172,16 @@ class PhotoprismUploader {
     manualUploadFinishedCompleter = Completer<int>();
 
     await Api.getNewSession(photoprismModel);
-    await uploader.enqueue(
-        url: photoprismModel.photoprismUrl + '/api/v1/upload/' + event,
-        files: filesToUpload,
-        method: UploadMethod.POST,
-        showNotification: false,
-        tag: 'manual',
-        headers: photoprismModel.photoprismAuth.getAuthHeaders());
+    for (final FileItem fileToUpload in filesToUpload) {
+      await uploader.enqueue(
+          url: photoprismModel.photoprismUrl + '/api/v1/upload/' + event,
+          files: <FileItem>[fileToUpload],
+          method: UploadMethod.POST,
+          showNotification: false,
+          tag: 'manual',
+          headers: photoprismModel.photoprismAuth.getAuthHeaders());
+      uploadsinProgress += 1;
+    }
 
     return manualUploadFinishedCompleter.future;
   }
