@@ -24,6 +24,8 @@
 ## How to contribute
 If you like the app and the project, please give us a star on GitHub. This keeps us motivated. We are also happy about every bug and ideas for improving the app.
 
+If you'd like to make an enhancement to the application, please see [the contributing docs](CONTRIBUTING.md) for information on how to build and run the application.
+
 ## Installation
 ### Android
 - The latest .apk file can be downloaded [here](https://github.com/photoprism/photoprism-mobile/releases/download/latest/photoprism.apk).
