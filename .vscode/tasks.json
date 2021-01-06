@@ -73,16 +73,9 @@
             "problemMatcher": []
         },
         {
-            "label": "restart adb in docker container",
-            "type": "shell",
-            "command": "adb devices -l | grep -q 'device ' || (test -f /usr/bin/restart-adb && restart-adb)",
-            "problemMatcher": []
-        },
-        {
             "label": "prepare debug",
             "dependsOn": [
                 "pub get",
-                "restart adb in docker container"
             ]
         }
     ]
