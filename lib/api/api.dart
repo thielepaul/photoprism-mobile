@@ -420,6 +420,9 @@ class Api {
   }
 
   static String videoUrl(PhotoprismModel model, Photo photo) {
+    if (model.config == null) {
+      return null;
+    }
     return model.photoprismUrl +
         '/api/v1/videos/' +
         photo.videoHash +

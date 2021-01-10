@@ -9,6 +9,12 @@ class Config {
     );
   }
 
+  Map<String, dynamic> toJson() => <String, dynamic>{
+        'downloadToken': downloadToken,
+        'previewToken': previewToken,
+        'count': <String, int>{'videos': countVideos},
+      };
+
   final String downloadToken;
   final String previewToken;
   final int countVideos;

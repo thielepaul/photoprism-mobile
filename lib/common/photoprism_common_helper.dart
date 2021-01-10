@@ -9,6 +9,7 @@ import 'package:photoprism/common/album_manager.dart';
 import 'package:photoprism/common/photoprism_uploader.dart';
 import 'package:photoprism/main.dart';
 import 'package:photoprism/model/album.dart';
+import 'package:photoprism/model/config.dart';
 import 'package:photoprism/model/moments_time.dart';
 import 'package:photoprism/model/photo.dart';
 import 'package:photoprism/model/photoprism_model.dart';
@@ -28,6 +29,7 @@ class PhotoprismCommonHelper {
   static Future<void> getCachedDataFromSharedPrefs(BuildContext context) async {
     print('getDataFromSharedPrefs');
     final SharedPreferences sp = await SharedPreferences.getInstance();
+    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
 
     if (sp.containsKey('photos')) {
       try {
@@ -101,8 +103,7 @@ class PhotoprismCommonHelper {
     if (sp.containsKey('alreadyUploadedPhotos')) {
       try {
         PhotoprismUploader.saveAndSetAlreadyUploadedPhotos(
-            Provider.of<PhotoprismModel>(context),
-            sp.getStringList('alreadyUploadedPhotos').toSet());
+            model, sp.getStringList('alreadyUploadedPhotos').toSet());
       } catch (_) {
         sp.remove('alreadyUploadedPhotos');
       }
@@ -111,8 +112,7 @@ class PhotoprismCommonHelper {
     if (sp.containsKey('photosUploadFailed')) {
       try {
         PhotoprismUploader.saveAndSetPhotosUploadFailed(
-            Provider.of<PhotoprismModel>(context),
-            sp.getStringList('photosUploadFailed').toSet());
+            model, sp.getStringList('photosUploadFailed').toSet());
       } catch (_) {
         sp.remove('photosUploadFailed');
       }
@@ -121,10 +121,18 @@ class PhotoprismCommonHelper {
     if (sp.containsKey('albumsToUpload')) {
       try {
         PhotoprismUploader.saveAndSetAlbumsToUpload(
-            Provider.of<PhotoprismModel>(context),
-            sp.getStringList('albumsToUpload').toSet());
+            model, sp.getStringList('albumsToUpload').toSet());
       } catch (_) {
         sp.remove('albumsToUpload');
+      }
+    }
+
+    if (sp.containsKey('config')) {
+      try {
+        model.config = Config.fromJson(
+            json.decode(sp.getString('config')) as Map<String, dynamic>);
+      } catch (_) {
+        sp.remove('config');
       }
     }
   }

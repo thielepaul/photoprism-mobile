@@ -173,6 +173,9 @@ class PhotoManager {
       return null;
     }
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
+    if (model.config == null) {
+      return null;
+    }
     final String filehash =
         PhotoManager.getPhotos(context, albumId, videosPage)[index].hash;
     return model.photoprismUrl +

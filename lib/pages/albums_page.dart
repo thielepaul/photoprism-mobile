@@ -15,7 +15,8 @@ class AlbumsPage extends StatelessWidget {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
     if (model.albums != null &&
         model.albums[index] != null &&
-        model.albums[index].imageCount > 0) {
+        model.albums[index].imageCount > 0 &&
+        model.config != null) {
       return model.photoprismUrl +
           '/api/v1/albums/' +
           model.albums[index].id +

@@ -123,6 +123,7 @@ class PhotoprismModel extends ChangeNotifier {
 
   void setConfig(Config newValue) {
     config = newValue;
+    PhotoprismCommonHelper.saveAsJsonToSharedPrefs('config', config);
     notifyListeners();
   }
 
