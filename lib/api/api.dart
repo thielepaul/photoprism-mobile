@@ -423,6 +423,8 @@ class Api {
     return model.photoprismUrl +
         '/api/v1/videos/' +
         photo.videoHash +
-        '/public/mp4';
+        '/' +
+        model.config.previewToken +
+        '/mp4';
   }
 }

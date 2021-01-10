@@ -175,7 +175,12 @@ class PhotoManager {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
     final String filehash =
         PhotoManager.getPhotos(context, albumId, videosPage)[index].hash;
-    return model.photoprismUrl + '/api/v1/t/' + filehash + '/public/tile_224';
+    return model.photoprismUrl +
+        '/api/v1/t/' +
+        filehash +
+        '/' +
+        model.config.previewToken +
+        '/tile_224';
   }
 
   static int getPhotoIndexInScrollView(BuildContext context, int albumId) {

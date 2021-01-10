@@ -150,7 +150,12 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
       ),
       filterQuality: FilterQuality.medium,
       imageProvider: CachedNetworkImageProvider(
-        photoprismUrl + '/api/v1/t/' + photos[index].hash + '/public/fit_1920',
+        photoprismUrl +
+            '/api/v1/t/' +
+            photos[index].hash +
+            '/' +
+            model.config.previewToken +
+            '/fit_1920',
         headers: model.photoprismAuth.getAuthHeaders(),
       ),
       initialScale: PhotoViewComputedScale.contained,

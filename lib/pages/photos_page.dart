@@ -200,8 +200,10 @@ class PhotosPage extends StatelessWidget {
     //}
     return RefreshIndicator(child: OrientationBuilder(
         builder: (BuildContext context, Orientation orientation) {
-      if (videosPage && model.config == null) {
+      if (model.config == null) {
         Api.loadConfig(model);
+      }
+      if (videosPage) {
         return const Text('', key: ValueKey<String>('videosGridView'));
       }
       if (albumId == null && model.momentsTime == null) {
