@@ -10,6 +10,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:photo_manager/photo_manager.dart' as photolib;
 import 'package:photoprism/pages/auto_upload_queue.dart';
+import 'package:photoprism/widgets/about.dart';
 import 'package:easy_localization/easy_localization.dart';
 
 import 'log_view.dart';
@@ -218,7 +219,7 @@ class SettingsPage extends StatelessWidget {
                         builder: (BuildContext ctx) => LogView(ctx)),
                   );
                 }),
-            const AboutListTile()
+            AboutWidget()
           ],
         )));
   }
