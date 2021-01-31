@@ -3,7 +3,7 @@ import 'package:photoprism/common/photo_manager.dart';
 import 'package:photoprism/common/photoprism_common_helper.dart';
 import 'package:photoprism/api/api.dart';
 import 'package:photoprism/model/album.dart';
-import 'package:photoprism/model/photo.dart';
+import 'package:photoprism/model/photo_old.dart' as photo_old;
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:provider/provider.dart';
 
@@ -19,8 +19,9 @@ class AlbumManager {
     for (final int albumId in albums.keys) {
       await PhotoprismCommonHelper.saveAsJsonToSharedPrefs(
           'photos' + albumId.toString(),
-          albums[albumId].photos.map<String, Photo>((int key, Photo value) =>
-              MapEntry<String, Photo>(key.toString(), value)));
+          albums[albumId].photos.map<String, photo_old.Photo>(
+              (int key, photo_old.Photo value) =>
+                  MapEntry<String, photo_old.Photo>(key.toString(), value)));
     }
     model.setAlbums(albums, notify: notify);
   }
@@ -38,7 +39,7 @@ class AlbumManager {
       final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
       await loadAlbums(context, 0, forceReload: true);
       await PhotoManager.saveAndSetPhotos(
-          context, <int, Photo>{}, albumId, false);
+          context, <int, photo_old.Photo>{}, albumId, false);
       await model.photoprismLoadingScreen.hideLoadingScreen();
       model.photoprismMessage
           .showMessage('Adding photos to album successfull.');
@@ -60,14 +61,7 @@ class AlbumManager {
       return await saveAndSetAlbums(context, albums,
           notify: loadPhotosForAlbumId == null);
     });
-    if (loadPhotosForAlbumId != null) {
-      return PhotoManager.loadPhoto(
-          context,
-          PhotoManager.getPhotoIndexInScrollView(context, loadPhotosForAlbumId),
-          loadPhotosForAlbumId,
-          false,
-          forceReload: true);
-    }
+    if (loadPhotosForAlbumId != null) {}
     return;
   }
 }

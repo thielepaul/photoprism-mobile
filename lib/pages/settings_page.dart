@@ -2,7 +2,7 @@ import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:photoprism/common/photoprism_uploader.dart';
-import 'package:photoprism/model/photo.dart';
+import 'package:photoprism/model/photo_old.dart' as photo_old;
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:photoprism/widgets/auth_dialog.dart';
 import 'package:photoprism/widgets/multi_select_dialog.dart';
@@ -322,12 +322,13 @@ class SettingsPage extends StatelessWidget {
         sp.remove('photos' + albumId.toString());
       }
     }
-    model.photos = null;
-    model.videos = <int, Photo>{};
+    model.photosOld = null;
+    model.videos = <int, photo_old.Photo>{};
     model.momentsTime = null;
     model.albums = null;
     model.config = null;
     await DefaultCacheManager().emptyCache();
+    model.resetDatabase();
   }
 
   Widget _albumsToUploadText() => FutureBuilder<List<photolib.AssetPathEntity>>(

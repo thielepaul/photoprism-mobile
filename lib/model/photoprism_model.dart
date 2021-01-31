@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:drag_select_grid_view/drag_select_grid_view.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:photo_view/photo_view.dart';
+import 'package:photoprism/common/db.dart';
 import 'package:photoprism/common/photoprism_auth.dart';
 import 'package:photoprism/common/photoprism_remote_config_loader.dart';
 import 'package:photoprism/common/photoprism_loading_screen.dart';
@@ -11,10 +14,12 @@ import 'package:photoprism/common/photoprism_uploader.dart';
 import 'package:photoprism/main.dart';
 import 'package:photoprism/model/album.dart';
 import 'package:photoprism/model/config.dart';
-import 'package:photoprism/model/photo.dart';
+import 'package:photoprism/model/dbtimestamps.dart';
+import 'package:photoprism/model/photo_old.dart' as photo_old;
 import 'package:photoprism/model/moments_time.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:synchronized/synchronized.dart';
+import 'package:photoprism/api/api.dart';
 
 class PhotoprismModel extends ChangeNotifier {
   PhotoprismModel() {
@@ -24,13 +29,18 @@ class PhotoprismModel extends ChangeNotifier {
   String photoprismUrl = 'https://demo.photoprism.org';
   Config config;
   List<MomentsTime> momentsTime;
-  Map<int, Photo> photos;
+  Map<int, photo_old.Photo> photosOld;
   Map<int, Album> albums;
-  Map<int, Photo> videos = <int, Photo>{};
+  Map<int, photo_old.Photo> videos = <int, photo_old.Photo>{};
   Lock photoLoadingLock = Lock();
   Lock albumLoadingLock = Lock();
   bool _dataFromCacheLoaded = false;
   List<String> log;
+  MyDatabase database;
+  StreamSubscription<List<PhotoWithFile>> photosStreamSubscription;
+  List<PhotoWithFile> photos;
+  DbTimestamps dbTimestamps;
+  bool ascending = false;
 
   // theming
   String applicationColor = '#424242';
@@ -86,6 +96,21 @@ class PhotoprismModel extends ChangeNotifier {
 
     photoprismRemoteConfigLoader.loadApplicationColor();
     gridController.addListener(notifyListeners);
+
+    database = MyDatabase();
+
+    updatePhotosSubscription();
+
+    dbTimestamps = await DbTimestamps.fromSharedPrefs();
+    await Api.updateDb(this);
+  }
+
+  Future<void> resetDatabase() async {
+    await database.close();
+    await database.deleteDatabase();
+    database = MyDatabase();
+    updatePhotosSubscription();
+    await dbTimestamps.clear();
   }
 
   Future<void> loadLog() async {
@@ -132,8 +157,8 @@ class PhotoprismModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setPhotos(Map<int, Photo> newValue) {
-    photos = newValue;
+  void setPhotos(Map<int, photo_old.Photo> newValue) {
+    photosOld = newValue;
     notifyListeners();
   }
 
@@ -144,7 +169,7 @@ class PhotoprismModel extends ChangeNotifier {
     }
   }
 
-  void setVideos(Map<int, Photo> newValue) {
+  void setVideos(Map<int, photo_old.Photo> newValue) {
     videos = newValue;
     notifyListeners();
   }
@@ -187,4 +212,17 @@ class PhotoprismModel extends ChangeNotifier {
   bool get dataFromCacheLoaded => _dataFromCacheLoaded;
 
   void notify() => notifyListeners();
+
+  void updatePhotosSubscription() {
+    if (photosStreamSubscription != null) {
+      photosStreamSubscription.cancel();
+    }
+    final Stream<List<PhotoWithFile>> photosStream =
+        database.photosWithFile(ascending);
+    photosStreamSubscription = photosStream.listen((List<PhotoWithFile> value) {
+      print('got photo update from database');
+      photos = value;
+      notifyListeners();
+    });
+  }
 }

@@ -44,11 +44,15 @@ dependencies:
   photo_manager: ^0.5.8
   device_info: ^0.4.1+5
   video_player: '>=0.10.11+2 <2.0.0'
+  moor: ^3.4.0
+  sqlite3_flutter_libs: ^0.3.0
   draggable_scrollbar:
     git:
       url: git://github.com/thielepaul/flutter-draggable-scrollbar.git
 
 dev_dependencies:
+  moor_generator: ^3.4.1
+  build_runner: ^1.11.0
   flutter_test:
     sdk: flutter
   flutter_launcher_icons: "^0.7.4"

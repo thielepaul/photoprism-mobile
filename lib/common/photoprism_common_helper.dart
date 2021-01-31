@@ -11,7 +11,7 @@ import 'package:photoprism/main.dart';
 import 'package:photoprism/model/album.dart';
 import 'package:photoprism/model/config.dart';
 import 'package:photoprism/model/moments_time.dart';
-import 'package:photoprism/model/photo.dart';
+import 'package:photoprism/model/photo_old.dart' as photo_old;
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -33,12 +33,14 @@ class PhotoprismCommonHelper {
 
     if (sp.containsKey('photos')) {
       try {
-        final Map<int, Photo> photos = json
+        final Map<int, photo_old.Photo> photos = json
                 .decode(sp.getString('photos'))
-                .map<int, Photo>((String key, dynamic value) =>
-                    MapEntry<int, Photo>(int.parse(key),
-                        Photo.fromJson(value as Map<String, dynamic>)))
-            as Map<int, Photo>;
+                .map<int, photo_old.Photo>((String key, dynamic value) =>
+                    MapEntry<int, photo_old.Photo>(
+                        int.parse(key),
+                        photo_old.Photo.fromJson(
+                            value as Map<String, dynamic>)))
+            as Map<int, photo_old.Photo>;
         PhotoManager.saveAndSetPhotos(context, photos, null, false);
       } catch (_) {
         sp.remove('photos');
@@ -74,10 +76,12 @@ class PhotoprismCommonHelper {
           try {
             albums[albumId].photos = json
                     .decode(sp.getString('photos' + albumId.toString()))
-                    .map<int, Photo>((String key, dynamic value) =>
-                        MapEntry<int, Photo>(int.parse(key),
-                            Photo.fromJson(value as Map<String, dynamic>)))
-                as Map<int, Photo>;
+                    .map<int, photo_old.Photo>((String key, dynamic value) =>
+                        MapEntry<int, photo_old.Photo>(
+                            int.parse(key),
+                            photo_old.Photo.fromJson(
+                                value as Map<String, dynamic>)))
+                as Map<int, photo_old.Photo>;
           } catch (_) {
             sp.remove('photos' + albumId.toString());
           }
@@ -88,12 +92,14 @@ class PhotoprismCommonHelper {
 
     if (sp.containsKey('videos')) {
       try {
-        final Map<int, Photo> photos = json
+        final Map<int, photo_old.Photo> photos = json
                 .decode(sp.getString('videos'))
-                .map<int, Photo>((String key, dynamic value) =>
-                    MapEntry<int, Photo>(int.parse(key),
-                        Photo.fromJson(value as Map<String, dynamic>)))
-            as Map<int, Photo>;
+                .map<int, photo_old.Photo>((String key, dynamic value) =>
+                    MapEntry<int, photo_old.Photo>(
+                        int.parse(key),
+                        photo_old.Photo.fromJson(
+                            value as Map<String, dynamic>)))
+            as Map<int, photo_old.Photo>;
         PhotoManager.saveAndSetPhotos(context, photos, null, true);
       } catch (_) {
         sp.remove('videos');

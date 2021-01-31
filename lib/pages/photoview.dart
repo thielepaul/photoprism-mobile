@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photoprism/api/api.dart';
 import 'package:photoprism/common/photo_manager.dart';
-import 'package:photoprism/model/photo.dart';
+import 'package:photoprism/model/photo_old.dart' as photo_old;
 import 'package:provider/provider.dart';
 import 'package:video_player/video_player.dart';
 
@@ -28,7 +28,7 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
   PageController pageController;
   int currentPhotoIndex;
   String photoprismUrl;
-  Map<int, Photo> photos;
+  Map<int, photo_old.Photo> photos;
   bool photoViewIsScrolling = false;
   bool showAppBar = true;
   bool dragging = false;
@@ -268,8 +268,6 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
           if (PhotoManager.getPhotos(
                   context, widget.albumId, widget.videosPage)[index] ==
               null) {
-            PhotoManager.loadPhoto(
-                context, index, widget.albumId, widget.videosPage);
             return Container();
           }
 

@@ -3,7 +3,7 @@ import 'package:photoprism/api/api.dart';
 import 'package:photoprism/common/photoprism_common_helper.dart';
 import 'package:photoprism/main.dart';
 import 'package:photoprism/model/moments_time.dart';
-import 'package:photoprism/model/photo.dart';
+import 'package:photoprism/model/photo_old.dart' as photo_old;
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:photoprism/common/album_manager.dart';
 import 'package:provider/provider.dart';
@@ -11,37 +11,37 @@ import 'package:provider/provider.dart';
 class PhotoManager {
   const PhotoManager();
 
-  static Map<int, Photo> getPhotos(
+  static Map<int, photo_old.Photo> getPhotos(
       BuildContext context, int albumId, bool videosPage) {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
     if (videosPage) {
       return model.videos;
     }
-    if (albumId == null && model.photos != null) {
-      return model.photos;
+    if (albumId == null && model.photosOld != null) {
+      return model.photosOld;
     }
     if (model.albums != null && model.albums[albumId] != null) {
       return model.albums[albumId].photos;
     }
-    return <int, Photo>{};
+    return <int, photo_old.Photo>{};
   }
 
   static Future<void> saveAndSetPhotos(BuildContext context,
-      Map<int, Photo> photos, int albumId, bool videosPage) async {
+      Map<int, photo_old.Photo> photos, int albumId, bool videosPage) async {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
     if (videosPage) {
       await PhotoprismCommonHelper.saveAsJsonToSharedPrefs(
           'videos',
-          photos.map((int key, Photo value) =>
-              MapEntry<String, Photo>(key.toString(), value)));
+          photos.map((int key, photo_old.Photo value) =>
+              MapEntry<String, photo_old.Photo>(key.toString(), value)));
       model.setVideos(photos);
       return;
     }
     if (albumId == null) {
       await PhotoprismCommonHelper.saveAsJsonToSharedPrefs(
           'photos',
-          photos.map((int key, Photo value) =>
-              MapEntry<String, Photo>(key.toString(), value)));
+          photos.map((int key, photo_old.Photo value) =>
+              MapEntry<String, photo_old.Photo>(key.toString(), value)));
       model.setPhotos(photos);
       return;
     }
@@ -128,56 +128,19 @@ class PhotoManager {
     });
     if (model.selectedPageIndex == PageIndex.Photos) {
       print('reload photos');
-      await loadPhoto(
-          context, getPhotoIndexInScrollView(context, null), null, false,
-          forceReload: true);
     } else {
-      await saveAndSetPhotos(context, <int, Photo>{}, null, false);
+      await saveAndSetPhotos(context, <int, photo_old.Photo>{}, null, false);
     }
     return;
   }
 
-  static Future<void> loadPhoto(
-      BuildContext context, int index, int albumId, bool videosPage,
-      {bool forceReload = false}) async {
-    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
-    return await model.photoLoadingLock.synchronized(() async {
-      // early stop in case an old request wants a photo that has been removed
-      if (albumId != null &&
-          model.albums != null &&
-          model.albums[albumId] != null &&
-          index >= model.albums[albumId].imageCount) {
-        return;
-      }
-      if (getPhotos(context, albumId, videosPage).containsKey(index) &&
-          !forceReload) {
-        return;
-      }
-      final int offset = index - (index % 100);
-      Map<int, Photo> photos;
-      if (forceReload) {
-        photos = <int, Photo>{};
-      } else {
-        photos = getPhotos(context, albumId, videosPage);
-      }
-      photos.addAll(await Api.loadPhotos(context, albumId, offset,
-          videosPage: videosPage));
-      saveAndSetPhotos(context, photos, albumId, videosPage);
-      return;
-    });
-  }
-
   static String getPhotoThumbnailUrl(
       BuildContext context, int index, int albumId, bool videosPage) {
-    if (getPhotos(context, albumId, videosPage)[index] == null) {
-      return null;
-    }
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
     if (model.config == null) {
       return null;
     }
-    final String filehash =
-        PhotoManager.getPhotos(context, albumId, videosPage)[index].hash;
+    final String filehash = model.photos[index].file.hash;
     return model.photoprismUrl +
         '/api/v1/t/' +
         filehash +

@@ -5,12 +5,15 @@ import 'package:http/http.dart' as http;
 import 'package:photoprism/model/album.dart';
 import 'package:photoprism/model/config.dart';
 import 'package:photoprism/model/moments_time.dart';
-import 'package:photoprism/model/photo.dart';
+import 'package:photoprism/model/photo_old.dart' as photo_old;
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:provider/provider.dart';
+import 'package:photoprism/common/db.dart';
 import 'package:http_parser/http_parser.dart';
 
 class Api {
+  static const int resultCount = 1000;
+
   static Future<dynamic> httpAuth(PhotoprismModel model, Function call) async {
     dynamic response = await call();
     if ((response as http.BaseResponse).statusCode == 401) {
@@ -258,41 +261,6 @@ class Api {
         .toList() as List<MomentsTime>;
   }
 
-  static Future<Map<int, Photo>> loadPhotos(
-      BuildContext context, int albumId, int offset,
-      {bool videosPage = false}) async {
-    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
-
-    String albumIdUrlParam = '';
-    if (albumId != null &&
-        model.albums != null &&
-        model.albums[albumId] != null) {
-      albumIdUrlParam = model.albums[albumId].id;
-    }
-
-    final String type = videosPage ? '&video=true' : '&photo=true';
-    final http.Response response = await httpAuth(
-        model,
-        () => http.get(
-            model.photoprismUrl +
-                '/api/v1/photos' +
-                '?count=100' +
-                '&merged=true' +
-                type +
-                '&offset=' +
-                offset.toString() +
-                '&album=' +
-                albumIdUrlParam,
-            headers: model.photoprismAuth.getAuthHeaders())) as http.Response;
-    final List<dynamic> parsed = json.decode(response.body) as List<dynamic>;
-    return Map<int, Photo>.fromIterables(
-        List<int>.generate(parsed.length, (int i) => i + offset),
-        parsed
-            .map<Photo>(
-                (dynamic json) => Photo.fromJson(json as Map<String, dynamic>))
-            .toList());
-  }
-
   static Future<Map<int, Album>> loadAlbums(
       BuildContext context, int offset) async {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
@@ -376,7 +344,7 @@ class Api {
   }
 
   static Future<List<int>> downloadVideo(
-      PhotoprismModel model, Photo photo) async {
+      PhotoprismModel model, photo_old.Photo photo) async {
     final http.Response response = await http.get(videoUrl(model, photo));
     if (response.statusCode == 200) {
       return response.bodyBytes;
@@ -419,7 +387,7 @@ class Api {
     return true;
   }
 
-  static String videoUrl(PhotoprismModel model, Photo photo) {
+  static String videoUrl(PhotoprismModel model, photo_old.Photo photo) {
     if (model.config == null) {
       return null;
     }
@@ -429,5 +397,100 @@ class Api {
         '/' +
         model.config.previewToken +
         '/mp4';
+  }
+
+  static Future<List<dynamic>> loadDb(
+      PhotoprismModel model, String table, bool deleted, String since) async {
+    final http.Response response = await httpAuth(
+        model,
+        () => http.get(
+            model.photoprismUrl +
+                '/api/v1/db' +
+                '?count=' +
+                resultCount.toString() +
+                '&table=' +
+                table +
+                '&deleted=' +
+                deleted.toString() +
+                (since != null ? '&since=' + since : ''),
+            headers: model.photoprismAuth.getAuthHeaders())) as http.Response;
+    if (response.statusCode != 200) {
+      print('ERROR: api DB call failed');
+      return <dynamic>[];
+    }
+    return json.decode(response.body) as List<dynamic>;
+  }
+
+  static Future<Iterable<Photo>> loadPhotosDb(PhotoprismModel model) async {
+    const bool deleted = false;
+
+    String since;
+    if (deleted) {
+      since = model.dbTimestamps.photosDeletedAt;
+    } else {
+      since = model.dbTimestamps.photosUpdatedAt;
+    }
+
+    final List<dynamic> parsed = await loadDb(model, 'photos', deleted, since);
+
+    if (deleted && parsed.last['DeletedAt'] != null) {
+      model.dbTimestamps.photosDeletedAt = parsed.last['DeletedAt'] as String;
+    } else if (parsed.last['UpdatedAt'] != null) {
+      model.dbTimestamps.photosUpdatedAt = parsed.last['UpdatedAt'] as String;
+    }
+
+    return parsed.map((dynamic json) => Photo.fromJson(
+        json as Map<String, dynamic>,
+        serializer: const CustomSerializer()));
+  }
+
+  static Future<Iterable<File>> loadFilesDb(PhotoprismModel model) async {
+    const bool deleted = false;
+
+    String since;
+    if (deleted) {
+      since = model.dbTimestamps.filesDeletedAt;
+    } else {
+      since = model.dbTimestamps.filesUpdatedAt;
+    }
+
+    final List<dynamic> parsed = await loadDb(model, 'files', deleted, since);
+
+    if (deleted && parsed.last['DeletedAt'] != null) {
+      model.dbTimestamps.filesDeletedAt = parsed.last['DeletedAt'] as String;
+    } else if (parsed.last['UpdatedAt'] != null) {
+      model.dbTimestamps.filesUpdatedAt = parsed.last['UpdatedAt'] as String;
+    }
+    return parsed.map((dynamic json) => File.fromJson(
+        json as Map<String, dynamic>,
+        serializer: const CustomSerializer()));
+  }
+
+  // static Future<List<Album>> loadAlbumsDb(BuildContext context) async {
+
+  // }
+
+  // static Future<List<PhotosAlbum>> loadPhotosAlbumsDb(BuildContext context) async {
+
+  // }
+
+  static Future<void> updateDb(PhotoprismModel model) async {
+    if (model.dbTimestamps == null) {
+      return;
+    }
+
+    List<Photo> photosFromApi;
+    while (photosFromApi == null || photosFromApi.length == resultCount) {
+      print('download batch of photos db');
+      photosFromApi = (await loadPhotosDb(model)).toList();
+      await model.database.createOrUpdateMultiplePhotos(photosFromApi);
+    }
+
+    List<File> filesFromApi;
+    while (filesFromApi == null || filesFromApi.length == resultCount) {
+      print('download batch of files db');
+      filesFromApi = (await loadFilesDb(model)).toList();
+      await model.database.createOrUpdateMultipleFiles(filesFromApi);
+    }
   }
 }

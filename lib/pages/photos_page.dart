@@ -9,7 +9,7 @@ import 'package:photoprism/common/hexcolor.dart';
 import 'package:photoprism/common/photo_manager.dart';
 import 'package:photoprism/common/transparent_route.dart';
 import 'package:photoprism/model/moments_time.dart';
-import 'package:photoprism/model/photo.dart';
+import 'package:photoprism/model/photo_old.dart' as photo_old;
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:photoprism/pages/photoview.dart';
 import 'package:draggable_scrollbar/draggable_scrollbar.dart';
@@ -65,12 +65,12 @@ class PhotosPage extends StatelessWidget {
         .showLoadingScreen('Preparing photos for sharing...');
     for (final int index in model.gridController.selection.selectedIndexes) {
       final List<int> bytes =
-          await Api.downloadPhoto(model, model.photos[index].hash);
+          await Api.downloadPhoto(model, model.photosOld[index].hash);
       if (bytes == null) {
         model.photoprismLoadingScreen.hideLoadingScreen();
         return;
       }
-      photos[model.photos[index].hash + '.jpg'] = bytes;
+      photos[model.photosOld[index].hash + '.jpg'] = bytes;
     }
     model.photoprismLoadingScreen.hideLoadingScreen();
     Share.files('Photoprism Photos', photos, 'image/jpg');
@@ -107,7 +107,6 @@ class PhotosPage extends StatelessWidget {
     final String imageUrl =
         PhotoManager.getPhotoThumbnailUrl(context, index, albumId, videosPage);
     if (imageUrl == null) {
-      PhotoManager.loadPhoto(context, index, albumId, videosPage);
       return Container(
         color: Colors.grey[300],
       );
@@ -172,11 +171,18 @@ class PhotosPage extends StatelessWidget {
                   PopupMenuItem<int>(
                     value: 0,
                     child: const Text('upload_photo').tr(),
+                  ),
+                  const PopupMenuItem<int>(
+                    value: 1,
+                    child: Text('reverse sorting'),
                   )
                 ],
                 onSelected: (int choice) {
                   if (choice == 0) {
                     model.photoprismUploader.selectPhotoAndUpload(context);
+                  } else if (choice == 1) {
+                    model.ascending = !model.ascending;
+                    model.updatePhotosSubscription();
                   }
                 },
               ),
@@ -187,13 +193,13 @@ class PhotosPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
+
     final ScrollController _scrollController = model.scrollController;
 
     final DragSelectGridViewController gridController =
         Provider.of<PhotoprismModel>(context).gridController;
 
-    final int tileCount =
-        PhotoManager.getPhotosCount(context, albumId, videosPage);
+    final int tileCount = model.photos != null ? model.photos.length : 0;
 
     //if (Photos.getPhotoList(context, albumId).length == 0) {
     //  return IconButton(onPressed: () => {}, icon: Icon(Icons.add));
@@ -262,9 +268,11 @@ class PhotosPage extends StatelessWidget {
         await AlbumManager.loadAlbums(context, 0,
             forceReload: true, loadPhotosForAlbumId: albumId);
       } else if (videosPage) {
-        PhotoManager.saveAndSetPhotos(context, <int, Photo>{}, null, true);
+        PhotoManager.saveAndSetPhotos(
+            context, <int, photo_old.Photo>{}, null, true);
         await Api.loadConfig(model);
       } else {
+        await Api.updateDb(model);
         return await PhotoManager.loadMomentsTime(context, forceReload: true);
       }
     });
