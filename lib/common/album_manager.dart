@@ -9,13 +9,13 @@ import 'package:provider/provider.dart';
 
 class AlbumManager {
   static Future<void> saveAndSetAlbums(
-      BuildContext context, Map<int, Album> albums,
+      BuildContext context, Map<int, AlbumOld> albums,
       {bool notify = true}) async {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
     await PhotoprismCommonHelper.saveAsJsonToSharedPrefs(
         'albums',
-        albums.map<String, Album>((int key, Album value) =>
-            MapEntry<String, Album>(key.toString(), value)));
+        albums.map<String, AlbumOld>((int key, AlbumOld value) =>
+            MapEntry<String, AlbumOld>(key.toString(), value)));
     for (final int albumId in albums.keys) {
       await PhotoprismCommonHelper.saveAsJsonToSharedPrefs(
           'photos' + albumId.toString(),
@@ -57,7 +57,7 @@ class AlbumManager {
       if (model.albums != null && !forceReload) {
         return;
       }
-      final Map<int, Album> albums = await Api.loadAlbums(context, offset);
+      final Map<int, AlbumOld> albums = await Api.loadAlbums(context, offset);
       return await saveAndSetAlbums(context, albums,
           notify: loadPhotosForAlbumId == null);
     });

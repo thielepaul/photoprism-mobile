@@ -29,8 +29,7 @@ class PhotosPage extends StatelessWidget {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
     final List<String> selectedPhotos = model
         .gridController.selection.selectedIndexes
-        .map<String>((int element) =>
-            PhotoManager.getPhotos(context, null, videosPage)[element].uid)
+        .map<String>((int element) => model.photos[element].photo.uid)
         .toList();
 
     PhotoManager.archivePhotos(context, selectedPhotos);
@@ -264,17 +263,9 @@ class PhotosPage extends StatelessWidget {
             }),
       );
     }), onRefresh: () async {
-      if (albumId != null) {
-        await AlbumManager.loadAlbums(context, 0,
-            forceReload: true, loadPhotosForAlbumId: albumId);
-      } else if (videosPage) {
-        PhotoManager.saveAndSetPhotos(
-            context, <int, photo_old.Photo>{}, null, true);
-        await Api.loadConfig(model);
-      } else {
-        await Api.updateDb(model);
-        return await PhotoManager.loadMomentsTime(context, forceReload: true);
-      }
+      await Api.loadConfig(model);
+      await Api.updateDb(model);
+      await PhotoManager.loadMomentsTime(context, forceReload: true);
     });
   }
 }

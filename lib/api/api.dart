@@ -5,7 +5,6 @@ import 'package:http/http.dart' as http;
 import 'package:photoprism/model/album.dart';
 import 'package:photoprism/model/config.dart';
 import 'package:photoprism/model/moments_time.dart';
-import 'package:photoprism/model/photo_old.dart' as photo_old;
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:provider/provider.dart';
 import 'package:photoprism/common/db.dart';
@@ -60,7 +59,7 @@ class Api {
     }
   }
 
-  static Future<List<Album>> searchAlbums(
+  static Future<List<AlbumOld>> searchAlbums(
       PhotoprismModel model, String query) async {
     try {
       final http.Response response = await httpAuth(
@@ -75,9 +74,9 @@ class Api {
       }
       return json
           .decode(response.body)
-          .map<Album>(
-              (dynamic value) => Album.fromJson(value as Map<String, dynamic>))
-          .toList() as List<Album>;
+          .map<AlbumOld>((dynamic value) =>
+              AlbumOld.fromJson(value as Map<String, dynamic>))
+          .toList() as List<AlbumOld>;
     } catch (_) {
       return null;
     }
@@ -261,7 +260,7 @@ class Api {
         .toList() as List<MomentsTime>;
   }
 
-  static Future<Map<int, Album>> loadAlbums(
+  static Future<Map<int, AlbumOld>> loadAlbums(
       BuildContext context, int offset) async {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
 
@@ -277,11 +276,11 @@ class Api {
             headers: model.photoprismAuth.getAuthHeaders())) as http.Response;
     final List<dynamic> parsed = json.decode(response.body) as List<dynamic>;
 
-    return Map<int, Album>.fromIterables(
+    return Map<int, AlbumOld>.fromIterables(
         List<int>.generate(parsed.length, (int i) => i + offset),
         parsed
-            .map<Album>(
-                (dynamic json) => Album.fromJson(json as Map<String, dynamic>))
+            .map<AlbumOld>((dynamic json) =>
+                AlbumOld.fromJson(json as Map<String, dynamic>))
             .toList());
   }
 
@@ -343,17 +342,17 @@ class Api {
     return false;
   }
 
-  static Future<List<int>> downloadVideo(
-      PhotoprismModel model, photo_old.Photo photo) async {
-    final http.Response response = await http.get(videoUrl(model, photo));
-    if (response.statusCode == 200) {
-      return response.bodyBytes;
-    } else {
-      model.photoprismMessage
-          .showMessage('Error while sharing: No connection to server!');
-    }
-    return null;
-  }
+  // static Future<List<int>> downloadVideo(
+  //     PhotoprismModel model, photo_old.Photo photo) async {
+  //   final http.Response response = await http.get(videoUrl(model, photo));
+  //   if (response.statusCode == 200) {
+  //     return response.bodyBytes;
+  //   } else {
+  //     model.photoprismMessage
+  //         .showMessage('Error while sharing: No connection to server!');
+  //   }
+  //   return null;
+  // }
 
   static Future<List<int>> downloadPhoto(
       PhotoprismModel model, String fileHash) async {
@@ -387,57 +386,89 @@ class Api {
     return true;
   }
 
-  static String videoUrl(PhotoprismModel model, photo_old.Photo photo) {
+  static String videoUrl(PhotoprismModel model, String hash) {
     if (model.config == null) {
       return null;
     }
     return model.photoprismUrl +
         '/api/v1/videos/' +
-        photo.videoHash +
+        hash +
         '/' +
         model.config.previewToken +
         '/mp4';
   }
 
-  static Future<List<dynamic>> loadDb(
+  static Future<List<dynamic>> loadDbBatch(
       PhotoprismModel model, String table, bool deleted, String since) async {
-    final http.Response response = await httpAuth(
-        model,
-        () => http.get(
-            model.photoprismUrl +
-                '/api/v1/db' +
-                '?count=' +
-                resultCount.toString() +
-                '&table=' +
-                table +
-                '&deleted=' +
-                deleted.toString() +
-                (since != null ? '&since=' + since : ''),
-            headers: model.photoprismAuth.getAuthHeaders())) as http.Response;
+    final String url = model.photoprismUrl +
+        '/api/v1/db' +
+        '?count=' +
+        resultCount.toString() +
+        '&table=' +
+        table +
+        '&deleted=' +
+        deleted.toString() +
+        (since != null ? '&since=' + since : '');
+    final http.Response response = await httpAuth(model,
+            () => http.get(url, headers: model.photoprismAuth.getAuthHeaders()))
+        as http.Response;
     if (response.statusCode != 200) {
-      print('ERROR: api DB call failed');
+      print('ERROR: api DB call failed ($url)');
       return <dynamic>[];
     }
     return json.decode(response.body) as List<dynamic>;
   }
 
-  static Future<Iterable<Photo>> loadPhotosDb(PhotoprismModel model) async {
-    const bool deleted = false;
+  static Future<List<dynamic>> loadDbBatchUpdated(
+      PhotoprismModel model, String table) async {
+    final String since = model.dbTimestamps.getUpdatedAt(table);
 
-    String since;
+    final List<dynamic> parsed = await loadDbBatch(model, table, false, since);
+
+    if (parsed.last['UpdatedAt'] != null) {
+      model.dbTimestamps
+          .setUpdatedAt(table, parsed.last['UpdatedAt'] as String);
+    }
+    return parsed;
+  }
+
+  static Future<List<dynamic>> loadDbBatchDeleted(
+      PhotoprismModel model, String table) async {
+    final String since = model.dbTimestamps.getDeletedAt(table);
+
+    final List<dynamic> parsed = await loadDbBatch(model, table, true, since);
+
+    if (parsed.last['DeletedAt'] != null) {
+      model.dbTimestamps
+          .setDeletedAt(table, parsed.last['DeletedAt'] as String);
+    }
+    return parsed;
+  }
+
+  static Future<List<dynamic>> loadDbAll(PhotoprismModel model, String table,
+      {bool deleted = true}) async {
+    final List<dynamic> rowsFromApiCollected = <dynamic>[];
+    List<dynamic> rowsFromApi;
+    while (rowsFromApi == null || rowsFromApi.length == resultCount) {
+      print('download batch of rows from db based on updatedAt for table ' +
+          table);
+      rowsFromApi = (await loadDbBatchUpdated(model, table)).toList();
+      rowsFromApiCollected.addAll(rowsFromApi);
+    }
     if (deleted) {
-      since = model.dbTimestamps.photosDeletedAt;
-    } else {
-      since = model.dbTimestamps.photosUpdatedAt;
+      rowsFromApi = null;
+      while (rowsFromApi == null || rowsFromApi.length == resultCount) {
+        print('download batch of rows from db based on deletedAt for table ' +
+            table);
+        rowsFromApi = (await loadDbBatchDeleted(model, table)).toList();
+        rowsFromApiCollected.addAll(rowsFromApi);
+      }
     }
+    return rowsFromApiCollected;
+  }
 
-    final List<dynamic> parsed = await loadDb(model, 'photos', deleted, since);
-
-    if (deleted && parsed.last['DeletedAt'] != null) {
-      model.dbTimestamps.photosDeletedAt = parsed.last['DeletedAt'] as String;
-    } else if (parsed.last['UpdatedAt'] != null) {
-      model.dbTimestamps.photosUpdatedAt = parsed.last['UpdatedAt'] as String;
-    }
+  static Future<Iterable<Photo>> loadPhotosDb(PhotoprismModel model) async {
+    final List<dynamic> parsed = await loadDbAll(model, 'photos');
 
     return parsed.map((dynamic json) => Photo.fromJson(
         json as Map<String, dynamic>,
@@ -445,52 +476,43 @@ class Api {
   }
 
   static Future<Iterable<File>> loadFilesDb(PhotoprismModel model) async {
-    const bool deleted = false;
+    final List<dynamic> parsed = await loadDbAll(model, 'files');
 
-    String since;
-    if (deleted) {
-      since = model.dbTimestamps.filesDeletedAt;
-    } else {
-      since = model.dbTimestamps.filesUpdatedAt;
-    }
-
-    final List<dynamic> parsed = await loadDb(model, 'files', deleted, since);
-
-    if (deleted && parsed.last['DeletedAt'] != null) {
-      model.dbTimestamps.filesDeletedAt = parsed.last['DeletedAt'] as String;
-    } else if (parsed.last['UpdatedAt'] != null) {
-      model.dbTimestamps.filesUpdatedAt = parsed.last['UpdatedAt'] as String;
-    }
     return parsed.map((dynamic json) => File.fromJson(
         json as Map<String, dynamic>,
         serializer: const CustomSerializer()));
   }
 
-  // static Future<List<Album>> loadAlbumsDb(BuildContext context) async {
+  static Future<Iterable<Album>> loadAlbumsDb(PhotoprismModel model) async {
+    final List<dynamic> parsed = await loadDbAll(model, 'albums');
 
-  // }
+    return parsed.map((dynamic json) => Album.fromJson(
+        json as Map<String, dynamic>,
+        serializer: const CustomSerializer()));
+  }
 
-  // static Future<List<PhotosAlbum>> loadPhotosAlbumsDb(BuildContext context) async {
+  static Future<Iterable<PhotosAlbum>> loadPhotosAlbumsDb(
+      PhotoprismModel model) async {
+    final List<dynamic> parsed =
+        await loadDbAll(model, 'photos_albums', deleted: false);
 
-  // }
+    return parsed.map((dynamic json) => PhotosAlbum.fromJson(
+        json as Map<String, dynamic>,
+        serializer: const CustomSerializer()));
+  }
 
   static Future<void> updateDb(PhotoprismModel model) async {
     if (model.dbTimestamps == null) {
       return;
     }
 
-    List<Photo> photosFromApi;
-    while (photosFromApi == null || photosFromApi.length == resultCount) {
-      print('download batch of photos db');
-      photosFromApi = (await loadPhotosDb(model)).toList();
-      await model.database.createOrUpdateMultiplePhotos(photosFromApi);
-    }
-
-    List<File> filesFromApi;
-    while (filesFromApi == null || filesFromApi.length == resultCount) {
-      print('download batch of files db');
-      filesFromApi = (await loadFilesDb(model)).toList();
-      await model.database.createOrUpdateMultipleFiles(filesFromApi);
-    }
+    await model.database
+        .createOrUpdateMultiplePhotos((await loadPhotosDb(model)).toList());
+    await model.database
+        .createOrUpdateMultipleFiles((await loadFilesDb(model)).toList());
+    await model.database
+        .createOrUpdateMultipleAlbums((await loadAlbumsDb(model)).toList());
+    await model.database.createOrUpdateMultiplePhotosAlbums(
+        (await loadPhotosAlbumsDb(model)).toList());
   }
 }

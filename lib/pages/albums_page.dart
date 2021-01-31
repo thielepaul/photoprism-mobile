@@ -88,6 +88,8 @@ class AlbumsPage extends StatelessWidget {
               itemBuilder: (BuildContext context, int index) {
                 return GestureDetector(
                     onTap: () {
+                      model.albumUid = model.albums[index].id;
+                      model.updatePhotosSubscription();
                       Navigator.push<void>(
                           context,
                           MaterialPageRoute<void>(

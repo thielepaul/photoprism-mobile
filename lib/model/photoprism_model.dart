@@ -30,7 +30,7 @@ class PhotoprismModel extends ChangeNotifier {
   Config config;
   List<MomentsTime> momentsTime;
   Map<int, photo_old.Photo> photosOld;
-  Map<int, Album> albums;
+  Map<int, AlbumOld> albums;
   Map<int, photo_old.Photo> videos = <int, photo_old.Photo>{};
   Lock photoLoadingLock = Lock();
   Lock albumLoadingLock = Lock();
@@ -41,6 +41,7 @@ class PhotoprismModel extends ChangeNotifier {
   List<PhotoWithFile> photos;
   DbTimestamps dbTimestamps;
   bool ascending = false;
+  String albumUid;
 
   // theming
   String applicationColor = '#424242';
@@ -162,7 +163,7 @@ class PhotoprismModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setAlbums(Map<int, Album> newValue, {bool notify = true}) {
+  void setAlbums(Map<int, AlbumOld> newValue, {bool notify = true}) {
     albums = newValue;
     if (notify) {
       notifyListeners();
@@ -218,7 +219,7 @@ class PhotoprismModel extends ChangeNotifier {
       photosStreamSubscription.cancel();
     }
     final Stream<List<PhotoWithFile>> photosStream =
-        database.photosWithFile(ascending);
+        database.photosWithFile(ascending, albumUid: albumUid);
     photosStreamSubscription = photosStream.listen((List<PhotoWithFile> value) {
       print('got photo update from database');
       photos = value;

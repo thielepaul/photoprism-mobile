@@ -76,7 +76,7 @@ class PhotoprismUploader {
   Completer<int> manualUploadFinishedCompleter;
   FlutterUploader uploader;
   String deviceName = '';
-  Map<String, Album> deviceAlbums = <String, Album>{};
+  Map<String, AlbumOld> deviceAlbums = <String, AlbumOld>{};
   int uploadsinProgress = 0;
   int failedUploads = 0;
 
@@ -312,14 +312,14 @@ class PhotoprismUploader {
 
   Future<int> getRemoteAlbumsWithDeviceName(PhotoprismModel model) async {
     // Get list of albums from server which name is the device name of the smartphone.
-    final List<Album> deviceAlbumList =
+    final List<AlbumOld> deviceAlbumList =
         await Api.searchAlbums(photoprismModel, deviceName);
     if (deviceAlbumList == null) {
       return -1;
     }
 
-    deviceAlbums = Map<String, Album>.fromEntries(deviceAlbumList
-        .map((Album album) => MapEntry<String, Album>(album.name, album)));
+    deviceAlbums = Map<String, AlbumOld>.fromEntries(deviceAlbumList.map(
+        (AlbumOld album) => MapEntry<String, AlbumOld>(album.name, album)));
 
     return 0;
   }

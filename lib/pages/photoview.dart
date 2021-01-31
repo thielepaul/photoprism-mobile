@@ -5,11 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photoprism/api/api.dart';
 import 'package:photoprism/common/photo_manager.dart';
-import 'package:photoprism/model/photo_old.dart' as photo_old;
+import 'package:photoprism/model/photoprism_model.dart';
 import 'package:provider/provider.dart';
 import 'package:video_player/video_player.dart';
-
-import '../model/photoprism_model.dart';
 
 class FullscreenPhotoGallery extends StatefulWidget {
   const FullscreenPhotoGallery(
@@ -28,7 +26,6 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
   PageController pageController;
   int currentPhotoIndex;
   String photoprismUrl;
-  Map<int, photo_old.Photo> photos;
   bool photoViewIsScrolling = false;
   bool showAppBar = true;
   bool dragging = false;
@@ -111,10 +108,11 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
 
     currentPhotoIndex = index;
-    if (photos[index].aspectRatio >= 1) {
+    if (model.photos[index].file.aspectRatio >= 1) {
       if (MediaQuery.of(context).size.width <=
           MediaQuery.of(context).size.height) {
-        animation = Tween<double>(begin: 1 / photos[index].aspectRatio, end: 1)
+        animation = Tween<double>(
+                begin: 1 / model.photos[index].file.aspectRatio, end: 1)
             .animate(animationController);
       } else {
         final double screenRatio = MediaQuery.of(context).size.height /
@@ -125,8 +123,9 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
     } else {
       if (MediaQuery.of(context).size.width >=
           MediaQuery.of(context).size.height) {
-        animation = Tween<double>(begin: photos[index].aspectRatio, end: 1)
-            .animate(animationController);
+        animation =
+            Tween<double>(begin: model.photos[index].file.aspectRatio, end: 1)
+                .animate(animationController);
       } else {
         final double screenRatio = MediaQuery.of(context).size.width /
             MediaQuery.of(context).size.height;
@@ -141,8 +140,10 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
         httpHeaders: Provider.of<PhotoprismModel>(context)
             .photoprismAuth
             .getAuthHeaders(),
-        width: MediaQuery.of(context).size.height * photos[index].aspectRatio,
-        height: MediaQuery.of(context).size.width / photos[index].aspectRatio,
+        width: MediaQuery.of(context).size.height *
+            model.photos[index].file.aspectRatio,
+        height: MediaQuery.of(context).size.width /
+            model.photos[index].file.aspectRatio,
         fit: BoxFit.contain,
         alignment: Alignment.center,
         imageUrl: PhotoManager.getPhotoThumbnailUrl(
@@ -152,7 +153,7 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
       imageProvider: CachedNetworkImageProvider(
         photoprismUrl +
             '/api/v1/t/' +
-            photos[index].hash +
+            model.photos[index].file.hash +
             '/' +
             model.config.previewToken +
             '/fit_1920',
@@ -175,11 +176,13 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
               )
             : Container();
 
-    final String videoUrl =
-        photos[index].isVideo ? Api.videoUrl(model, photos[index]) : '';
+    final String videoUrl = model.photos[index].photo.type == 'video'
+        // ? Api.videoUrl(model, videoHash) // TODO get video hash from db
+        ? ''
+        : '';
 
     return _AnimatedFullScreenPhoto(
-        orientation: photos[index].aspectRatio >= 1
+        orientation: model.photos[index].file.aspectRatio >= 1
             ? Orientation.landscape
             : Orientation.portrait,
         animation: animation,
@@ -192,7 +195,7 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
                 ? videoChild
                 : photoChild,
           ),
-          floatingActionButton: photos[index].isVideo
+          floatingActionButton: model.photos[index].photo.type == 'video'
               ? FloatingActionButton(
                   onPressed: () {
                     if (videoController == null ||
@@ -234,6 +237,7 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
   Widget getPreview(int index, bool videosPage) {
     final String imageUrl = PhotoManager.getPhotoThumbnailUrl(
         context, index, widget.albumId, videosPage);
+    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
     return Container(
         width: MediaQuery.of(context).size.width,
         height: MediaQuery.of(context).size.height,
@@ -248,9 +252,9 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
                       .photoprismAuth
                       .getAuthHeaders(),
                   width: MediaQuery.of(context).size.height *
-                      photos[index].aspectRatio,
+                      model.photos[index].file.aspectRatio,
                   height: MediaQuery.of(context).size.width /
-                      photos[index].aspectRatio,
+                      model.photos[index].file.aspectRatio,
                   fit: BoxFit.contain,
                   alignment: Alignment.center,
                   imageUrl: imageUrl,
@@ -265,9 +269,8 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
             ? const NeverScrollableScrollPhysics()
             : const BouncingScrollPhysics(),
         itemBuilder: (BuildContext context, int index) {
-          if (PhotoManager.getPhotos(
-                  context, widget.albumId, widget.videosPage)[index] ==
-              null) {
+          final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
+          if (model.photos == null) {
             return Container();
           }
 
@@ -289,8 +292,7 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
                     child: photoview(index)),
               ]));
         },
-        itemCount: PhotoManager.getPhotosCount(
-            context, widget.albumId, widget.videosPage),
+        itemCount: Provider.of<PhotoprismModel>(context).photos.length,
         controller: pageController,
       ));
 
@@ -351,8 +353,8 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
       child: child);
   @override
   Widget build(BuildContext context) {
-    photoprismUrl = Provider.of<PhotoprismModel>(context).photoprismUrl;
-    photos = PhotoManager.getPhotos(context, widget.albumId, widget.videosPage);
+    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
+    photoprismUrl = model.photoprismUrl;
     currentPhotoIndex = widget.currentPhotoIndex;
 
     return WillPopScope(
@@ -395,7 +397,8 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
                             sharePhoto(currentPhotoIndex, context);
                           },
                         ),
-                        if (photos[currentPhotoIndex].isVideo)
+                        if (model.photos[currentPhotoIndex].photo.type ==
+                            'video')
                           IconButton(
                             icon: const Icon(Icons.video_library),
                             tooltip: 'Share video',
@@ -414,22 +417,24 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
   Future<void> sharePhoto(int index, BuildContext context) async {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
     final List<int> photoBytes =
-        await Api.downloadPhoto(model, photos[index].hash);
+        await Api.downloadPhoto(model, model.photos[index].file.hash);
 
     if (photoBytes != null) {
-      await Share.file('Photoprism Photo', photos[index].hash + '.jpg',
-          photoBytes, 'image/jpg');
+      await Share.file('Photoprism Photo',
+          model.photos[index].file.hash + '.jpg', photoBytes, 'image/jpg');
     }
   }
 
   Future<void> shareVideo(int index, BuildContext context) async {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
-    final List<int> videoBytes = await Api.downloadVideo(model, photos[index]);
+    // Todo get video hash from
+    // final List<int> videoBytes =
+    // await Api.downloadVideo(model, model.photos[index]);
 
-    if (videoBytes != null) {
-      await Share.file('Photoprism Video', photos[index].hash + '.mp4',
-          videoBytes, 'video/mp4');
-    }
+    // if (videoBytes != null) {
+    // await Share.file('Photoprism Video',
+    // model.photos[index].file.hash + '.mp4', videoBytes, 'video/mp4');
+    // }
   }
 }
 

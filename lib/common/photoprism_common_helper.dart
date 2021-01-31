@@ -61,13 +61,13 @@ class PhotoprismCommonHelper {
     }
 
     if (sp.containsKey('albums')) {
-      Map<int, Album> albums;
+      Map<int, AlbumOld> albums;
       try {
-        albums = json.decode(sp.getString('albums')).map<int, Album>(
-                (String key, dynamic value) => MapEntry<int, Album>(
+        albums = json.decode(sp.getString('albums')).map<int, AlbumOld>(
+                (String key, dynamic value) => MapEntry<int, AlbumOld>(
                     int.parse(key),
-                    Album.fromJson(value as Map<String, dynamic>)))
-            as Map<int, Album>;
+                    AlbumOld.fromJson(value as Map<String, dynamic>)))
+            as Map<int, AlbumOld>;
       } catch (_) {
         sp.remove('albums');
       }

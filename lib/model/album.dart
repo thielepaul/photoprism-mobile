@@ -1,10 +1,10 @@
 import 'package:photoprism/model/photo_old.dart' as photo_old;
 
-class Album {
-  Album({this.id, this.name, this.imageCount});
+class AlbumOld {
+  AlbumOld({this.id, this.name, this.imageCount});
 
-  factory Album.fromJson(Map<String, dynamic> json) {
-    return Album(
+  factory AlbumOld.fromJson(Map<String, dynamic> json) {
+    return AlbumOld(
       id: json['UID'] as String,
       name: json['Title'] as String,
       imageCount: json['PhotoCount'] as int,

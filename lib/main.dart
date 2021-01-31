@@ -111,6 +111,8 @@ class MainPage extends StatelessWidget {
         onTap: (int index) {
           if (index != _pageController.page) {
             model.gridController.clear();
+            model.albumUid = null;
+            model.updatePhotosSubscription();
           }
           _pageController.jumpToPage(index);
           model.photoprismCommonHelper

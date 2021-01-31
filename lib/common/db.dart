@@ -6,6 +6,8 @@ import 'package:moor/moor.dart';
 
 import 'package:photoprism/model/photos.dart';
 import 'package:photoprism/model/files.dart';
+import 'package:photoprism/model/albums.dart';
+import 'package:photoprism/model/photos_albums.dart';
 
 part 'db.g.dart';
 
@@ -17,7 +19,7 @@ LazyDatabase _openConnection() {
   });
 }
 
-@UseMoor(tables: <Type>[Photos, Files])
+@UseMoor(tables: <Type>[Photos, Files, Albums, PhotosAlbums])
 class MyDatabase extends _$MyDatabase {
   MyDatabase() : super(_openConnection());
 
@@ -35,21 +37,44 @@ class MyDatabase extends _$MyDatabase {
     await batch((Batch batch) => batch.insertAllOnConflictUpdate(files, rows));
   }
 
-  Stream<List<PhotoWithFile>> photosWithFile(bool ascending) {
-    final JoinedSelectStatement<Table, DataClass> query = select(photos)
-        .join(<Join<Table, DataClass>>[
-      innerJoin(files, files.photoUID.equalsExp(photos.uid)),
-    ])
-          ..where(isNotNull(files.hash) &
-              files.primary &
-              isNull(files.deletedAt) &
-              isNull(photos.deletedAt) &
-              isNotNull(photos.takenAt))
-          ..orderBy(<OrderingTerm>[
-            OrderingTerm(
-                expression: photos.takenAt,
-                mode: ascending ? OrderingMode.asc : OrderingMode.desc)
-          ]);
+  Future<void> createOrUpdateMultipleAlbums(List<Album> rows) async {
+    await batch((Batch batch) => batch.insertAllOnConflictUpdate(albums, rows));
+  }
+
+  Future<void> createOrUpdateMultiplePhotosAlbums(
+      List<PhotosAlbum> rows) async {
+    await batch(
+        (Batch batch) => batch.insertAllOnConflictUpdate(photosAlbums, rows));
+  }
+
+  Stream<List<PhotoWithFile>> photosWithFile(bool ascending,
+      {String albumUid}) {
+    JoinedSelectStatement<Table, DataClass> query;
+    if (albumUid != null) {
+      query = (select(photosAlbums)
+            ..where(($PhotosAlbumsTable tbl) => tbl.albumUID.equals(albumUid)))
+          .join(<Join<Table, DataClass>>[
+        innerJoin(photos, photos.uid.equalsExp(photosAlbums.photoUID)),
+      ]).join(<Join<Table, DataClass>>[
+        innerJoin(files, files.photoUID.equalsExp(photos.uid)),
+      ]);
+    } else {
+      query = select(photos).join(<Join<Table, DataClass>>[
+        innerJoin(files, files.photoUID.equalsExp(photos.uid)),
+      ]);
+    }
+
+    query = query
+      ..where(isNotNull(files.hash) &
+          files.primary &
+          isNull(files.deletedAt) &
+          isNull(photos.deletedAt) &
+          isNotNull(photos.takenAt))
+      ..orderBy(<OrderingTerm>[
+        OrderingTerm(
+            expression: photos.takenAt,
+            mode: ascending ? OrderingMode.asc : OrderingMode.desc)
+      ]);
 
     return query.watch().map((List<TypedResult> rows) {
       return rows.map((TypedResult row) {

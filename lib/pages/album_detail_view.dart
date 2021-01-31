@@ -13,7 +13,7 @@ class AlbumDetailView extends StatelessWidget {
         _model = Provider.of<PhotoprismModel>(context);
 
   final PhotoprismModel _model;
-  final Album _album;
+  final AlbumOld _album;
   final int _albumId;
   final TextEditingController _renameAlbumTextFieldController;
 

@@ -39,8 +39,8 @@ class Files extends Table {
   // IntColumn get height => integer().nullable()();
   // @JsonKey('Orientation')
   // IntColumn get orientation => integer().nullable()();
-  // @JsonKey('AspectRatio')
-  // RealColumn get aspectRatio => real().nullable()();
+  @JsonKey('AspectRatio')
+  RealColumn get aspectRatio => real().nullable()();
   // @JsonKey('MainColor')
   // TextColumn get mainColor => text().nullable()();
   // @JsonKey('Colors')

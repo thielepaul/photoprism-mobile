@@ -2,141 +2,90 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
-class DbTimestamps {
-  DbTimestamps({
-    String photosUpdatedAt,
-    String photosDeletedAt,
-    String filesUpdatedAt,
-    String filesDeletedAt,
-    String albumsUpdatedAt,
-    String albumsDeletedAt,
-    String photosAlbumsUpdatedAt,
-    String photosAlbumsDeletedAt,
-  }) {
-    _photosUpdatedAt = photosUpdatedAt;
-    _photosDeletedAt = photosDeletedAt;
-    _filesUpdatedAt = filesUpdatedAt;
-    _filesDeletedAt = filesDeletedAt;
-    _albumsUpdatedAt = albumsUpdatedAt;
-    _albumsDeletedAt = albumsDeletedAt;
-    _photosAlbumsUpdatedAt = photosAlbumsUpdatedAt;
-    _photosAlbumsDeletedAt = photosAlbumsDeletedAt;
-  }
+class DbTimestamp {
+  DbTimestamp({this.updatedAt, this.deletedAt});
 
-  factory DbTimestamps.fromJson(Map<String, dynamic> json) {
-    return DbTimestamps(
-      photosUpdatedAt: json['photosUpdatedAt'] as String,
-      photosDeletedAt: json['photosDeletedAt'] as String,
-      filesUpdatedAt: json['filesUpdatedAt'] as String,
-      filesDeletedAt: json['filesDeletedAt'] as String,
-      albumsUpdatedAt: json['albumsUpdatedAt'] as String,
-      albumsDeletedAt: json['albumsDeletedAt'] as String,
-      photosAlbumsUpdatedAt: json['photosAlbumsUpdatedAt'] as String,
-      photosAlbumsDeletedAt: json['photosAlbumsDeletedAt'] as String,
+  factory DbTimestamp.fromJson(Map<String, dynamic> json) {
+    return DbTimestamp(
+      updatedAt: json['updatedAt'] as String,
+      deletedAt: json['deletedAt'] as String,
     );
   }
 
+  String updatedAt;
+  String deletedAt;
+
+  Map<String, dynamic> toJson() => <String, String>{
+        'updatedAt': updatedAt,
+        'deletedAt': deletedAt,
+      };
+}
+
+class DbTimestamps {
+  DbTimestamps(Map<String, DbTimestamp> data) {
+    _d = data;
+  }
   static Future<DbTimestamps> fromSharedPrefs() async {
     print('load dbTimestamps from sharedprefs');
     final SharedPreferences sp = await SharedPreferences.getInstance();
 
     if (sp.containsKey(_spKey)) {
       print('found dbTimestamps in sharedprefs: ' + sp.getString(_spKey));
-      // try {
-      return DbTimestamps.fromJson(
-          json.decode(sp.getString(_spKey)) as Map<String, dynamic>);
-      // } catch (_) {
-      // sp.remove(_spKey);
-      // }
+      try {
+        return DbTimestamps(
+            (json.decode(sp.getString(_spKey)) as Map<String, dynamic>).map(
+                (String key, dynamic value) => MapEntry<String, DbTimestamp>(
+                    key, DbTimestamp.fromJson(value as Map<String, dynamic>))));
+      } catch (_) {
+        sp.remove(_spKey);
+      }
     }
-    return DbTimestamps();
+    return DbTimestamps(<String, DbTimestamp>{});
   }
 
   static const String _spKey = 'dbTimestamps';
+  Map<String, DbTimestamp> _d;
 
-  String _photosUpdatedAt;
-  String _photosDeletedAt;
-  String _filesUpdatedAt;
-  String _filesDeletedAt;
-  String _albumsUpdatedAt;
-  String _albumsDeletedAt;
-  String _photosAlbumsUpdatedAt;
-  String _photosAlbumsDeletedAt;
-  String get photosUpdatedAt => _photosUpdatedAt;
-  String get photosDeletedAt => _photosDeletedAt;
-  String get filesUpdatedAt => _filesUpdatedAt;
-  String get filesDeletedAt => _filesDeletedAt;
-  String get albumsUpdatedAt => _albumsUpdatedAt;
-  String get albumsDeletedAt => _albumsDeletedAt;
-  String get photosAlbumsUpdatedAt => _photosAlbumsUpdatedAt;
-  String get photosAlbumsDeletedAt => _photosAlbumsDeletedAt;
+  String getUpdatedAt(String table) {
+    if (_d.containsKey(table)) {
+      return _d[table].updatedAt;
+    }
+    return null;
+  }
 
-  Map<String, dynamic> toJson() => <String, String>{
-        'photosUpdatedAt': _photosUpdatedAt,
-        'photosDeletedAt': _photosDeletedAt,
-        'filesUpdatedAt': _filesUpdatedAt,
-        'filesDeletedAt': _filesDeletedAt,
-        'albumsUpdatedAt': _albumsUpdatedAt,
-        'albumsDeletedAt': _albumsDeletedAt,
-        'photosAlbumsUpdatedAt': _photosAlbumsUpdatedAt,
-        'photosAlbumsDeletedAt': _photosAlbumsDeletedAt,
-      };
+  String getDeletedAt(String table) {
+    if (_d.containsKey(table)) {
+      return _d[table].deletedAt;
+    }
+    return null;
+  }
 
-  set photosUpdatedAt(String value) {
-    _photosUpdatedAt = value;
+  void setUpdatedAt(String table, String value) {
+    if (!_d.containsKey(table)) {
+      _d[table] = DbTimestamp();
+    }
+    _d[table].updatedAt = value;
     _saveTosharedPrefs();
   }
 
-  set photosDeletedAt(String value) {
-    _photosDeletedAt = value;
+  void setDeletedAt(String table, String value) {
+    if (!_d.containsKey(table)) {
+      _d[table] = DbTimestamp();
+    }
+    _d[table].updatedAt = value;
     _saveTosharedPrefs();
   }
 
-  set filesUpdatedAt(String value) {
-    _filesUpdatedAt = value;
-    _saveTosharedPrefs();
-  }
-
-  set filesDeletedAt(String value) {
-    _filesDeletedAt = value;
-    _saveTosharedPrefs();
-  }
-
-  set albumsUpdatedAt(String value) {
-    _albumsUpdatedAt = value;
-    _saveTosharedPrefs();
-  }
-
-  set albumsDeletedAt(String value) {
-    _albumsDeletedAt = value;
-    _saveTosharedPrefs();
-  }
-
-  set photosAlbumsUpdatedAt(String value) {
-    _photosAlbumsUpdatedAt = value;
-    _saveTosharedPrefs();
-  }
-
-  set photosAlbumsDeletedAt(String value) {
-    _photosAlbumsDeletedAt = value;
-    _saveTosharedPrefs();
-  }
+  Map<String, dynamic> toJson() => _d;
 
   Future<void> _saveTosharedPrefs() async {
     print('save dbTimestamps to sharedprefs');
     final SharedPreferences sp = await SharedPreferences.getInstance();
-    sp.setString(_spKey, json.encode(this));
+    sp.setString(_spKey, json.encode(_d));
   }
 
   Future<void> clear() async {
-    _photosUpdatedAt = null;
-    _photosDeletedAt = null;
-    _filesUpdatedAt = null;
-    _filesDeletedAt = null;
-    _albumsUpdatedAt = null;
-    _albumsDeletedAt = null;
-    _photosAlbumsUpdatedAt = null;
-    _photosAlbumsDeletedAt = null;
+    _d = <String, DbTimestamp>{};
     _saveTosharedPrefs();
   }
 }
