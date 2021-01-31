@@ -12,11 +12,8 @@ import 'package:photoprism/common/photoprism_message.dart';
 import 'package:photoprism/common/photoprism_common_helper.dart';
 import 'package:photoprism/common/photoprism_uploader.dart';
 import 'package:photoprism/main.dart';
-import 'package:photoprism/model/album.dart';
 import 'package:photoprism/model/config.dart';
 import 'package:photoprism/model/dbtimestamps.dart';
-import 'package:photoprism/model/photo_old.dart' as photo_old;
-import 'package:photoprism/model/moments_time.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:synchronized/synchronized.dart';
 import 'package:photoprism/api/api.dart';
@@ -28,10 +25,6 @@ class PhotoprismModel extends ChangeNotifier {
   // general
   String photoprismUrl = 'https://demo.photoprism.org';
   Config config;
-  List<MomentsTime> momentsTime;
-  Map<int, photo_old.Photo> photosOld;
-  Map<int, AlbumOld> albums;
-  Map<int, photo_old.Photo> videos = <int, photo_old.Photo>{};
   Lock photoLoadingLock = Lock();
   Lock albumLoadingLock = Lock();
   bool _dataFromCacheLoaded = false;
@@ -39,6 +32,10 @@ class PhotoprismModel extends ChangeNotifier {
   MyDatabase database;
   StreamSubscription<List<PhotoWithFile>> photosStreamSubscription;
   List<PhotoWithFile> photos;
+  StreamSubscription<List<Album>> albumsStreamSubscription;
+  List<Album> albums;
+  StreamSubscription<Map<String, int>> albumCountsStreamSubscription;
+  Map<String, int> albumCounts;
   DbTimestamps dbTimestamps;
   bool ascending = false;
   String albumUid;
@@ -101,6 +98,7 @@ class PhotoprismModel extends ChangeNotifier {
     database = MyDatabase();
 
     updatePhotosSubscription();
+    updateAlbumsSubscription();
 
     dbTimestamps = await DbTimestamps.fromSharedPrefs();
     await Api.updateDb(this);
@@ -111,6 +109,7 @@ class PhotoprismModel extends ChangeNotifier {
     await database.deleteDatabase();
     database = MyDatabase();
     updatePhotosSubscription();
+    updateAlbumsSubscription();
     await dbTimestamps.clear();
   }
 
@@ -150,28 +149,6 @@ class PhotoprismModel extends ChangeNotifier {
   void setConfig(Config newValue) {
     config = newValue;
     PhotoprismCommonHelper.saveAsJsonToSharedPrefs('config', config);
-    notifyListeners();
-  }
-
-  void setMomentsTime(List<MomentsTime> newValue) {
-    momentsTime = newValue;
-    notifyListeners();
-  }
-
-  void setPhotos(Map<int, photo_old.Photo> newValue) {
-    photosOld = newValue;
-    notifyListeners();
-  }
-
-  void setAlbums(Map<int, AlbumOld> newValue, {bool notify = true}) {
-    albums = newValue;
-    if (notify) {
-      notifyListeners();
-    }
-  }
-
-  void setVideos(Map<int, photo_old.Photo> newValue) {
-    videos = newValue;
     notifyListeners();
   }
 
@@ -223,6 +200,29 @@ class PhotoprismModel extends ChangeNotifier {
     photosStreamSubscription = photosStream.listen((List<PhotoWithFile> value) {
       print('got photo update from database');
       photos = value;
+      notifyListeners();
+    });
+  }
+
+  void updateAlbumsSubscription() {
+    if (albumsStreamSubscription != null) {
+      albumsStreamSubscription.cancel();
+    }
+    if (albumCountsStreamSubscription != null) {
+      albumCountsStreamSubscription.cancel();
+    }
+    final Stream<List<Album>> albumsStream = database.allAlbums;
+    albumsStreamSubscription = albumsStream.listen((List<Album> value) {
+      print('got album update from database');
+      albums = value;
+      notifyListeners();
+    });
+    final Stream<Map<String, int>> albumCountsStream =
+        database.allAlbumCounts();
+    albumCountsStreamSubscription =
+        albumCountsStream.listen((Map<String, int> value) {
+      print('got albumCount update from database');
+      albumCounts = value;
       notifyListeners();
     });
   }

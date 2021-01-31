@@ -1,12 +1,9 @@
 import 'dart:convert';
 
-import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
 import 'package:photoprism/model/album.dart';
 import 'package:photoprism/model/config.dart';
-import 'package:photoprism/model/moments_time.dart';
 import 'package:photoprism/model/photoprism_model.dart';
-import 'package:provider/provider.dart';
 import 'package:photoprism/common/db.dart';
 import 'package:http_parser/http_parser.dart';
 
@@ -244,46 +241,6 @@ class Api {
     }
   }
 
-  static Future<List<MomentsTime>> loadMomentsTime(BuildContext context) async {
-    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
-    final http.Response response = await httpAuth(
-        model,
-        () => http.get(model.photoprismUrl + '/api/v1/moments/time',
-            headers: model.photoprismAuth.getAuthHeaders())) as http.Response;
-    if (response.statusCode != 200) {
-      return <MomentsTime>[];
-    }
-    return json
-        .decode(response.body)
-        .map<MomentsTime>((dynamic value) =>
-            MomentsTime.fromJson(value as Map<String, dynamic>))
-        .toList() as List<MomentsTime>;
-  }
-
-  static Future<Map<int, AlbumOld>> loadAlbums(
-      BuildContext context, int offset) async {
-    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
-
-    final http.Response response = await httpAuth(
-        model,
-        () => http.get(
-            model.photoprismUrl +
-                '/api/v1/albums' +
-                '?count=1000' +
-                '&type=album' +
-                '&offset=' +
-                offset.toString(),
-            headers: model.photoprismAuth.getAuthHeaders())) as http.Response;
-    final List<dynamic> parsed = json.decode(response.body) as List<dynamic>;
-
-    return Map<int, AlbumOld>.fromIterables(
-        List<int>.generate(parsed.length, (int i) => i + offset),
-        parsed
-            .map<AlbumOld>((dynamic json) =>
-                AlbumOld.fromJson(json as Map<String, dynamic>))
-            .toList());
-  }
-
   static Future<String> getUuidFromHash(
       PhotoprismModel model, String filehash) async {
     final http.Response response = await httpAuth(
@@ -425,7 +382,7 @@ class Api {
 
     final List<dynamic> parsed = await loadDbBatch(model, table, false, since);
 
-    if (parsed.last['UpdatedAt'] != null) {
+    if (parsed.isNotEmpty && parsed.last['UpdatedAt'] != null) {
       model.dbTimestamps
           .setUpdatedAt(table, parsed.last['UpdatedAt'] as String);
     }

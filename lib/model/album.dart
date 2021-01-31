@@ -1,5 +1,3 @@
-import 'package:photoprism/model/photo_old.dart' as photo_old;
-
 class AlbumOld {
   AlbumOld({this.id, this.name, this.imageCount});
 
@@ -14,7 +12,6 @@ class AlbumOld {
   String id;
   String name;
   int imageCount;
-  Map<int, photo_old.Photo> photos = <int, photo_old.Photo>{};
 
   Map<String, dynamic> toJson() => <String, dynamic>{
         'UID': id,

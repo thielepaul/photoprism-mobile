@@ -47,12 +47,38 @@ class MyDatabase extends _$MyDatabase {
         (Batch batch) => batch.insertAllOnConflictUpdate(photosAlbums, rows));
   }
 
+  Stream<List<Album>> get allAlbums => (select(albums)
+        ..where(($AlbumsTable tbl) =>
+            isNull(tbl.deletedAt) & tbl.type.equals('album')))
+      .watch();
+
+  Stream<Map<String, int>> allAlbumCounts() {
+    final Expression<int> photoCount = photosAlbums.photoUID.count();
+
+    final JoinedSelectStatement<Table, DataClass> query = (select(albums)
+          ..where(($AlbumsTable tbl) =>
+              isNull(tbl.deletedAt) & tbl.type.equals('album')))
+        .join(<Join<Table, DataClass>>[
+      innerJoin(photosAlbums, photosAlbums.albumUID.equalsExp(albums.uid),
+          useColumns: false)
+    ])
+          ..where(photosAlbums.hidden.not())
+          ..addColumns(<Expression<dynamic>>[photoCount])
+          ..groupBy(<Expression<dynamic>>[albums.uid]);
+
+    return query.watch().map((List<TypedResult> rows) => <String, int>{
+          for (TypedResult row in rows)
+            row.read(albums.uid): row.read(photoCount),
+        });
+  }
+
   Stream<List<PhotoWithFile>> photosWithFile(bool ascending,
       {String albumUid}) {
     JoinedSelectStatement<Table, DataClass> query;
     if (albumUid != null) {
       query = (select(photosAlbums)
-            ..where(($PhotosAlbumsTable tbl) => tbl.albumUID.equals(albumUid)))
+            ..where(($PhotosAlbumsTable tbl) =>
+                tbl.albumUID.equals(albumUid) & tbl.hidden.not()))
           .join(<Join<Table, DataClass>>[
         innerJoin(photos, photos.uid.equalsExp(photosAlbums.photoUID)),
       ]).join(<Join<Table, DataClass>>[

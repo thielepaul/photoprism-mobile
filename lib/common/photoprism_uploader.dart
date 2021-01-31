@@ -9,7 +9,6 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_uploader/flutter_uploader.dart';
 import 'package:intl/intl.dart';
-import 'package:photoprism/common/photo_manager.dart';
 import 'package:photoprism/model/album.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path/path.dart';
@@ -148,7 +147,7 @@ class PhotoprismUploader {
         final int status = await Api.importPhotoEvent(photoprismModel, event);
 
         if (status == 0) {
-          await PhotoManager.loadMomentsTime(context, forceReload: true);
+          await Api.updateDb(photoprismModel);
           await photoprismModel.photoprismLoadingScreen.hideLoadingScreen();
           photoprismModel.photoprismMessage
               .showMessage('Uploading and importing successful.');

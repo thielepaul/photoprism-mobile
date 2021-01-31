@@ -426,7 +426,7 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
   }
 
   Future<void> shareVideo(int index, BuildContext context) async {
-    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
+    // final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
     // Todo get video hash from
     // final List<int> videoBytes =
     // await Api.downloadVideo(model, model.photos[index]);
