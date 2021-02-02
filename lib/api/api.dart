@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
-import 'package:photoprism/model/album.dart';
 import 'package:photoprism/model/config.dart';
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:photoprism/common/db.dart';
@@ -53,29 +52,6 @@ class Api {
       }
     } catch (_) {
       return '-1';
-    }
-  }
-
-  static Future<List<AlbumOld>> searchAlbums(
-      PhotoprismModel model, String query) async {
-    try {
-      final http.Response response = await httpAuth(
-          model,
-          () => http.get(
-              model.photoprismUrl + '/api/v1/albums?count=1000&q=$query',
-              headers: model.photoprismAuth.getAuthHeaders())) as http.Response;
-      if (response.statusCode != 200) {
-        print('searchAlbums: Statuscode not 200. Instead: ' +
-            response.statusCode.toString());
-        return null;
-      }
-      return json
-          .decode(response.body)
-          .map<AlbumOld>((dynamic value) =>
-              AlbumOld.fromJson(value as Map<String, dynamic>))
-          .toList() as List<AlbumOld>;
-    } catch (_) {
-      return null;
     }
   }
 
@@ -241,23 +217,6 @@ class Api {
     }
   }
 
-  static Future<String> getUuidFromHash(
-      PhotoprismModel model, String filehash) async {
-    final http.Response response = await httpAuth(
-        model,
-        () => http.get(model.photoprismUrl + '/api/v1/files/$filehash',
-            headers: model.photoprismAuth.getAuthHeaders())) as http.Response;
-    if (response.statusCode != 200) {
-      return '';
-    }
-    final Map<String, dynamic> parsed =
-        json.decode(response.body) as Map<String, dynamic>;
-    if (parsed.containsKey('PhotoUID')) {
-      return parsed['PhotoUID'] as String;
-    }
-    return parsed['Photo']['UID'] as String;
-  }
-
   static Future<bool> upload(PhotoprismModel model, String fileId,
       String fileName, List<int> file) async {
     try {
@@ -395,7 +354,7 @@ class Api {
 
     final List<dynamic> parsed = await loadDbBatch(model, table, true, since);
 
-    if (parsed.last['DeletedAt'] != null) {
+    if (parsed.isNotEmpty && parsed.last['DeletedAt'] != null) {
       model.dbTimestamps
           .setDeletedAt(table, parsed.last['DeletedAt'] as String);
     }
@@ -407,17 +366,23 @@ class Api {
     final List<dynamic> rowsFromApiCollected = <dynamic>[];
     List<dynamic> rowsFromApi;
     while (rowsFromApi == null || rowsFromApi.length == resultCount) {
-      print('download batch of rows from db based on updatedAt for table ' +
-          table);
       rowsFromApi = (await loadDbBatchUpdated(model, table)).toList();
+      print('download batch of rows from db based on updatedAt for table ' +
+          table +
+          ' got ' +
+          rowsFromApi.length.toString() +
+          ' rows');
       rowsFromApiCollected.addAll(rowsFromApi);
     }
     if (deleted) {
       rowsFromApi = null;
       while (rowsFromApi == null || rowsFromApi.length == resultCount) {
-        print('download batch of rows from db based on deletedAt for table ' +
-            table);
         rowsFromApi = (await loadDbBatchDeleted(model, table)).toList();
+        print('download batch of rows from db based on deletedAt for table ' +
+            table +
+            ' got ' +
+            rowsFromApi.length.toString() +
+            ' rows');
         rowsFromApiCollected.addAll(rowsFromApi);
       }
     }
@@ -463,13 +428,20 @@ class Api {
       return;
     }
 
-    await model.database
-        .createOrUpdateMultiplePhotos((await loadPhotosDb(model)).toList());
-    await model.database
-        .createOrUpdateMultipleFiles((await loadFilesDb(model)).toList());
-    await model.database
-        .createOrUpdateMultipleAlbums((await loadAlbumsDb(model)).toList());
+    await model.database.createOrUpdateMultiplePhotos(
+        (await loadPhotosDb(model))
+            .map((Photo p) => p.toCompanion(false))
+            .toList());
+    await model.database.createOrUpdateMultipleFiles((await loadFilesDb(model))
+        .map((File p) => p.toCompanion(false))
+        .toList());
+    await model.database.createOrUpdateMultipleAlbums(
+        (await loadAlbumsDb(model))
+            .map((Album p) => p.toCompanion(false))
+            .toList());
     await model.database.createOrUpdateMultiplePhotosAlbums(
-        (await loadPhotosAlbumsDb(model)).toList());
+        (await loadPhotosAlbumsDb(model))
+            .map((PhotosAlbum p) => p.toCompanion(false))
+            .toList());
   }
 }

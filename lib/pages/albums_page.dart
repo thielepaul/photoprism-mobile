@@ -14,6 +14,8 @@ class AlbumsPage extends StatelessWidget {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
     if (model.albums != null &&
         model.albums[index] != null &&
+        model.albumCounts != null &&
+        model.albumCounts[model.albums[index].uid] != null &&
         model.config != null) {
       return model.photoprismUrl +
           '/api/v1/albums/' +
@@ -37,6 +39,8 @@ class AlbumsPage extends StatelessWidget {
       model.photoprismMessage.showMessage('Creating album failed.');
     } else {
       await Api.updateDb(model);
+      model.albumUid = uuid;
+      model.updatePhotosSubscription();
       await model.photoprismLoadingScreen.hideLoadingScreen();
 
       Navigator.push<void>(
@@ -48,6 +52,14 @@ class AlbumsPage extends StatelessWidget {
                 context)),
       );
     }
+  }
+
+  String _albumCount(PhotoprismModel model, int index) {
+    final String uid = model.albums[index].uid;
+    if (model.albumCounts.containsKey(uid)) {
+      return model.albumCounts[uid].toString();
+    }
+    return '0';
   }
 
   @override
@@ -110,8 +122,7 @@ class AlbumsPage extends StatelessWidget {
                             child: GridTileBar(
                               backgroundColor: Colors.black45,
                               trailing: Text(
-                                model.albumCounts[model.albums[index].uid]
-                                    .toString(),
+                                _albumCount(model, index),
                                 style: const TextStyle(color: Colors.white),
                               ),
                               title: _GridTitleText(model.albums[index].title),

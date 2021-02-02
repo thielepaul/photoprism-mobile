@@ -72,14 +72,13 @@ class DbTimestamps {
     if (!_d.containsKey(table)) {
       _d[table] = DbTimestamp();
     }
-    _d[table].updatedAt = value;
+    _d[table].deletedAt = value;
     _saveTosharedPrefs();
   }
 
   Map<String, dynamic> toJson() => _d;
 
   Future<void> _saveTosharedPrefs() async {
-    print('save dbTimestamps to sharedprefs');
     final SharedPreferences sp = await SharedPreferences.getInstance();
     sp.setString(_spKey, json.encode(_d));
   }

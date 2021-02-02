@@ -29,20 +29,23 @@ class MyDatabase extends _$MyDatabase {
     await file.delete();
   }
 
-  Future<void> createOrUpdateMultiplePhotos(List<Photo> rows) async {
-    await batch((Batch batch) => batch.insertAllOnConflictUpdate(photos, rows));
+  Future<void> createOrUpdateMultiplePhotos(List<PhotosCompanion> rows) async {
+    await batch((Batch batch) => batch.insertAllOnConflictUpdate(
+          photos,
+          rows,
+        ));
   }
 
-  Future<void> createOrUpdateMultipleFiles(List<File> rows) async {
+  Future<void> createOrUpdateMultipleFiles(List<FilesCompanion> rows) async {
     await batch((Batch batch) => batch.insertAllOnConflictUpdate(files, rows));
   }
 
-  Future<void> createOrUpdateMultipleAlbums(List<Album> rows) async {
+  Future<void> createOrUpdateMultipleAlbums(List<AlbumsCompanion> rows) async {
     await batch((Batch batch) => batch.insertAllOnConflictUpdate(albums, rows));
   }
 
   Future<void> createOrUpdateMultiplePhotosAlbums(
-      List<PhotosAlbum> rows) async {
+      List<PhotosAlbumsCompanion> rows) async {
     await batch(
         (Batch batch) => batch.insertAllOnConflictUpdate(photosAlbums, rows));
   }
@@ -51,6 +54,19 @@ class MyDatabase extends _$MyDatabase {
         ..where(($AlbumsTable tbl) =>
             isNull(tbl.deletedAt) & tbl.type.equals('album')))
       .watch();
+
+  Future<File> getFileFromHash(String hash) => (select(files)
+        ..where(
+            ($FilesTable tbl) => isNotNull(tbl.hash) & tbl.hash.equals(hash)))
+      .getSingle();
+
+  Future<bool> isPhotoAlbum(String photoUid, String albumUid) async {
+    final Future<PhotosAlbum> result = (select(photosAlbums)
+          ..where(($PhotosAlbumsTable tbl) =>
+              tbl.photoUID.equals(photoUid) & tbl.albumUID.equals(albumUid)))
+        .getSingle();
+    return await result != null;
+  }
 
   Stream<Map<String, int>> allAlbumCounts() {
     final Expression<int> photoCount = photosAlbums.photoUID.count();

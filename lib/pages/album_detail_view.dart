@@ -49,8 +49,8 @@ class AlbumDetailView extends StatelessWidget {
       _model.photoprismMessage.showMessage('Deleting album failed.');
     } else {
       // go back to albums view
-      await Api.updateDb(_model);
       Navigator.pop(context);
+      await Api.updateDb(_model);
     }
   }
 

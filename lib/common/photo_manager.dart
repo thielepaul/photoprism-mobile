@@ -40,7 +40,7 @@ class PhotoManager {
   static int getPhotoIndexInScrollView(BuildContext context) {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
     try {
-      final double currentPhoto = model.photos.length *
+      final double currentPhoto = (model.photos.length - 1) *
           model.scrollController.offset /
           (model.scrollController.position.maxScrollExtent -
               model.scrollController.position.minScrollExtent);
