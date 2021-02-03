@@ -14,9 +14,10 @@ jobs:
         with:
           flutter-version: "1.22.x"
           channel: "stable"
-      - run: flutter format --dry-run --set-exit-if-changed lib
-      - run: flutter analyze
       - run: flutter pub get
+      - run: flutter format --dry-run --set-exit-if-changed lib
+      - run: flutter packages pub run build_runner build
+      - run: flutter analyze
       - run: flutter test --coverage
       - run: flutter build apk --profile --flavor dev --no-shrink
       - uses: actions/upload-artifact@v1
