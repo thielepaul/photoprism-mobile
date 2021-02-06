@@ -8,8 +8,6 @@ import 'package:photoprism/common/album_manager.dart';
 import 'package:photoprism/common/hexcolor.dart';
 import 'package:photoprism/common/photo_manager.dart';
 import 'package:photoprism/common/transparent_route.dart';
-import 'package:photoprism/model/moments_time.dart';
-import 'package:photoprism/model/photo.dart';
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:photoprism/pages/photoview.dart';
 import 'package:draggable_scrollbar/draggable_scrollbar.dart';
@@ -29,8 +27,7 @@ class PhotosPage extends StatelessWidget {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
     final List<String> selectedPhotos = model
         .gridController.selection.selectedIndexes
-        .map<String>((int element) =>
-            PhotoManager.getPhotos(context, null, videosPage)[element].uid)
+        .map<String>((int element) => model.photos[element].photo.uid)
         .toList();
 
     PhotoManager.archivePhotos(context, selectedPhotos);
@@ -39,7 +36,7 @@ class PhotosPage extends StatelessWidget {
   static void _selectAlbumBottomSheet(BuildContext context, bool videosPage) {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
     if (model.albums == null) {
-      AlbumManager.loadAlbums(context, 0);
+      Api.updateDb(model);
     }
 
     showModalBottomSheet<void>(
@@ -49,7 +46,7 @@ class PhotosPage extends StatelessWidget {
               itemCount: model.albums == null ? 0 : model.albums.length,
               itemBuilder: (BuildContext ctxt, int index) {
                 return ListTile(
-                  title: Text(model.albums[index].name),
+                  title: Text(model.albums[index].title),
                   onTap: () {
                     addPhotosToAlbum(index, context, videosPage);
                   },
@@ -65,12 +62,12 @@ class PhotosPage extends StatelessWidget {
         .showLoadingScreen('Preparing photos for sharing...');
     for (final int index in model.gridController.selection.selectedIndexes) {
       final List<int> bytes =
-          await Api.downloadPhoto(model, model.photos[index].hash);
+          await Api.downloadPhoto(model, model.photos[index].file.hash);
       if (bytes == null) {
         model.photoprismLoadingScreen.hideLoadingScreen();
         return;
       }
-      photos[model.photos[index].hash + '.jpg'] = bytes;
+      photos[model.photos[index].file.hash + '.jpg'] = bytes;
     }
     model.photoprismLoadingScreen.hideLoadingScreen();
     Share.files('Photoprism Photos', photos, 'image/jpg');
@@ -83,8 +80,7 @@ class PhotosPage extends StatelessWidget {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
     final List<String> selectedPhotos = model
         .gridController.selection.selectedIndexes
-        .map<String>((int element) =>
-            PhotoManager.getPhotos(context, null, videosPage)[element].uid)
+        .map<String>((int element) => model.photos[element].photo.uid)
         .toList();
 
     model.gridController.clear();
@@ -93,13 +89,10 @@ class PhotosPage extends StatelessWidget {
 
   Text getMonthFromOffset(
       BuildContext context, ScrollController scrollController) {
-    for (final MomentsTime m
-        in PhotoManager.getCummulativeMonthCount(context)) {
-      if (m.count >= PhotoManager.getPhotoIndexInScrollView(context, albumId)) {
-        return Text('${m.month}/${m.year}');
-      }
-    }
-    return const Text('');
+    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
+    final DateTime takenAt = model
+        .photos[PhotoManager.getPhotoIndexInScrollView(context)].photo.takenAt;
+    return Text('${takenAt.month}/${takenAt.year}');
   }
 
   Widget displayPhotoIfUrlLoaded(BuildContext context, int index) {
@@ -107,7 +100,6 @@ class PhotosPage extends StatelessWidget {
     final String imageUrl =
         PhotoManager.getPhotoThumbnailUrl(context, index, albumId, videosPage);
     if (imageUrl == null) {
-      PhotoManager.loadPhoto(context, index, albumId, videosPage);
       return Container(
         color: Colors.grey[300],
       );
@@ -172,11 +164,18 @@ class PhotosPage extends StatelessWidget {
                   PopupMenuItem<int>(
                     value: 0,
                     child: const Text('upload_photo').tr(),
+                  ),
+                  const PopupMenuItem<int>(
+                    value: 1,
+                    child: Text('reverse sorting'),
                   )
                 ],
                 onSelected: (int choice) {
                   if (choice == 0) {
                     model.photoprismUploader.selectPhotoAndUpload(context);
+                  } else if (choice == 1) {
+                    model.ascending = !model.ascending;
+                    model.updatePhotosSubscription();
                   }
                 },
               ),
@@ -187,13 +186,13 @@ class PhotosPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
+
     final ScrollController _scrollController = model.scrollController;
 
     final DragSelectGridViewController gridController =
         Provider.of<PhotoprismModel>(context).gridController;
 
-    final int tileCount =
-        PhotoManager.getPhotosCount(context, albumId, videosPage);
+    final int tileCount = model.photos != null ? model.photos.length : 0;
 
     //if (Photos.getPhotoList(context, albumId).length == 0) {
     //  return IconButton(onPressed: () => {}, icon: Icon(Icons.add));
@@ -206,15 +205,14 @@ class PhotosPage extends StatelessWidget {
       if (videosPage) {
         return const Text('', key: ValueKey<String>('videosGridView'));
       }
-      if (albumId == null && model.momentsTime == null) {
-        PhotoManager.loadMomentsTime(context);
+      if (model.photos == null) {
+        Api.updateDb(model);
         return const Text('', key: ValueKey<String>('photosGridView'));
       }
 
       return DraggableScrollbar.semicircle(
-        labelTextBuilder: albumId == null
-            ? (double offset) => getMonthFromOffset(context, _scrollController)
-            : null,
+        labelTextBuilder: (double offset) =>
+            getMonthFromOffset(context, _scrollController),
         heightScrollThumb: 50.0,
         controller: _scrollController,
         child: DragSelectGridView(
@@ -258,15 +256,8 @@ class PhotosPage extends StatelessWidget {
             }),
       );
     }), onRefresh: () async {
-      if (albumId != null) {
-        await AlbumManager.loadAlbums(context, 0,
-            forceReload: true, loadPhotosForAlbumId: albumId);
-      } else if (videosPage) {
-        PhotoManager.saveAndSetPhotos(context, <int, Photo>{}, null, true);
-        await Api.loadConfig(model);
-      } else {
-        return await PhotoManager.loadMomentsTime(context, forceReload: true);
-      }
+      await Api.loadConfig(model);
+      await Api.updateDb(model);
     });
   }
 }

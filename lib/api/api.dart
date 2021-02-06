@@ -1,16 +1,14 @@
 import 'dart:convert';
 
-import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
-import 'package:photoprism/model/album.dart';
 import 'package:photoprism/model/config.dart';
-import 'package:photoprism/model/moments_time.dart';
-import 'package:photoprism/model/photo.dart';
 import 'package:photoprism/model/photoprism_model.dart';
-import 'package:provider/provider.dart';
+import 'package:photoprism/common/db.dart';
 import 'package:http_parser/http_parser.dart';
 
 class Api {
+  static const int resultCount = 1000;
+
   static Future<dynamic> httpAuth(PhotoprismModel model, Function call) async {
     dynamic response = await call();
     if ((response as http.BaseResponse).statusCode == 401) {
@@ -54,29 +52,6 @@ class Api {
       }
     } catch (_) {
       return '-1';
-    }
-  }
-
-  static Future<List<Album>> searchAlbums(
-      PhotoprismModel model, String query) async {
-    try {
-      final http.Response response = await httpAuth(
-          model,
-          () => http.get(
-              model.photoprismUrl + '/api/v1/albums?count=1000&q=$query',
-              headers: model.photoprismAuth.getAuthHeaders())) as http.Response;
-      if (response.statusCode != 200) {
-        print('searchAlbums: Statuscode not 200. Instead: ' +
-            response.statusCode.toString());
-        return null;
-      }
-      return json
-          .decode(response.body)
-          .map<Album>(
-              (dynamic value) => Album.fromJson(value as Map<String, dynamic>))
-          .toList() as List<Album>;
-    } catch (_) {
-      return null;
     }
   }
 
@@ -242,98 +217,6 @@ class Api {
     }
   }
 
-  static Future<List<MomentsTime>> loadMomentsTime(BuildContext context) async {
-    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
-    final http.Response response = await httpAuth(
-        model,
-        () => http.get(model.photoprismUrl + '/api/v1/moments/time',
-            headers: model.photoprismAuth.getAuthHeaders())) as http.Response;
-    if (response.statusCode != 200) {
-      return <MomentsTime>[];
-    }
-    return json
-        .decode(response.body)
-        .map<MomentsTime>((dynamic value) =>
-            MomentsTime.fromJson(value as Map<String, dynamic>))
-        .toList() as List<MomentsTime>;
-  }
-
-  static Future<Map<int, Photo>> loadPhotos(
-      BuildContext context, int albumId, int offset,
-      {bool videosPage = false}) async {
-    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
-
-    String albumIdUrlParam = '';
-    if (albumId != null &&
-        model.albums != null &&
-        model.albums[albumId] != null) {
-      albumIdUrlParam = model.albums[albumId].id;
-    }
-
-    final String type = videosPage ? '&video=true' : '&photo=true';
-    final http.Response response = await httpAuth(
-        model,
-        () => http.get(
-            model.photoprismUrl +
-                '/api/v1/photos' +
-                '?count=100' +
-                '&merged=true' +
-                type +
-                '&offset=' +
-                offset.toString() +
-                '&album=' +
-                albumIdUrlParam,
-            headers: model.photoprismAuth.getAuthHeaders())) as http.Response;
-    final List<dynamic> parsed = json.decode(response.body) as List<dynamic>;
-    return Map<int, Photo>.fromIterables(
-        List<int>.generate(parsed.length, (int i) => i + offset),
-        parsed
-            .map<Photo>(
-                (dynamic json) => Photo.fromJson(json as Map<String, dynamic>))
-            .toList());
-  }
-
-  static Future<Map<int, Album>> loadAlbums(
-      BuildContext context, int offset) async {
-    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
-
-    final http.Response response = await httpAuth(
-        model,
-        () => http.get(
-            model.photoprismUrl +
-                '/api/v1/albums' +
-                '?count=1000' +
-                '&type=album' +
-                '&offset=' +
-                offset.toString(),
-            headers: model.photoprismAuth.getAuthHeaders())) as http.Response;
-    final List<dynamic> parsed = json.decode(response.body) as List<dynamic>;
-
-    return Map<int, Album>.fromIterables(
-        List<int>.generate(parsed.length, (int i) => i + offset),
-        parsed
-            .map<Album>(
-                (dynamic json) => Album.fromJson(json as Map<String, dynamic>))
-            .toList());
-  }
-
-  static Future<String> getUuidFromHash(
-      PhotoprismModel model, String filehash) async {
-    final http.Response response = await httpAuth(
-        model,
-        () => http.get(model.photoprismUrl + '/api/v1/files/$filehash',
-            headers: model.photoprismAuth.getAuthHeaders())) as http.Response;
-    if (response.statusCode != 200) {
-      return '';
-    }
-    final Map<String, dynamic> parsed =
-        json.decode(response.body) as Map<String, dynamic>;
-    if (parsed.containsKey('PhotoUID')) {
-      return parsed['PhotoUID'] as String;
-    }
-    return parsed['Photo']['UID'] as String;
-  }
-
   static Future<bool> upload(PhotoprismModel model, String fileId,
       String fileName, List<int> file) async {
     try {
@@ -375,17 +258,17 @@ class Api {
     return false;
   }
 
-  static Future<List<int>> downloadVideo(
-      PhotoprismModel model, Photo photo) async {
-    final http.Response response = await http.get(videoUrl(model, photo));
-    if (response.statusCode == 200) {
-      return response.bodyBytes;
-    } else {
-      model.photoprismMessage
-          .showMessage('Error while sharing: No connection to server!');
-    }
-    return null;
-  }
+  // static Future<List<int>> downloadVideo(
+  //     PhotoprismModel model, photo_old.Photo photo) async {
+  //   final http.Response response = await http.get(videoUrl(model, photo));
+  //   if (response.statusCode == 200) {
+  //     return response.bodyBytes;
+  //   } else {
+  //     model.photoprismMessage
+  //         .showMessage('Error while sharing: No connection to server!');
+  //   }
+  //   return null;
+  // }
 
   static Future<List<int>> downloadPhoto(
       PhotoprismModel model, String fileHash) async {
@@ -419,15 +302,146 @@ class Api {
     return true;
   }
 
-  static String videoUrl(PhotoprismModel model, Photo photo) {
+  static String videoUrl(PhotoprismModel model, String hash) {
     if (model.config == null) {
       return null;
     }
     return model.photoprismUrl +
         '/api/v1/videos/' +
-        photo.videoHash +
+        hash +
         '/' +
         model.config.previewToken +
         '/mp4';
+  }
+
+  static Future<List<dynamic>> loadDbBatch(
+      PhotoprismModel model, String table, bool deleted, String since) async {
+    final String url = model.photoprismUrl +
+        '/api/v1/db' +
+        '?count=' +
+        resultCount.toString() +
+        '&table=' +
+        table +
+        '&deleted=' +
+        deleted.toString() +
+        (since != null ? '&since=' + since : '');
+    final http.Response response = await httpAuth(model,
+            () => http.get(url, headers: model.photoprismAuth.getAuthHeaders()))
+        as http.Response;
+    if (response.statusCode != 200) {
+      print('ERROR: api DB call failed ($url)');
+      return <dynamic>[];
+    }
+    return json.decode(response.body) as List<dynamic>;
+  }
+
+  static Future<List<dynamic>> loadDbBatchUpdated(
+      PhotoprismModel model, String table) async {
+    final String since = model.dbTimestamps.getUpdatedAt(table);
+
+    final List<dynamic> parsed = await loadDbBatch(model, table, false, since);
+
+    if (parsed.isNotEmpty && parsed.last['UpdatedAt'] != null) {
+      model.dbTimestamps
+          .setUpdatedAt(table, parsed.last['UpdatedAt'] as String);
+    }
+    return parsed;
+  }
+
+  static Future<List<dynamic>> loadDbBatchDeleted(
+      PhotoprismModel model, String table) async {
+    final String since = model.dbTimestamps.getDeletedAt(table);
+
+    final List<dynamic> parsed = await loadDbBatch(model, table, true, since);
+
+    if (parsed.isNotEmpty && parsed.last['DeletedAt'] != null) {
+      model.dbTimestamps
+          .setDeletedAt(table, parsed.last['DeletedAt'] as String);
+    }
+    return parsed;
+  }
+
+  static Future<List<dynamic>> loadDbAll(PhotoprismModel model, String table,
+      {bool deleted = true}) async {
+    final List<dynamic> rowsFromApiCollected = <dynamic>[];
+    List<dynamic> rowsFromApi;
+    while (rowsFromApi == null || rowsFromApi.length == resultCount) {
+      rowsFromApi = (await loadDbBatchUpdated(model, table)).toList();
+      print('download batch of rows from db based on updatedAt for table ' +
+          table +
+          ' got ' +
+          rowsFromApi.length.toString() +
+          ' rows');
+      rowsFromApiCollected.addAll(rowsFromApi);
+    }
+    if (deleted) {
+      rowsFromApi = null;
+      while (rowsFromApi == null || rowsFromApi.length == resultCount) {
+        rowsFromApi = (await loadDbBatchDeleted(model, table)).toList();
+        print('download batch of rows from db based on deletedAt for table ' +
+            table +
+            ' got ' +
+            rowsFromApi.length.toString() +
+            ' rows');
+        rowsFromApiCollected.addAll(rowsFromApi);
+      }
+    }
+    return rowsFromApiCollected;
+  }
+
+  static Future<Iterable<Photo>> loadPhotosDb(PhotoprismModel model) async {
+    final List<dynamic> parsed = await loadDbAll(model, 'photos');
+
+    return parsed.map((dynamic json) => Photo.fromJson(
+        json as Map<String, dynamic>,
+        serializer: const CustomSerializer()));
+  }
+
+  static Future<Iterable<File>> loadFilesDb(PhotoprismModel model) async {
+    final List<dynamic> parsed = await loadDbAll(model, 'files');
+
+    return parsed.map((dynamic json) => File.fromJson(
+        json as Map<String, dynamic>,
+        serializer: const CustomSerializer()));
+  }
+
+  static Future<Iterable<Album>> loadAlbumsDb(PhotoprismModel model) async {
+    final List<dynamic> parsed = await loadDbAll(model, 'albums');
+
+    return parsed.map((dynamic json) => Album.fromJson(
+        json as Map<String, dynamic>,
+        serializer: const CustomSerializer()));
+  }
+
+  static Future<Iterable<PhotosAlbum>> loadPhotosAlbumsDb(
+      PhotoprismModel model) async {
+    final List<dynamic> parsed =
+        await loadDbAll(model, 'photos_albums', deleted: false);
+
+    return parsed.map((dynamic json) => PhotosAlbum.fromJson(
+        json as Map<String, dynamic>,
+        serializer: const CustomSerializer()));
+  }
+
+  static Future<void> updateDb(PhotoprismModel model) async {
+    if (model.dbTimestamps == null) {
+      return;
+    }
+
+    await model.database.createOrUpdateMultiplePhotos(
+        (await loadPhotosDb(model))
+            .map((Photo p) => p.toCompanion(false))
+            .toList());
+    await model.database.createOrUpdateMultipleFiles((await loadFilesDb(model))
+        .map((File p) => p.toCompanion(false))
+        .toList());
+    await model.database.createOrUpdateMultipleAlbums(
+        (await loadAlbumsDb(model))
+            .map((Album p) => p.toCompanion(false))
+            .toList());
+    await model.database.createOrUpdateMultiplePhotosAlbums(
+        (await loadPhotosAlbumsDb(model))
+            .map((PhotosAlbum p) => p.toCompanion(false))
+            .toList());
   }
 }

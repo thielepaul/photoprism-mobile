@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'dart:io';
+import 'dart:io' as io;
 import 'dart:math';
 import 'dart:typed_data';
 
@@ -9,12 +9,11 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_uploader/flutter_uploader.dart';
 import 'package:intl/intl.dart';
-import 'package:photoprism/common/photo_manager.dart';
-import 'package:photoprism/model/album.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path/path.dart';
 import 'package:background_fetch/background_fetch.dart';
 import 'package:photoprism/api/api.dart';
+import 'package:photoprism/common/db.dart';
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:photo_manager/photo_manager.dart' as photolib;
 
@@ -110,14 +109,14 @@ class PhotoprismUploader {
 
   /// Starts image file picker, uploads photo(s) and imports them.
   Future<void> selectPhotoAndUpload(BuildContext context) async {
-    final List<File> files = await FilePicker.getMultiFile();
+    final List<io.File> files = await FilePicker.getMultiFile();
 
     // list for flutter uploader
     final List<FileItem> filesToUpload = <FileItem>[];
 
     // check if at least one file was selected
     if (files != null) {
-      filesToUpload.addAll(files.map<FileItem>((File file) => FileItem(
+      filesToUpload.addAll(files.map<FileItem>((io.File file) => FileItem(
           filename: basename(file.path),
           savedDir: dirname(file.path),
           fieldname: 'files')));
@@ -148,7 +147,7 @@ class PhotoprismUploader {
         final int status = await Api.importPhotoEvent(photoprismModel, event);
 
         if (status == 0) {
-          await PhotoManager.loadMomentsTime(context, forceReload: true);
+          await Api.updateDb(photoprismModel);
           await photoprismModel.photoprismLoadingScreen.hideLoadingScreen();
           photoprismModel.photoprismMessage
               .showMessage('Uploading and importing successful.');
@@ -312,14 +311,16 @@ class PhotoprismUploader {
 
   Future<int> getRemoteAlbumsWithDeviceName(PhotoprismModel model) async {
     // Get list of albums from server which name is the device name of the smartphone.
-    final List<Album> deviceAlbumList =
-        await Api.searchAlbums(photoprismModel, deviceName);
+    await Api.updateDb(model);
+    final List<Album> deviceAlbumList = model.albums
+        .where((Album album) => album.title.contains(deviceName))
+        .toList();
     if (deviceAlbumList == null) {
       return -1;
     }
 
     deviceAlbums = Map<String, Album>.fromEntries(deviceAlbumList
-        .map((Album album) => MapEntry<String, Album>(album.name, album)));
+        .map((Album album) => MapEntry<String, Album>(album.title, album)));
 
     return 0;
   }
@@ -332,7 +333,7 @@ class PhotoprismUploader {
     final String albumName = '$deviceName – ${album.name}';
 
     if (deviceAlbums.containsKey(albumName)) {
-      albumId = deviceAlbums[albumName].id;
+      albumId = deviceAlbums[albumName].uid;
       model.addLogEntry(
           'AutoUploader',
           "Album '" +
@@ -384,7 +385,7 @@ class PhotoprismUploader {
           photoprismModel, id, filehash, albumId)) {
         model.addLogEntry(
             'AutoUploader',
-            "Photo was already uploaded and added to album '" +
+            "Photo $filename was already uploaded and added to album '" +
                 albumName +
                 "'. Skipping uploading and importing.");
         continue;
@@ -394,27 +395,30 @@ class PhotoprismUploader {
       final bool status =
           await Api.upload(photoprismModel, filehash, filename, imageBytes);
       if (status) {
-        model.addLogEntry('AutoUploader', "Uploading photo successful'.");
-      } else {
         model.addLogEntry(
-            'AutoUploader', "Uploading photo failed'. Skipping to next photo.");
+            'AutoUploader', "Uploading photo $filename successful'.");
+      } else {
+        model.addLogEntry('AutoUploader',
+            "Uploading photo $filename failed'. Skipping to next photo.");
         continue;
       }
 
       // add uploaded photo to shared pref
       if (await Api.importPhotos(
           photoprismModel.photoprismUrl, photoprismModel, filehash)) {
+        await Api.updateDb(model);
         if (await isPhotoOnServerAndAddToAlbum(
             photoprismModel, id, filehash, albumId)) {
-          model.addLogEntry(
-              'AutoUploader', 'Photo was imported and added to album.');
+          model.addLogEntry('AutoUploader',
+              'Photo $filename was imported and added to album.');
           continue;
         }
       } else {
         model.addLogEntry(
-            'AutoUploader', 'ERROR: Photo could not be imported.');
+            'AutoUploader', 'ERROR: Photo $filename could not be imported.');
       }
-      model.addLogEntry('AutoUploader', 'Adding photo to failed upload list.');
+      model.addLogEntry(
+          'AutoUploader', 'Adding photo $filename to failed upload list.');
       saveAndSetPhotosUploadFailed(
           photoprismModel, photoprismModel.photosUploadFailed..add(id));
     }
@@ -422,12 +426,15 @@ class PhotoprismUploader {
 
   static Future<bool> isPhotoOnServerAndAddToAlbum(
       PhotoprismModel model, String id, String filehash, String albumId) async {
-    final String photoUUID = await Api.getUuidFromHash(model, filehash);
-    if (photoUUID.isEmpty) {
+    final File file = await model.database.getFileFromHash(filehash);
+    if (file == null || file.photoUID == null) {
       return false;
     }
-    if (await Api.addPhotosToAlbum(albumId, <String>[photoUUID], model) != 0) {
-      return false;
+    if (!await model.database.isPhotoAlbum(file.photoUID, albumId)) {
+      if (await Api.addPhotosToAlbum(albumId, <String>[file.photoUID], model) !=
+          0) {
+        return false;
+      }
     }
     saveAndSetAlreadyUploadedPhotos(
         model, model.alreadyUploadedPhotos..add(id));
@@ -497,10 +504,10 @@ class PhotoprismUploader {
   // Returns the device name of the current device (smartphone).
   static Future<String> getNameOfCurrentDevice(PhotoprismModel model) async {
     final DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
-    if (Platform.isAndroid) {
+    if (io.Platform.isAndroid) {
       final AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
       return androidInfo.model;
-    } else if (Platform.isIOS) {
+    } else if (io.Platform.isIOS) {
       final IosDeviceInfo iosInfo = await deviceInfo.iosInfo;
       return iosInfo.name;
     }

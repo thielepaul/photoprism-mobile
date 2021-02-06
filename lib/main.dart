@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:photoprism/common/db.dart';
 import 'package:photoprism/pages/albums_page.dart';
 import 'package:photoprism/pages/settings_page.dart';
 import 'package:provider/provider.dart';
@@ -24,7 +25,7 @@ void main() {
         path: 'assets/translations',
         fallbackLocale: const Locale('en', 'US'),
         child: ChangeNotifierProvider<PhotoprismModel>(
-          create: (BuildContext context) => PhotoprismModel(),
+          create: (BuildContext context) => PhotoprismModel(openDbConnection()),
           child: PhotoprismApp(),
         )),
   );
@@ -111,6 +112,8 @@ class MainPage extends StatelessWidget {
         onTap: (int index) {
           if (index != _pageController.page) {
             model.gridController.clear();
+            model.albumUid = null;
+            model.updatePhotosSubscription();
           }
           _pageController.jumpToPage(index);
           model.photoprismCommonHelper

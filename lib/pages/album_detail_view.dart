@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:photoprism/common/album_manager.dart';
-import 'package:photoprism/common/photo_manager.dart';
 import 'package:photoprism/api/api.dart';
 import 'package:photoprism/pages/photos_page.dart';
-import 'package:photoprism/model/album.dart';
+import 'package:photoprism/common/db.dart';
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:provider/provider.dart';
 
@@ -22,9 +20,9 @@ class AlbumDetailView extends StatelessWidget {
 
     // rename remote album
     final int status = await Api.renameAlbum(
-        _album.id, _renameAlbumTextFieldController.text, _model);
+        _album.uid, _renameAlbumTextFieldController.text, _model);
 
-    await AlbumManager.loadAlbums(context, 0, forceReload: true);
+    await Api.updateDb(_model);
 
     await _model.photoprismLoadingScreen.hideLoadingScreen();
     // close rename dialog
@@ -40,7 +38,7 @@ class AlbumDetailView extends StatelessWidget {
     _model.photoprismLoadingScreen.showLoadingScreen('Deleting album...');
 
     // delete remote album
-    final int status = await Api.deleteAlbum(_album.id, _model);
+    final int status = await Api.deleteAlbum(_album.uid, _model);
 
     await _model.photoprismLoadingScreen.hideLoadingScreen();
 
@@ -51,8 +49,8 @@ class AlbumDetailView extends StatelessWidget {
       _model.photoprismMessage.showMessage('Deleting album failed.');
     } else {
       // go back to albums view
-      await AlbumManager.loadAlbums(context, 0, forceReload: true);
       Navigator.pop(context);
+      await Api.updateDb(_model);
     }
   }
 
@@ -62,21 +60,19 @@ class AlbumDetailView extends StatelessWidget {
     // save all selected photos in list
     final List<String> selectedPhotos = <String>[];
     for (final int photoId in _model.gridController.selection.selectedIndexes) {
-      selectedPhotos
-          .add(PhotoManager.getPhotos(context, _albumId, false)[photoId].uid);
+      selectedPhotos.add(_model.photos[photoId].photo.uid);
     }
 
     // remove remote photos from album
     final int status =
-        await Api.removePhotosFromAlbum(_album.id, selectedPhotos, _model);
+        await Api.removePhotosFromAlbum(_album.uid, selectedPhotos, _model);
 
     // check if successful
     if (status != 0) {
       _model.photoprismMessage
           .showMessage('Removing photos from album failed.');
     } else {
-      AlbumManager.loadAlbums(context, 0,
-          forceReload: true, loadPhotosForAlbumId: _albumId);
+      await Api.updateDb(_model);
     }
     // deselect selected photos
     _model.gridController.clear();
@@ -96,7 +92,7 @@ class AlbumDetailView extends StatelessWidget {
               flexibleSpace: FlexibleSpaceBar(
                 title: _selectedPhotosCount > 0
                     ? Text(_selectedPhotosCount.toString())
-                    : Text(_album.name),
+                    : Text(_album.title),
                 centerTitle: _selectedPhotosCount > 0 ? false : null,
               ),
               leading: _selectedPhotosCount > 0
@@ -153,7 +149,7 @@ class AlbumDetailView extends StatelessWidget {
   }
 
   Future<void> _showRenameAlbumDialog(BuildContext context) async {
-    _renameAlbumTextFieldController.text = _album.name;
+    _renameAlbumTextFieldController.text = _album.title;
     return showDialog(
         context: context,
         builder: (BuildContext context) {

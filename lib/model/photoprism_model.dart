@@ -1,7 +1,11 @@
+import 'dart:async';
+
 import 'package:drag_select_grid_view/drag_select_grid_view.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:moor/moor.dart';
 import 'package:photo_view/photo_view.dart';
+import 'package:photoprism/common/db.dart';
 import 'package:photoprism/common/photoprism_auth.dart';
 import 'package:photoprism/common/photoprism_remote_config_loader.dart';
 import 'package:photoprism/common/photoprism_loading_screen.dart';
@@ -9,28 +13,34 @@ import 'package:photoprism/common/photoprism_message.dart';
 import 'package:photoprism/common/photoprism_common_helper.dart';
 import 'package:photoprism/common/photoprism_uploader.dart';
 import 'package:photoprism/main.dart';
-import 'package:photoprism/model/album.dart';
 import 'package:photoprism/model/config.dart';
-import 'package:photoprism/model/photo.dart';
-import 'package:photoprism/model/moments_time.dart';
+import 'package:photoprism/model/dbtimestamps.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:synchronized/synchronized.dart';
+import 'package:photoprism/api/api.dart';
 
 class PhotoprismModel extends ChangeNotifier {
-  PhotoprismModel() {
+  PhotoprismModel(this.queryExecutor) {
     initialize();
   }
   // general
   String photoprismUrl = 'https://demo.photoprism.org';
   Config config;
-  List<MomentsTime> momentsTime;
-  Map<int, Photo> photos;
-  Map<int, Album> albums;
-  Map<int, Photo> videos = <int, Photo>{};
   Lock photoLoadingLock = Lock();
   Lock albumLoadingLock = Lock();
   bool _dataFromCacheLoaded = false;
   List<String> log;
+  MyDatabase database;
+  StreamSubscription<List<PhotoWithFile>> photosStreamSubscription;
+  List<PhotoWithFile> photos;
+  StreamSubscription<List<Album>> albumsStreamSubscription;
+  List<Album> albums;
+  StreamSubscription<Map<String, int>> albumCountsStreamSubscription;
+  Map<String, int> albumCounts;
+  DbTimestamps dbTimestamps;
+  bool ascending = false;
+  String albumUid;
+  QueryExecutor queryExecutor;
 
   // theming
   String applicationColor = '#424242';
@@ -70,6 +80,7 @@ class PhotoprismModel extends ChangeNotifier {
   PhotoprismAuth photoprismAuth;
 
   Future<void> initialize() async {
+    print('initialize model');
     loadLog();
     photoprismLoadingScreen = PhotoprismLoadingScreen(this);
     photoprismRemoteConfigLoader = PhotoprismRemoteSettingsLoader(this);
@@ -78,14 +89,32 @@ class PhotoprismModel extends ChangeNotifier {
 
     photoprismAuth = PhotoprismAuth(this);
 
-    await photoprismCommonHelper.loadPhotoprismUrl();
-    await photoprismAuth.initialize();
+    database = MyDatabase(queryExecutor);
 
     // uploader needs photoprismAuth to be initialized
     photoprismUploader = PhotoprismUploader(this);
 
     photoprismRemoteConfigLoader.loadApplicationColor();
     gridController.addListener(notifyListeners);
+
+    updatePhotosSubscription();
+    updateAlbumsSubscription();
+
+    dbTimestamps = await DbTimestamps.fromSharedPrefs();
+
+    await photoprismCommonHelper.loadPhotoprismUrl();
+    await photoprismAuth.initialize();
+
+    await Api.updateDb(this);
+  }
+
+  Future<void> resetDatabase() async {
+    await database.close();
+    await database.deleteDatabase();
+    database = MyDatabase(queryExecutor);
+    updatePhotosSubscription();
+    updateAlbumsSubscription();
+    await dbTimestamps.clear();
   }
 
   Future<void> loadLog() async {
@@ -127,28 +156,6 @@ class PhotoprismModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setMomentsTime(List<MomentsTime> newValue) {
-    momentsTime = newValue;
-    notifyListeners();
-  }
-
-  void setPhotos(Map<int, Photo> newValue) {
-    photos = newValue;
-    notifyListeners();
-  }
-
-  void setAlbums(Map<int, Album> newValue, {bool notify = true}) {
-    albums = newValue;
-    if (notify) {
-      notifyListeners();
-    }
-  }
-
-  void setVideos(Map<int, Photo> newValue) {
-    videos = newValue;
-    notifyListeners();
-  }
-
   set alreadyUploadedPhotos(Set<String> newValue) {
     _alreadyUploadedPhotos = newValue;
     notifyListeners();
@@ -187,4 +194,46 @@ class PhotoprismModel extends ChangeNotifier {
   bool get dataFromCacheLoaded => _dataFromCacheLoaded;
 
   void notify() => notifyListeners();
+
+  void updatePhotosSubscription() {
+    if (database == null) {
+      return;
+    }
+    if (photosStreamSubscription != null) {
+      photosStreamSubscription.cancel();
+    }
+    final Stream<List<PhotoWithFile>> photosStream =
+        database.photosWithFile(ascending, albumUid: albumUid);
+    photosStreamSubscription = photosStream.listen((List<PhotoWithFile> value) {
+      print('got photo update from database');
+      photos = value;
+      notifyListeners();
+    });
+  }
+
+  void updateAlbumsSubscription() {
+    if (database == null) {
+      return;
+    }
+    if (albumsStreamSubscription != null) {
+      albumsStreamSubscription.cancel();
+    }
+    if (albumCountsStreamSubscription != null) {
+      albumCountsStreamSubscription.cancel();
+    }
+    final Stream<List<Album>> albumsStream = database.allAlbums;
+    albumsStreamSubscription = albumsStream.listen((List<Album> value) {
+      print('got album update from database');
+      albums = value;
+      notifyListeners();
+    });
+    final Stream<Map<String, int>> albumCountsStream =
+        database.allAlbumCounts();
+    albumCountsStreamSubscription =
+        albumCountsStream.listen((Map<String, int> value) {
+      print('got albumCount update from database');
+      albumCounts = value;
+      notifyListeners();
+    });
+  }
 }

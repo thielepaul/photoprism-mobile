@@ -2,12 +2,10 @@ import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:photoprism/common/photoprism_uploader.dart';
-import 'package:photoprism/model/photo.dart';
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:photoprism/widgets/auth_dialog.dart';
 import 'package:photoprism/widgets/multi_select_dialog.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:photo_manager/photo_manager.dart' as photolib;
 import 'package:photoprism/pages/auto_upload_queue.dart';
 import 'package:photoprism/widgets/about.dart';
@@ -313,22 +311,11 @@ class SettingsPage extends StatelessWidget {
 
   static Future<void> emptyCache(BuildContext context) async {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
-    final SharedPreferences sp = await SharedPreferences.getInstance();
-    sp.remove('momentsTime');
-    sp.remove('photos');
-    sp.remove('videos');
-    sp.remove('albums');
-    if (model.albums != null) {
-      for (final int albumId in model.albums.keys) {
-        sp.remove('photos' + albumId.toString());
-      }
-    }
     model.photos = null;
-    model.videos = <int, Photo>{};
-    model.momentsTime = null;
     model.albums = null;
     model.config = null;
     await DefaultCacheManager().emptyCache();
+    model.resetDatabase();
   }
 
   Widget _albumsToUploadText() => FutureBuilder<List<photolib.AssetPathEntity>>(
