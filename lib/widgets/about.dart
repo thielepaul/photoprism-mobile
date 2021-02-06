@@ -24,16 +24,18 @@ class AboutWidget extends StatelessWidget {
                   },
               ),
               const TextSpan(
+                  style: TextStyle(color: Colors.black, fontSize: 20),
+                  text: '\n\nTrademarks'),
+              const TextSpan(
                   style: TextStyle(color: Colors.black),
                   text:
-                      '\n\nPhotoPrism® is a registered trademark of Michael Mayer. You may use it as required to describe our software, run your server, for educational purposes, but not for offering commercial goods, products, or services without prior written permission. In other words, please ask.\n\nAlso see '),
+                      '\n\nPhotoPrism® is a registered trademark of Michael Mayer. You may use it as required to describe our software, run your server, for educational purposes, but not for offering commercial goods, products, or services without prior written permission.\n\nFeel free to reach out if you have questions:\n'),
               TextSpan(
-                text: 'https://github.com/photoprism/photoprism#trademarks',
+                text: 'https://photoprism.app/contact',
                 style: const TextStyle(color: Colors.blue),
                 recognizer: TapGestureRecognizer()
                   ..onTap = () {
-                    launch(
-                        'https://github.com/photoprism/photoprism#trademarks');
+                    launch('https://photoprism.app/contact');
                   },
               ),
             ],

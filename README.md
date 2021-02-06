@@ -37,6 +37,7 @@ If you'd like to make an enhancement to the application, please see [the contrib
 
 PhotoPrism® is a registered trademark of Michael Mayer. You may use it as required to describe 
 our software, run your server, for educational purposes, but not for offering commercial 
-goods, products, or services without prior written permission. In other words, please ask.
+goods, products, or services without prior written permission. 
 
-See also https://github.com/photoprism/photoprism#trademarks 
+Feel free to reach out if you have questions:  
+https://photoprism.app/contact
