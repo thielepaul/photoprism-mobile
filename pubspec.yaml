@@ -44,6 +44,7 @@ dependencies:
   photo_manager: ^0.5.8
   device_info: ^0.4.1+5
   video_player: '>=0.10.11+2 <2.0.0'
+  url_launcher: ^5.7.10
   draggable_scrollbar:
     git:
       url: git://github.com/thielepaul/flutter-draggable-scrollbar.git
