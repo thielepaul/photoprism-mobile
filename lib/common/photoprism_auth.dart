@@ -6,9 +6,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class PhotoprismAuth {
-  PhotoprismAuth(this.model) : secureStorage = const FlutterSecureStorage() {
-    initialized = initialize();
-  }
+  PhotoprismAuth(this.model, this.secureStorage);
 
   PhotoprismModel model;
   final FlutterSecureStorage secureStorage;
@@ -19,7 +17,6 @@ class PhotoprismAuth {
   bool httpBasicEnabled = false;
   String httpBasicUser = '';
   String httpBasicPassword = '';
-  Future<void> initialized;
 
   Future<void> initialize() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();

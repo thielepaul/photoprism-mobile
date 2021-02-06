@@ -74,7 +74,6 @@ class AlbumsPage extends StatelessWidget {
               icon: const Icon(Icons.add),
               tooltip: 'create_album'.tr(),
               onPressed: () {
-                //model.photoprismAlbumManager.createAlbum();
                 createAlbum(context);
               },
             ),

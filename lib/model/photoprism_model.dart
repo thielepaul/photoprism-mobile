@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:drag_select_grid_view/drag_select_grid_view.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:intl/intl.dart';
 import 'package:moor/moor.dart';
 import 'package:photo_view/photo_view.dart';
@@ -20,9 +21,7 @@ import 'package:synchronized/synchronized.dart';
 import 'package:photoprism/api/api.dart';
 
 class PhotoprismModel extends ChangeNotifier {
-  PhotoprismModel(this.queryExecutor) {
-    initialize();
-  }
+  PhotoprismModel(this.queryExecutor, this.secureStorage);
   // general
   String photoprismUrl = 'https://demo.photoprism.org';
   Config config;
@@ -41,6 +40,7 @@ class PhotoprismModel extends ChangeNotifier {
   bool ascending = false;
   String albumUid;
   QueryExecutor queryExecutor;
+  FlutterSecureStorage secureStorage;
 
   // theming
   String applicationColor = '#424242';
@@ -81,17 +81,17 @@ class PhotoprismModel extends ChangeNotifier {
 
   Future<void> initialize() async {
     print('initialize model');
-    loadLog();
     photoprismLoadingScreen = PhotoprismLoadingScreen(this);
     photoprismRemoteConfigLoader = PhotoprismRemoteSettingsLoader(this);
     photoprismCommonHelper = PhotoprismCommonHelper(this);
     photoprismMessage = PhotoprismMessage(this);
 
-    photoprismAuth = PhotoprismAuth(this);
+    photoprismAuth = PhotoprismAuth(this, secureStorage);
 
     database = MyDatabase(queryExecutor);
 
     // uploader needs photoprismAuth to be initialized
+    await photoprismAuth.initialize();
     photoprismUploader = PhotoprismUploader(this);
 
     photoprismRemoteConfigLoader.loadApplicationColor();
@@ -100,10 +100,10 @@ class PhotoprismModel extends ChangeNotifier {
     updatePhotosSubscription();
     updateAlbumsSubscription();
 
+    await loadLog();
     dbTimestamps = await DbTimestamps.fromSharedPrefs();
 
     await photoprismCommonHelper.loadPhotoprismUrl();
-    await photoprismAuth.initialize();
 
     await Api.updateDb(this);
   }
@@ -195,17 +195,21 @@ class PhotoprismModel extends ChangeNotifier {
 
   void notify() => notifyListeners();
 
-  void updatePhotosSubscription() {
+  Future<void> updatePhotosSubscription() async {
+    print('updatePhotosSubscription');
     if (database == null) {
       return;
     }
     if (photosStreamSubscription != null) {
-      photosStreamSubscription.cancel();
+      await photosStreamSubscription.cancel();
     }
     final Stream<List<PhotoWithFile>> photosStream =
         database.photosWithFile(ascending, albumUid: albumUid);
     photosStreamSubscription = photosStream.listen((List<PhotoWithFile> value) {
-      print('got photo update from database');
+      if (photos != null && photos.isEmpty && value.isEmpty) {
+        return;
+      }
+      print('got photo update from database count: ' + value.length.toString());
       photos = value;
       notifyListeners();
     });
@@ -223,7 +227,7 @@ class PhotoprismModel extends ChangeNotifier {
     }
     final Stream<List<Album>> albumsStream = database.allAlbums;
     albumsStreamSubscription = albumsStream.listen((List<Album> value) {
-      print('got album update from database');
+      print('got album update from database count: ' + value.length.toString());
       albums = value;
       notifyListeners();
     });
@@ -231,9 +235,16 @@ class PhotoprismModel extends ChangeNotifier {
         database.allAlbumCounts();
     albumCountsStreamSubscription =
         albumCountsStream.listen((Map<String, int> value) {
-      print('got albumCount update from database');
+      print('got albumCount update from database count: ' +
+          value.length.toString());
       albumCounts = value;
       notifyListeners();
     });
+  }
+
+  @override
+  Future<void> dispose() async {
+    super.dispose();
+    await database.close();
   }
 }

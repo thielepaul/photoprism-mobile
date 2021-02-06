@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:photoprism/common/db.dart';
 import 'package:photoprism/pages/albums_page.dart';
 import 'package:photoprism/pages/settings_page.dart';
@@ -25,7 +26,8 @@ void main() {
         path: 'assets/translations',
         fallbackLocale: const Locale('en', 'US'),
         child: ChangeNotifierProvider<PhotoprismModel>(
-          create: (BuildContext context) => PhotoprismModel(openDbConnection()),
+          create: (BuildContext context) =>
+              PhotoprismModel(openDbConnection(), const FlutterSecureStorage()),
           child: PhotoprismApp(),
         )),
   );
@@ -109,7 +111,7 @@ class MainPage extends StatelessWidget {
               icon: const Icon(Icons.settings), label: 'settings'.tr()),
         ],
         currentIndex: model.selectedPageIndex.index,
-        onTap: (int index) {
+        onTap: (int index) async {
           if (index != _pageController.page) {
             model.gridController.clear();
             model.albumUid = null;

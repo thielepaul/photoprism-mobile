@@ -87,8 +87,7 @@ class PhotosPage extends StatelessWidget {
     AlbumManager.addPhotosToAlbum(context, albumId, selectedPhotos);
   }
 
-  Text getMonthFromOffset(
-      BuildContext context, ScrollController scrollController) {
+  Text getMonthFromOffset(BuildContext context) {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
     final DateTime takenAt = model
         .photos[PhotoManager.getPhotoIndexInScrollView(context)].photo.takenAt;
@@ -211,8 +210,7 @@ class PhotosPage extends StatelessWidget {
       }
 
       return DraggableScrollbar.semicircle(
-        labelTextBuilder: (double offset) =>
-            getMonthFromOffset(context, _scrollController),
+        labelTextBuilder: (double offset) => getMonthFromOffset(context),
         heightScrollThumb: 50.0,
         controller: _scrollController,
         child: DragSelectGridView(

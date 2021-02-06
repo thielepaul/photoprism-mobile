@@ -19,7 +19,24 @@ import 'package:photo_manager/photo_manager.dart' as photolib;
 
 class PhotoprismUploader {
   PhotoprismUploader(this.photoprismModel) {
-    loadPreferences();
+    initialize();
+  }
+
+  PhotoprismModel photoprismModel;
+  Completer<int> uploadFinishedCompleter;
+  Completer<int> manualUploadFinishedCompleter;
+  FlutterUploader uploader;
+  String deviceName = '';
+  Map<String, Album> deviceAlbums = <String, Album>{};
+  int uploadsinProgress = 0;
+  int failedUploads = 0;
+
+  Future<void> initialize() async {
+    await loadPreferences();
+    if (!photoprismModel.autoUploadEnabled) {
+      print('photo upload disabled');
+      return;
+    }
     initPlatformState(photoprismModel);
     getPhotosToUpload(photoprismModel);
 
@@ -69,15 +86,6 @@ class PhotoprismUploader {
       }
     });
   }
-
-  PhotoprismModel photoprismModel;
-  Completer<int> uploadFinishedCompleter;
-  Completer<int> manualUploadFinishedCompleter;
-  FlutterUploader uploader;
-  String deviceName = '';
-  Map<String, Album> deviceAlbums = <String, Album>{};
-  int uploadsinProgress = 0;
-  int failedUploads = 0;
 
   Future<void> setAutoUpload(bool autoUploadEnabledNew) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();

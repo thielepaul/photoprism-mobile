@@ -57,6 +57,7 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_launcher_icons: "^0.7.4"
+  mockito: ^4.1.4
 
 flutter_icons:
   android: "ic_launcher"

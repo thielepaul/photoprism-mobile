@@ -332,7 +332,12 @@ class Api {
       print('ERROR: api DB call failed ($url)');
       return <dynamic>[];
     }
-    return json.decode(response.body) as List<dynamic>;
+    try {
+      return json.decode(response.body) as List<dynamic>;
+    } catch (error) {
+      print('decoding answer from db api failed: ' + error.toString());
+      return <dynamic>[];
+    }
   }
 
   static Future<List<dynamic>> loadDbBatchUpdated(
@@ -428,20 +433,29 @@ class Api {
       return;
     }
 
-    await model.database.createOrUpdateMultiplePhotos(
-        (await loadPhotosDb(model))
-            .map((Photo p) => p.toCompanion(false))
-            .toList());
-    await model.database.createOrUpdateMultipleFiles((await loadFilesDb(model))
-        .map((File p) => p.toCompanion(false))
-        .toList());
-    await model.database.createOrUpdateMultipleAlbums(
-        (await loadAlbumsDb(model))
-            .map((Album p) => p.toCompanion(false))
-            .toList());
-    await model.database.createOrUpdateMultiplePhotosAlbums(
-        (await loadPhotosAlbumsDb(model))
-            .map((PhotosAlbum p) => p.toCompanion(false))
-            .toList());
+    final Iterable<Photo> photos = await loadPhotosDb(model);
+    if (photos.isNotEmpty) {
+      print('update Photo table');
+      await model.database.createOrUpdateMultiplePhotos(
+          photos.map((Photo p) => p.toCompanion(false)).toList());
+    }
+    final Iterable<File> files = await loadFilesDb(model);
+    if (files.isNotEmpty) {
+      print('update File table');
+      await model.database.createOrUpdateMultipleFiles(
+          files.map((File p) => p.toCompanion(false)).toList());
+    }
+    final Iterable<Album> albums = await loadAlbumsDb(model);
+    if (albums.isNotEmpty) {
+      print('update Album table');
+      await model.database.createOrUpdateMultipleAlbums(
+          albums.map((Album p) => p.toCompanion(false)).toList());
+    }
+    final Iterable<PhotosAlbum> photosAlbums = await loadPhotosAlbumsDb(model);
+    if (photosAlbums.isNotEmpty) {
+      print('update PhotosAlbum table');
+      await model.database.createOrUpdateMultiplePhotosAlbums(
+          photosAlbums.map((PhotosAlbum p) => p.toCompanion(false)).toList());
+    }
   }
 }
