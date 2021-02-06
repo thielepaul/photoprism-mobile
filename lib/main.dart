@@ -27,7 +27,7 @@ void main() {
         fallbackLocale: const Locale('en', 'US'),
         child: ChangeNotifierProvider<PhotoprismModel>(
           create: (BuildContext context) =>
-              PhotoprismModel(openDbConnection(), const FlutterSecureStorage()),
+              PhotoprismModel(openDbConnection, const FlutterSecureStorage()),
           child: PhotoprismApp(),
         )),
   );
@@ -71,6 +71,10 @@ class MainPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
+    if (!model.initialized) {
+      model.initialize();
+      return Container();
+    }
     model.photoprismLoadingScreen.context = context;
 
     if (!model.dataFromCacheLoaded) {

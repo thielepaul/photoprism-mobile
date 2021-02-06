@@ -49,15 +49,15 @@ class _SelectableTileState extends State<SelectableTile>
   }
 
   void onTap() {
-    final Selection selection = widget.gridController.selection;
+    final Selection selection = widget.gridController.value;
     if (selection.isSelecting) {
-      final Set<int> selectedIndexes = selection.selectedIndexes;
+      final Set<int> selectedIndexes = selection.selectedIndexes.toSet();
       if (selectedIndexes.contains(widget.index)) {
         selectedIndexes.remove(widget.index);
       } else {
         selectedIndexes.add(widget.index);
       }
-      widget.gridController.selection = Selection(selectedIndexes);
+      widget.gridController.value = Selection(selectedIndexes);
       return;
     }
     widget.onTapCallback();
@@ -110,7 +110,7 @@ class _AnimatedSelectableTile extends AnimatedWidget {
       );
     } else if (Provider.of<PhotoprismModel>(context)
         .gridController
-        .selection
+        .value
         .isSelecting) {
       return Positioned(
         left: 3.0,

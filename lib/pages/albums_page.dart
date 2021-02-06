@@ -13,6 +13,7 @@ class AlbumsPage extends StatelessWidget {
   static String getAlbumPreviewUrl(BuildContext context, int index) {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
     if (model.albums != null &&
+        model.albums.length - 1 >= index &&
         model.albums[index] != null &&
         model.albumCounts != null &&
         model.albumCounts[model.albums[index].uid] != null &&
@@ -29,7 +30,8 @@ class AlbumsPage extends StatelessWidget {
   }
 
   Future<void> createAlbum(BuildContext context) async {
-    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
+    final PhotoprismModel model =
+        Provider.of<PhotoprismModel>(context, listen: false);
     model.photoprismLoadingScreen
         .showLoadingScreen('create_album'.tr() + '...');
     final String uuid = await Api.createAlbum('New album', model);
@@ -55,6 +57,9 @@ class AlbumsPage extends StatelessWidget {
   }
 
   String _albumCount(PhotoprismModel model, int index) {
+    if (index >= model.albums.length) {
+      return '0';
+    }
     final String uid = model.albums[index].uid;
     if (model.albumCounts.containsKey(uid)) {
       return model.albumCounts[uid].toString();
@@ -124,7 +129,10 @@ class AlbumsPage extends StatelessWidget {
                                 _albumCount(model, index),
                                 style: const TextStyle(color: Colors.white),
                               ),
-                              title: _GridTitleText(model.albums[index].title),
+                              title: _GridTitleText(
+                                  model.albums.length - 1 >= index
+                                      ? model.albums[index].title
+                                      : ''),
                             ),
                           ),
                         )));

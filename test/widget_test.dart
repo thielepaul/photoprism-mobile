@@ -45,7 +45,7 @@ void main() {
         <String, String>{'url': 'http://localhost:2342'});
     HttpOverrides.global = TestHttpOverrides();
     final SecureStorageMock secureStorageMock = SecureStorageMock();
-    model = PhotoprismModel(VmDatabase.memory(), secureStorageMock);
+    model = PhotoprismModel(() => VmDatabase.memory(), secureStorageMock);
     await model.initialize();
   });
 

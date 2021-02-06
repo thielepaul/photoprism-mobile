@@ -8,7 +8,8 @@ class PhotoManager {
 
   static Future<void> archivePhotos(
       BuildContext context, List<String> photoUUIDs) async {
-    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
+    final PhotoprismModel model =
+        Provider.of<PhotoprismModel>(context, listen: false);
 
     model.photoprismLoadingScreen.showLoadingScreen('Archive photos..');
     final int status = await Api.archivePhotos(photoUUIDs, model);

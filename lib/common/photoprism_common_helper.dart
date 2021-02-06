@@ -24,7 +24,8 @@ class PhotoprismCommonHelper {
   static Future<void> getCachedDataFromSharedPrefs(BuildContext context) async {
     print('getDataFromSharedPrefs');
     final SharedPreferences sp = await SharedPreferences.getInstance();
-    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
+    final PhotoprismModel model =
+        Provider.of<PhotoprismModel>(context, listen: false);
 
     if (sp.containsKey('alreadyUploadedPhotos')) {
       try {

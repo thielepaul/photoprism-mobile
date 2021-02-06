@@ -24,9 +24,10 @@ class PhotosPage extends StatelessWidget {
 
   static Future<void> archiveSelectedPhotos(
       BuildContext context, bool videosPage) async {
-    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
+    final PhotoprismModel model =
+        Provider.of<PhotoprismModel>(context, listen: false);
     final List<String> selectedPhotos = model
-        .gridController.selection.selectedIndexes
+        .gridController.value.selectedIndexes
         .map<String>((int element) => model.photos[element].photo.uid)
         .toList();
 
@@ -34,7 +35,8 @@ class PhotosPage extends StatelessWidget {
   }
 
   static void _selectAlbumBottomSheet(BuildContext context, bool videosPage) {
-    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
+    final PhotoprismModel model =
+        Provider.of<PhotoprismModel>(context, listen: false);
     if (model.albums == null) {
       Api.updateDb(model);
     }
@@ -56,11 +58,12 @@ class PhotosPage extends StatelessWidget {
   }
 
   static Future<void> _sharePhotos(BuildContext context) async {
-    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
+    final PhotoprismModel model =
+        Provider.of<PhotoprismModel>(context, listen: false);
     final Map<String, List<int>> photos = <String, List<int>>{};
     model.photoprismLoadingScreen
         .showLoadingScreen('Preparing photos for sharing...');
-    for (final int index in model.gridController.selection.selectedIndexes) {
+    for (final int index in model.gridController.value.selectedIndexes) {
       final List<int> bytes =
           await Api.downloadPhoto(model, model.photos[index].file.hash);
       if (bytes == null) {
@@ -77,9 +80,10 @@ class PhotosPage extends StatelessWidget {
       int albumId, BuildContext context, bool videosPage) async {
     Navigator.pop(context);
 
-    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
+    final PhotoprismModel model =
+        Provider.of<PhotoprismModel>(context, listen: false);
     final List<String> selectedPhotos = model
-        .gridController.selection.selectedIndexes
+        .gridController.value.selectedIndexes
         .map<String>((int element) => model.photos[element].photo.uid)
         .toList();
 
@@ -120,12 +124,11 @@ class PhotosPage extends StatelessWidget {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
 
     return AppBar(
-      title: model.gridController.selection.selectedIndexes.isNotEmpty
-          ? Text(
-              model.gridController.selection.selectedIndexes.length.toString())
+      title: model.gridController.value.selectedIndexes.isNotEmpty
+          ? Text(model.gridController.value.selectedIndexes.length.toString())
           : const Text('PhotoPrism'),
       backgroundColor: HexColor(model.applicationColor),
-      leading: model.gridController.selection.selectedIndexes.isNotEmpty
+      leading: model.gridController.value.selectedIndexes.isNotEmpty
           ? IconButton(
               icon: const Icon(Icons.close),
               onPressed: () {
@@ -133,7 +136,7 @@ class PhotosPage extends StatelessWidget {
               },
             )
           : null,
-      actions: model.gridController.selection.selectedIndexes.isNotEmpty
+      actions: model.gridController.value.selectedIndexes.isNotEmpty
           ? <Widget>[
               IconButton(
                 icon: const Icon(Icons.archive),
@@ -233,7 +236,7 @@ class PhotosPage extends StatelessWidget {
                   gridController: gridController,
                   selected: selected,
                   onTap: () {
-                    Provider.of<PhotoprismModel>(context)
+                    Provider.of<PhotoprismModel>(context, listen: false)
                         .photoprismCommonHelper
                         .setPhotoViewScaleState(PhotoViewScaleState.initial);
                     Navigator.push(

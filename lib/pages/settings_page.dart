@@ -73,6 +73,7 @@ class SettingsPage extends StatelessWidget {
                     await photolib.PhotoManager.requestPermission();
                 if (result) {
                   model.photoprismUploader.setAutoUpload(newState);
+                  model.photoprismUploader.initialize();
                   if (newState) {
                     configureAlbumsToUpload(context);
                   }
@@ -230,7 +231,8 @@ class SettingsPage extends StatelessWidget {
   }
 
   Future<void> configureAlbumsToUpload(BuildContext context) async {
-    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
+    final PhotoprismModel model =
+        Provider.of<PhotoprismModel>(context, listen: false);
 
     if (!await photolib.PhotoManager.requestPermission()) {
       model.photoprismMessage
@@ -269,7 +271,8 @@ class SettingsPage extends StatelessWidget {
   }
 
   Future<void> _settingsDisplayUrlDialog(BuildContext context) async {
-    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
+    final PhotoprismModel model =
+        Provider.of<PhotoprismModel>(context, listen: false);
     _urlTextFieldController.text = model.photoprismUrl;
 
     return showDialog(
@@ -302,20 +305,22 @@ class SettingsPage extends StatelessWidget {
   }
 
   Future<void> setNewPhotoprismUrl(BuildContext context, String url) async {
-    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
+    final PhotoprismModel model =
+        Provider.of<PhotoprismModel>(context, listen: false);
     Navigator.of(context).pop();
     await model.photoprismCommonHelper.setPhotoprismUrl(url);
     model.photoprismRemoteConfigLoader.loadApplicationColor();
-    emptyCache(context);
+    await emptyCache(context);
   }
 
   static Future<void> emptyCache(BuildContext context) async {
-    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
+    final PhotoprismModel model =
+        Provider.of<PhotoprismModel>(context, listen: false);
     model.photos = null;
     model.albums = null;
     model.config = null;
     await DefaultCacheManager().emptyCache();
-    model.resetDatabase();
+    await model.resetDatabase();
   }
 
   Widget _albumsToUploadText() => FutureBuilder<List<photolib.AssetPathEntity>>(

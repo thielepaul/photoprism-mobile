@@ -28,6 +28,8 @@ class PhotoprismModel extends ChangeNotifier {
   Lock photoLoadingLock = Lock();
   Lock albumLoadingLock = Lock();
   bool _dataFromCacheLoaded = false;
+  bool _initializing = false;
+  bool initialized = false;
   List<String> log;
   MyDatabase database;
   StreamSubscription<List<PhotoWithFile>> photosStreamSubscription;
@@ -39,7 +41,7 @@ class PhotoprismModel extends ChangeNotifier {
   DbTimestamps dbTimestamps;
   bool ascending = false;
   String albumUid;
-  QueryExecutor queryExecutor;
+  QueryExecutor Function() queryExecutor;
   FlutterSecureStorage secureStorage;
 
   // theming
@@ -80,6 +82,10 @@ class PhotoprismModel extends ChangeNotifier {
   PhotoprismAuth photoprismAuth;
 
   Future<void> initialize() async {
+    if (_initializing) {
+      return;
+    }
+    _initializing = true;
     print('initialize model');
     photoprismLoadingScreen = PhotoprismLoadingScreen(this);
     photoprismRemoteConfigLoader = PhotoprismRemoteSettingsLoader(this);
@@ -88,7 +94,7 @@ class PhotoprismModel extends ChangeNotifier {
 
     photoprismAuth = PhotoprismAuth(this, secureStorage);
 
-    database = MyDatabase(queryExecutor);
+    database = MyDatabase(queryExecutor());
 
     // uploader needs photoprismAuth to be initialized
     await photoprismAuth.initialize();
@@ -106,14 +112,20 @@ class PhotoprismModel extends ChangeNotifier {
     await photoprismCommonHelper.loadPhotoprismUrl();
 
     await Api.updateDb(this);
+    initialized = true;
   }
 
   Future<void> resetDatabase() async {
+    photosStreamSubscription = null;
+    albumsStreamSubscription = null;
+    albumCountsStreamSubscription = null;
+    print('closing database');
     await database.close();
     await database.deleteDatabase();
-    database = MyDatabase(queryExecutor);
-    updatePhotosSubscription();
-    updateAlbumsSubscription();
+    print('create new database');
+    database = MyDatabase(queryExecutor());
+    await updatePhotosSubscription();
+    await updateAlbumsSubscription();
     await dbTimestamps.clear();
   }
 
@@ -215,15 +227,16 @@ class PhotoprismModel extends ChangeNotifier {
     });
   }
 
-  void updateAlbumsSubscription() {
+  Future<void> updateAlbumsSubscription() async {
+    print('updateAlbumsSubscription');
     if (database == null) {
       return;
     }
     if (albumsStreamSubscription != null) {
-      albumsStreamSubscription.cancel();
+      await albumsStreamSubscription.cancel();
     }
     if (albumCountsStreamSubscription != null) {
-      albumCountsStreamSubscription.cancel();
+      await albumCountsStreamSubscription.cancel();
     }
     final Stream<List<Album>> albumsStream = database.allAlbums;
     albumsStreamSubscription = albumsStream.listen((List<Album> value) {
@@ -245,6 +258,7 @@ class PhotoprismModel extends ChangeNotifier {
   @override
   Future<void> dispose() async {
     super.dispose();
+    print('closing database');
     await database.close();
   }
 }

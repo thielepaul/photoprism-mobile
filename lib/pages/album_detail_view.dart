@@ -59,7 +59,7 @@ class AlbumDetailView extends StatelessWidget {
 
     // save all selected photos in list
     final List<String> selectedPhotos = <String>[];
-    for (final int photoId in _model.gridController.selection.selectedIndexes) {
+    for (final int photoId in _model.gridController.value.selectedIndexes) {
       selectedPhotos.add(_model.photos[photoId].photo.uid);
     }
 
@@ -82,7 +82,7 @@ class AlbumDetailView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final int _selectedPhotosCount =
-        _model.gridController.selection.selectedIndexes.length;
+        _model.gridController.value.selectedIndexes.length;
     return NestedScrollView(
         headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
           return <Widget>[
