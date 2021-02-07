@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:photoprism/api/api.dart';
 import 'package:photoprism/common/hexcolor.dart';
+import 'package:photoprism/model/filter_photos.dart';
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:photoprism/pages/album_detail_view.dart';
 import 'package:provider/provider.dart';
@@ -86,7 +87,7 @@ class AlbumsPage extends StatelessWidget {
         ),
         body: RefreshIndicator(child: OrientationBuilder(
             builder: (BuildContext context, Orientation orientation) {
-          if (model.albums == null) {
+          if (model.dbTimestamps.isEmpty) {
             Api.updateDb(model);
             return const Text('', key: ValueKey<String>('albumsGridView'));
           }
@@ -103,6 +104,7 @@ class AlbumsPage extends StatelessWidget {
                 return GestureDetector(
                     onTap: () {
                       model.albumUid = model.albums[index].uid;
+                      model.filterPhotos = FilterPhotos();
                       model.updatePhotosSubscription();
                       Navigator.push<void>(
                           context,

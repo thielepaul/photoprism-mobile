@@ -25,6 +25,9 @@ class DbTimestamps {
   DbTimestamps(Map<String, DbTimestamp> data) {
     _d = data;
   }
+
+  bool get isEmpty => _d.isEmpty;
+
   static Future<DbTimestamps> fromSharedPrefs() async {
     print('load dbTimestamps from sharedprefs');
     final SharedPreferences sp = await SharedPreferences.getInstance();

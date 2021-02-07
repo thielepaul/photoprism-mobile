@@ -11,19 +11,17 @@ import 'package:photoprism/common/transparent_route.dart';
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:photoprism/pages/photoview.dart';
 import 'package:draggable_scrollbar/draggable_scrollbar.dart';
+import 'package:photoprism/widgets/filter_photos_dialog.dart';
 import 'package:photoprism/widgets/selectable_tile.dart';
 import 'package:provider/provider.dart';
 import 'package:easy_localization/easy_localization.dart';
 
 class PhotosPage extends StatelessWidget {
-  const PhotosPage({Key key, this.albumId, this.videosPage = false})
-      : super(key: key);
+  const PhotosPage({Key key, this.albumId}) : super(key: key);
 
   final int albumId;
-  final bool videosPage;
 
-  static Future<void> archiveSelectedPhotos(
-      BuildContext context, bool videosPage) async {
+  static Future<void> archiveSelectedPhotos(BuildContext context) async {
     final PhotoprismModel model =
         Provider.of<PhotoprismModel>(context, listen: false);
     final List<String> selectedPhotos = model
@@ -34,7 +32,7 @@ class PhotosPage extends StatelessWidget {
     PhotoManager.archivePhotos(context, selectedPhotos);
   }
 
-  static void _selectAlbumBottomSheet(BuildContext context, bool videosPage) {
+  static void _selectAlbumBottomSheet(BuildContext context) {
     final PhotoprismModel model =
         Provider.of<PhotoprismModel>(context, listen: false);
     if (model.albums == null) {
@@ -50,7 +48,7 @@ class PhotosPage extends StatelessWidget {
                 return ListTile(
                   title: Text(model.albums[index].title),
                   onTap: () {
-                    addPhotosToAlbum(index, context, videosPage);
+                    addPhotosToAlbum(index, context);
                   },
                 );
               });
@@ -77,7 +75,7 @@ class PhotosPage extends StatelessWidget {
   }
 
   static Future<void> addPhotosToAlbum(
-      int albumId, BuildContext context, bool videosPage) async {
+      int albumId, BuildContext context) async {
     Navigator.pop(context);
 
     final PhotoprismModel model =
@@ -100,8 +98,13 @@ class PhotosPage extends StatelessWidget {
 
   Widget displayPhotoIfUrlLoaded(BuildContext context, int index) {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
+    if (!(index < model.photos.length)) {
+      return Container(
+        color: Colors.grey[300],
+      );
+    }
     final String imageUrl =
-        PhotoManager.getPhotoThumbnailUrl(context, index, albumId, videosPage);
+        PhotoManager.getPhotoThumbnailUrl(context, index, albumId);
     if (imageUrl == null) {
       return Container(
         color: Colors.grey[300],
@@ -120,7 +123,7 @@ class PhotosPage extends StatelessWidget {
     );
   }
 
-  static AppBar appBar(BuildContext context, bool videosPage) {
+  static AppBar appBar(BuildContext context) {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
 
     return AppBar(
@@ -142,14 +145,14 @@ class PhotosPage extends StatelessWidget {
                 icon: const Icon(Icons.archive),
                 tooltip: 'archive_photos'.tr(),
                 onPressed: () {
-                  archiveSelectedPhotos(context, videosPage);
+                  archiveSelectedPhotos(context);
                 },
               ),
               IconButton(
                 icon: const Icon(Icons.add),
                 tooltip: 'add_to_album'.tr(),
                 onPressed: () {
-                  _selectAlbumBottomSheet(context, videosPage);
+                  _selectAlbumBottomSheet(context);
                 },
               ),
               IconButton(
@@ -167,17 +170,16 @@ class PhotosPage extends StatelessWidget {
                     value: 0,
                     child: const Text('upload_photo').tr(),
                   ),
-                  const PopupMenuItem<int>(
+                  PopupMenuItem<int>(
                     value: 1,
-                    child: Text('reverse sorting'),
+                    child: const Text('filter_and_sort').tr(),
                   )
                 ],
                 onSelected: (int choice) {
                   if (choice == 0) {
                     model.photoprismUploader.selectPhotoAndUpload(context);
                   } else if (choice == 1) {
-                    model.ascending = !model.ascending;
-                    model.updatePhotosSubscription();
+                    FilterPhotosDialog.show(context);
                   }
                 },
               ),
@@ -196,18 +198,12 @@ class PhotosPage extends StatelessWidget {
 
     final int tileCount = model.photos != null ? model.photos.length : 0;
 
-    //if (Photos.getPhotoList(context, albumId).length == 0) {
-    //  return IconButton(onPressed: () => {}, icon: Icon(Icons.add));
-    //}
     return RefreshIndicator(child: OrientationBuilder(
         builder: (BuildContext context, Orientation orientation) {
       if (model.config == null) {
         Api.loadConfig(model);
       }
-      if (videosPage) {
-        return const Text('', key: ValueKey<String>('videosGridView'));
-      }
-      if (model.photos == null) {
+      if (model.dbTimestamps.isEmpty) {
         Api.updateDb(model);
         return const Text('', key: ValueKey<String>('photosGridView'));
       }
@@ -243,8 +239,7 @@ class PhotosPage extends StatelessWidget {
                         context,
                         TransparentRoute(
                           builder: (BuildContext context) =>
-                              FullscreenPhotoGallery(
-                                  index, albumId, videosPage),
+                              FullscreenPhotoGallery(index, albumId),
                         ));
                   },
                   child: Hero(

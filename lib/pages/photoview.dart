@@ -8,14 +8,13 @@ import 'package:photoprism/common/photo_manager.dart';
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:provider/provider.dart';
 import 'package:video_player/video_player.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class FullscreenPhotoGallery extends StatefulWidget {
-  const FullscreenPhotoGallery(
-      this.currentPhotoIndex, this.albumId, this.videosPage);
+  const FullscreenPhotoGallery(this.currentPhotoIndex, this.albumId);
 
   final int albumId;
   final int currentPhotoIndex;
-  final bool videosPage;
 
   @override
   _FullscreenPhotoGalleryState createState() => _FullscreenPhotoGalleryState();
@@ -146,8 +145,8 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
             model.photos[index].file.aspectRatio,
         fit: BoxFit.contain,
         alignment: Alignment.center,
-        imageUrl: PhotoManager.getPhotoThumbnailUrl(
-            context, index, widget.albumId, widget.videosPage),
+        imageUrl:
+            PhotoManager.getPhotoThumbnailUrl(context, index, widget.albumId),
       ),
       filterQuality: FilterQuality.medium,
       imageProvider: CachedNetworkImageProvider(
@@ -176,67 +175,75 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
               )
             : Container();
 
-    final String videoUrl = model.photos[index].photo.type == 'video'
-        // ? Api.videoUrl(model, videoHash) // TODO get video hash from db
-        ? ''
-        : '';
-
     return _AnimatedFullScreenPhoto(
-        orientation: model.photos[index].file.aspectRatio >= 1
-            ? Orientation.landscape
-            : Orientation.portrait,
-        animation: animation,
-        child: Scaffold(
-          backgroundColor: Colors.transparent,
-          body: Center(
-            child: videoController != null &&
-                    videoController.value.isPlaying &&
-                    videoController.dataSource == videoUrl
-                ? videoChild
-                : photoChild,
-          ),
-          floatingActionButton: model.photos[index].photo.type == 'video'
-              ? FloatingActionButton(
-                  onPressed: () {
-                    if (videoController == null ||
-                        videoController.dataSource != videoUrl) {
-                      if (videoController != null) {
-                        videoController.dispose();
-                      }
-                      model.photoprismLoadingScreen
-                          .showLoadingScreen('loading video');
-                      videoController = VideoPlayerController.network(videoUrl)
-                        ..initialize().then((_) {
-                          model.photoprismLoadingScreen.hideLoadingScreen();
-                          videoController.setLooping(true);
-                          setState(() {
-                            videoController.play();
-                          });
-                        });
-                    } else {
-                      setState(() {
-                        if (videoController.value.isPlaying) {
-                          videoController.pause();
-                        } else {
-                          videoController.seekTo(const Duration());
-                          videoController.play();
-                        }
-                      });
-                    }
-                  },
-                  child: Icon(
-                    videoController != null && videoController.value.isPlaying
-                        ? Icons.pause
-                        : Icons.play_arrow,
+      orientation: model.photos[index].file.aspectRatio >= 1
+          ? Orientation.landscape
+          : Orientation.portrait,
+      animation: animation,
+      child: FutureBuilder<String>(
+          future:
+              Api.getVideoUrl(model, model.photos[currentPhotoIndex].photo.uid),
+          builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
+            if (snapshot.data == null) {
+              return Scaffold(
+                  backgroundColor: Colors.transparent,
+                  body: Center(
+                    child: photoChild,
+                  ));
+            } else {
+              return Scaffold(
+                  backgroundColor: Colors.transparent,
+                  body: Center(
+                    child: videoController != null &&
+                            videoController.value.isPlaying &&
+                            videoController.dataSource == snapshot.data
+                        ? videoChild
+                        : photoChild,
                   ),
-                )
-              : null,
-        ));
+                  floatingActionButton: FloatingActionButton(
+                    onPressed: () {
+                      if (videoController == null ||
+                          videoController.dataSource != snapshot.data) {
+                        if (videoController != null) {
+                          videoController.dispose();
+                        }
+                        model.photoprismLoadingScreen
+                            .showLoadingScreen('loading video');
+                        videoController =
+                            VideoPlayerController.network(snapshot.data)
+                              ..initialize().then((_) {
+                                model.photoprismLoadingScreen
+                                    .hideLoadingScreen();
+                                videoController.setLooping(true);
+                                setState(() {
+                                  videoController.play();
+                                });
+                              });
+                      } else {
+                        setState(() {
+                          if (videoController.value.isPlaying) {
+                            videoController.pause();
+                          } else {
+                            videoController.seekTo(const Duration());
+                            videoController.play();
+                          }
+                        });
+                      }
+                    },
+                    child: Icon(
+                      videoController != null && videoController.value.isPlaying
+                          ? Icons.pause
+                          : Icons.play_arrow,
+                    ),
+                  ));
+            }
+          }),
+    );
   }
 
-  Widget getPreview(int index, bool videosPage) {
-    final String imageUrl = PhotoManager.getPhotoThumbnailUrl(
-        context, index, widget.albumId, videosPage);
+  Widget getPreview(int index) {
+    final String imageUrl =
+        PhotoManager.getPhotoThumbnailUrl(context, index, widget.albumId);
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
     return Container(
         width: MediaQuery.of(context).size.width,
@@ -284,7 +291,7 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
                     child: (Provider.of<PhotoprismModel>(context)
                                 .photoViewScaleState !=
                             PhotoViewScaleState.zoomedOut)
-                        ? getPreview(index, widget.videosPage)
+                        ? getPreview(index)
                         : Container()),
                 Positioned(
                     left: photoPosition.dx,
@@ -397,15 +404,6 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
                             sharePhoto(currentPhotoIndex, context);
                           },
                         ),
-                        if (model.photos[currentPhotoIndex].photo.type ==
-                            'video')
-                          IconButton(
-                            icon: const Icon(Icons.video_library),
-                            tooltip: 'Share video',
-                            onPressed: () {
-                              shareVideo(currentPhotoIndex, context);
-                            },
-                          )
                       ],
                       backgroundColor: Colors.transparent,
                     ))
@@ -415,7 +413,42 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
   }
 
   Future<void> sharePhoto(int index, BuildContext context) async {
-    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
+    final PhotoprismModel model =
+        Provider.of<PhotoprismModel>(context, listen: false);
+
+    final String videoUrl =
+        await Api.getVideoUrl(model, model.photos[index].photo.uid);
+
+    if (videoUrl != null) {
+      return showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Text('share_photo_or_video').tr(),
+              actions: <Widget>[
+                FlatButton(
+                  child: const Text('video').tr(),
+                  onPressed: () {
+                    shareVideoFile(index, model);
+                    Navigator.of(context).pop();
+                  },
+                ),
+                FlatButton(
+                  child: const Text('photo').tr(),
+                  onPressed: () {
+                    sharePhotoFile(index, model);
+                    Navigator.of(context).pop();
+                  },
+                )
+              ],
+            );
+          });
+    }
+
+    return sharePhotoFile(index, model);
+  }
+
+  Future<void> sharePhotoFile(int index, PhotoprismModel model) async {
     final List<int> photoBytes =
         await Api.downloadPhoto(model, model.photos[index].file.hash);
 
@@ -425,16 +458,14 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
     }
   }
 
-  Future<void> shareVideo(int index, BuildContext context) async {
-    // final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
-    // Todo get video hash from
-    // final List<int> videoBytes =
-    // await Api.downloadVideo(model, model.photos[index]);
+  Future<void> shareVideoFile(int index, PhotoprismModel model) async {
+    final List<int> videoBytes =
+        await Api.downloadVideo(model, model.photos[index].photo);
 
-    // if (videoBytes != null) {
-    // await Share.file('Photoprism Video',
-    // model.photos[index].file.hash + '.mp4', videoBytes, 'video/mp4');
-    // }
+    if (videoBytes != null) {
+      await Share.file('Photoprism Video',
+          model.photos[index].file.hash + '.mp4', videoBytes, 'video/mp4');
+    }
   }
 }
 

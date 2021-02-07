@@ -3,6 +3,7 @@ import 'package:moor/ffi.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'package:moor/moor.dart';
+import 'package:photoprism/model/filter_photos.dart';
 
 import 'package:photoprism/model/photos.dart';
 import 'package:photoprism/model/files.dart';
@@ -61,6 +62,16 @@ class MyDatabase extends _$MyDatabase {
         ..limit(1))
       .getSingle();
 
+  Future<File> getVideoFileForPhoto(String photoUid) => ((select(files)
+        ..where(($FilesTable tbl) =>
+            isNotNull(tbl.photoUID) &
+            tbl.photoUID.equals(photoUid) &
+            isNotNull(tbl.video) &
+            tbl.video &
+            isNotNull(tbl.hash)))
+        ..limit(1))
+      .getSingle();
+
   Future<bool> isPhotoAlbum(String photoUid, String albumUid) async {
     final Future<PhotosAlbum> result = (select(photosAlbums)
           ..where(($PhotosAlbumsTable tbl) =>
@@ -89,7 +100,7 @@ class MyDatabase extends _$MyDatabase {
         });
   }
 
-  Stream<List<PhotoWithFile>> photosWithFile(bool ascending,
+  Stream<List<PhotoWithFile>> photosWithFile(FilterPhotos filterPhotos,
       {String albumUid}) {
     JoinedSelectStatement<Table, DataClass> query;
     if (albumUid != null) {
@@ -107,16 +118,34 @@ class MyDatabase extends _$MyDatabase {
       ]);
     }
 
+    GeneratedDateTimeColumn sortColumn;
+    switch (filterPhotos.sort) {
+      case PhotoSort.CreatedAt:
+        sortColumn = photos.createdAt;
+        break;
+      case PhotoSort.TakenAt:
+        sortColumn = photos.takenAt;
+        break;
+      case PhotoSort.UpdatedAt:
+        sortColumn = photos.updatedAt;
+        break;
+      default:
+        sortColumn = photos.takenAt;
+    }
+
     query = query
       ..where(isNotNull(files.hash) &
+          isNotNull(files.primary) &
           files.primary &
           isNull(files.deletedAt) &
-          isNull(photos.deletedAt) &
-          isNotNull(photos.takenAt))
+          (filterPhotos.archived
+              ? isNotNull(photos.deletedAt)
+              : isNull(photos.deletedAt)) &
+          isNotNull(photos.takenAt) &
+          isNotNull(photos.type) &
+          photos.type.isIn(filterPhotos.typesAsString))
       ..orderBy(<OrderingTerm>[
-        OrderingTerm(
-            expression: photos.takenAt,
-            mode: ascending ? OrderingMode.asc : OrderingMode.desc)
+        OrderingTerm(expression: sortColumn, mode: filterPhotos.order)
       ]);
 
     return query.watch().map((List<TypedResult> rows) {

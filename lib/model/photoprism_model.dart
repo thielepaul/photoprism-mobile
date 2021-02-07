@@ -16,6 +16,7 @@ import 'package:photoprism/common/photoprism_uploader.dart';
 import 'package:photoprism/main.dart';
 import 'package:photoprism/model/config.dart';
 import 'package:photoprism/model/dbtimestamps.dart';
+import 'package:photoprism/model/filter_photos.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:synchronized/synchronized.dart';
 import 'package:photoprism/api/api.dart';
@@ -25,8 +26,7 @@ class PhotoprismModel extends ChangeNotifier {
   // general
   String photoprismUrl = 'https://demo.photoprism.org';
   Config config;
-  Lock photoLoadingLock = Lock();
-  Lock albumLoadingLock = Lock();
+  Lock dbLoadingLock = Lock();
   bool _dataFromCacheLoaded = false;
   bool _initializing = false;
   bool initialized = false;
@@ -39,7 +39,7 @@ class PhotoprismModel extends ChangeNotifier {
   StreamSubscription<Map<String, int>> albumCountsStreamSubscription;
   Map<String, int> albumCounts;
   DbTimestamps dbTimestamps;
-  bool ascending = false;
+  FilterPhotos filterPhotos = FilterPhotos();
   String albumUid;
   QueryExecutor Function() queryExecutor;
   FlutterSecureStorage secureStorage;
@@ -113,6 +113,7 @@ class PhotoprismModel extends ChangeNotifier {
 
     await Api.updateDb(this);
     initialized = true;
+    notifyListeners();
   }
 
   Future<void> resetDatabase() async {
@@ -216,7 +217,7 @@ class PhotoprismModel extends ChangeNotifier {
       await photosStreamSubscription.cancel();
     }
     final Stream<List<PhotoWithFile>> photosStream =
-        database.photosWithFile(ascending, albumUid: albumUid);
+        database.photosWithFile(filterPhotos, albumUid: albumUid);
     photosStreamSubscription = photosStream.listen((List<PhotoWithFile> value) {
       if (photos != null && photos.isEmpty && value.isEmpty) {
         return;

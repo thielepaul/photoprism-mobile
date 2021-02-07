@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import 'package:moor/ffi.dart';
 import 'package:photoprism/model/config.dart';
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:photoprism/common/db.dart';
@@ -258,17 +259,22 @@ class Api {
     return false;
   }
 
-  // static Future<List<int>> downloadVideo(
-  //     PhotoprismModel model, photo_old.Photo photo) async {
-  //   final http.Response response = await http.get(videoUrl(model, photo));
-  //   if (response.statusCode == 200) {
-  //     return response.bodyBytes;
-  //   } else {
-  //     model.photoprismMessage
-  //         .showMessage('Error while sharing: No connection to server!');
-  //   }
-  //   return null;
-  // }
+  static Future<List<int>> downloadVideo(
+      PhotoprismModel model, Photo photo) async {
+    final String videoUrl = await getVideoUrl(model, photo.uid);
+    if (videoUrl == null) {
+      print('found no video file for photo: ' + photo.uid);
+      return null;
+    }
+    final http.Response response = await http.get(videoUrl);
+    if (response.statusCode == 200) {
+      return response.bodyBytes;
+    } else {
+      model.photoprismMessage
+          .showMessage('Error while sharing: No connection to server!');
+    }
+    return null;
+  }
 
   static Future<List<int>> downloadPhoto(
       PhotoprismModel model, String fileHash) async {
@@ -302,13 +308,18 @@ class Api {
     return true;
   }
 
-  static String videoUrl(PhotoprismModel model, String hash) {
+  static Future<String> getVideoUrl(
+      PhotoprismModel model, String photoUid) async {
     if (model.config == null) {
+      return null;
+    }
+    final File file = await model.database.getVideoFileForPhoto(photoUid);
+    if (file == null) {
       return null;
     }
     return model.photoprismUrl +
         '/api/v1/videos/' +
-        hash +
+        file.hash +
         '/' +
         model.config.previewToken +
         '/mp4';
@@ -429,33 +440,42 @@ class Api {
   }
 
   static Future<void> updateDb(PhotoprismModel model) async {
-    if (model.dbTimestamps == null) {
-      return;
-    }
+    await model.dbLoadingLock.synchronized(() async {
+      if (model.dbTimestamps == null) {
+        return;
+      }
 
-    final Iterable<Photo> photos = await loadPhotosDb(model);
-    if (photos.isNotEmpty) {
-      print('update Photo table');
-      await model.database.createOrUpdateMultiplePhotos(
-          photos.map((Photo p) => p.toCompanion(false)).toList());
-    }
-    final Iterable<File> files = await loadFilesDb(model);
-    if (files.isNotEmpty) {
-      print('update File table');
-      await model.database.createOrUpdateMultipleFiles(
-          files.map((File p) => p.toCompanion(false)).toList());
-    }
-    final Iterable<Album> albums = await loadAlbumsDb(model);
-    if (albums.isNotEmpty) {
-      print('update Album table');
-      await model.database.createOrUpdateMultipleAlbums(
-          albums.map((Album p) => p.toCompanion(false)).toList());
-    }
-    final Iterable<PhotosAlbum> photosAlbums = await loadPhotosAlbumsDb(model);
-    if (photosAlbums.isNotEmpty) {
-      print('update PhotosAlbum table');
-      await model.database.createOrUpdateMultiplePhotosAlbums(
-          photosAlbums.map((PhotosAlbum p) => p.toCompanion(false)).toList());
-    }
+      try {
+        final Iterable<Photo> photos = await loadPhotosDb(model);
+        if (photos.isNotEmpty) {
+          print('update Photo table');
+          await model.database.createOrUpdateMultiplePhotos(
+              photos.map((Photo p) => p.toCompanion(false)).toList());
+        }
+        final Iterable<File> files = await loadFilesDb(model);
+        if (files.isNotEmpty) {
+          print('update File table');
+          await model.database.createOrUpdateMultipleFiles(
+              files.map((File p) => p.toCompanion(false)).toList());
+        }
+        final Iterable<Album> albums = await loadAlbumsDb(model);
+        if (albums.isNotEmpty) {
+          print('update Album table');
+          await model.database.createOrUpdateMultipleAlbums(
+              albums.map((Album p) => p.toCompanion(false)).toList());
+        }
+        final Iterable<PhotosAlbum> photosAlbums =
+            await loadPhotosAlbumsDb(model);
+        if (photosAlbums.isNotEmpty) {
+          print('update PhotosAlbum table');
+          await model.database.createOrUpdateMultiplePhotosAlbums(photosAlbums
+              .map((PhotosAlbum p) => p.toCompanion(false))
+              .toList());
+        }
+      } on SqliteException catch (e) {
+        print('cannot update db, will reset db: ' + e.toString());
+        model.resetDatabase();
+      }
+    });
   }
 }

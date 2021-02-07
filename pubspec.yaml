@@ -47,6 +47,7 @@ dependencies:
   url_launcher: ^5.7.10
   moor: ^3.4.0
   sqlite3_flutter_libs: ^0.3.0
+  enum_to_string: ^1.0.14
   draggable_scrollbar:
     git:
       url: git://github.com/thielepaul/flutter-draggable-scrollbar.git

@@ -24,7 +24,7 @@ class PhotoManager {
   }
 
   static String getPhotoThumbnailUrl(
-      BuildContext context, int index, int albumId, bool videosPage) {
+      BuildContext context, int index, int albumId) {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
     if (model.config == null) {
       return null;

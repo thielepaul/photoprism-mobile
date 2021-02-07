@@ -11,7 +11,7 @@ import 'package:photoprism/model/photoprism_model.dart';
 // use this for debugging animations
 // import 'package:flutter/scheduler.dart' show timeDilation;
 
-enum PageIndex { Photos, Videos, Albums, Settings }
+enum PageIndex { Photos, Albums, Settings }
 
 void main() {
   // use this for debugging animations
@@ -87,18 +87,13 @@ class MainPage extends StatelessWidget {
     }
 
     return Scaffold(
-      appBar: model.selectedPageIndex == PageIndex.Photos ||
-              model.selectedPageIndex == PageIndex.Videos
-          ? PhotosPage.appBar(
-              context, model.selectedPageIndex == PageIndex.Videos)
+      appBar: model.selectedPageIndex == PageIndex.Photos
+          ? PhotosPage.appBar(context)
           : null,
       body: PageView(
           controller: _pageController,
           children: <Widget>[
             const PhotosPage(),
-            const PhotosPage(
-              videosPage: true,
-            ),
             const AlbumsPage(),
             SettingsPage(),
           ],
@@ -107,8 +102,6 @@ class MainPage extends StatelessWidget {
         items: <BottomNavigationBarItem>[
           BottomNavigationBarItem(
               icon: const Icon(Icons.photo), label: 'photos'.tr()),
-          BottomNavigationBarItem(
-              icon: const Icon(Icons.video_library), label: 'videos'.tr()),
           BottomNavigationBarItem(
               icon: const Icon(Icons.photo_album), label: 'albums'.tr()),
           BottomNavigationBarItem(

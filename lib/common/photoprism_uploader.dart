@@ -123,7 +123,7 @@ class PhotoprismUploader {
     final List<FileItem> filesToUpload = <FileItem>[];
 
     // check if at least one file was selected
-    if (result.count > 0) {
+    if (result != null) {
       filesToUpload.addAll(result.files.map<FileItem>((PlatformFile file) =>
           FileItem(
               filename: basename(file.path),

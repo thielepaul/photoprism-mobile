@@ -2,7 +2,7 @@ import 'package:moor/moor.dart';
 
 class Files extends Table {
   @JsonKey('PhotoUID')
-  TextColumn get photoUID => text().nullable()();
+  TextColumn get photoUID => text()();
   @JsonKey('UID')
   TextColumn get uid => text()();
   // @JsonKey('Name')
@@ -12,7 +12,7 @@ class Files extends Table {
   // @JsonKey('OriginalName')
   // TextColumn get originalName => text().nullable()();
   @JsonKey('Hash')
-  TextColumn get hash => text().nullable()();
+  TextColumn get hash => text()();
   // @JsonKey('Size')
   // IntColumn get size => integer().nullable()();
   // @JsonKey('Codec')
@@ -29,8 +29,8 @@ class Files extends Table {
   // BoolColumn get missing => boolean().nullable()();
   // @JsonKey('Portrait')
   // BoolColumn get portrait => boolean().nullable()();
-  // @JsonKey('Video')
-  // BoolColumn get video => boolean().nullable()();
+  @JsonKey('Video')
+  BoolColumn get video => boolean().nullable()();
   // @JsonKey('Duration')
   // IntColumn get duration => integer().nullable()();
   // @JsonKey('Width')
@@ -55,8 +55,8 @@ class Files extends Table {
   // TextColumn get error => text().nullable()();
   // @JsonKey('ModTime')
   // IntColumn get modTime => integer().nullable()();
-  // @JsonKey('CreatedAt')
-  // DateTimeColumn get createdAt => dateTime().nullable()();
+  @JsonKey('CreatedAt')
+  DateTimeColumn get createdAt => dateTime().nullable()();
   // @JsonKey('CreatedIn')
   // IntColumn get createdIn => integer().nullable()();
   @JsonKey('UpdatedAt')
