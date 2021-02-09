@@ -30,8 +30,12 @@ If you'd like to make an enhancement to the application, please see [the contrib
 ### Android
 - The latest .apk file can be downloaded [here](https://github.com/photoprism/photoprism-mobile/releases/download/latest/photoprism.apk).
 
+![alt text](https://chart.googleapis.com/chart?cht=qr&chl=https%3A%2F%2Fgithub.com%2Fphotoprism%2Fphotoprism-mobile%2Freleases%2Fdownload%2Flatest%2Fphotoprism.apk&chs=180x180&choe=UTF-8&chld=L%7C2 "Android APK QR Code image")
+
 ### iOS
 - On iOS you can use [testflight to install app](https://testflight.apple.com/join/Rxzv6JpC).
+
+![alt text](https://chart.googleapis.com/chart?cht=qr&chl=https%3A%2F%2Ftestflight.apple.com%2Fjoin%2FRxzv6JpC&chs=180x180&choe=UTF-8&chld=L%7C2 "TestFlight QR Code image")
 
 ## Trademarks ##
 
