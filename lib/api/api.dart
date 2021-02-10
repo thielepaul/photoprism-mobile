@@ -282,7 +282,9 @@ class Api {
                 '&offset=' +
                 offset.toString() +
                 '&album=' +
-                albumIdUrlParam,
+                albumIdUrlParam +
+                '&public=' +
+                (!model.displaySettings.showPrivate).toString(),
             headers: model.photoprismAuth.getAuthHeaders())) as http.Response;
     final List<dynamic> parsed = json.decode(response.body) as List<dynamic>;
     return Map<int, Photo>.fromIterables(

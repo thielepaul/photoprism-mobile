@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photoprism/common/photoprism_auth.dart';
+import 'package:photoprism/common/photoprism_displaysettings.dart';
 import 'package:photoprism/common/photoprism_remote_config_loader.dart';
 import 'package:photoprism/common/photoprism_loading_screen.dart';
 import 'package:photoprism/common/photoprism_message.dart';
@@ -68,6 +69,7 @@ class PhotoprismModel extends ChangeNotifier {
   PhotoprismLoadingScreen photoprismLoadingScreen;
   PhotoprismMessage photoprismMessage;
   PhotoprismAuth photoprismAuth;
+  PhotoprismDisplaySettings displaySettings;
 
   Future<void> initialize() async {
     loadLog();
@@ -83,6 +85,9 @@ class PhotoprismModel extends ChangeNotifier {
 
     // uploader needs photoprismAuth to be initialized
     photoprismUploader = PhotoprismUploader(this);
+
+    displaySettings = PhotoprismDisplaySettings(this);
+    await photoprismAuth.initialize();
 
     photoprismRemoteConfigLoader.loadApplicationColor();
     gridController.addListener(notifyListeners);

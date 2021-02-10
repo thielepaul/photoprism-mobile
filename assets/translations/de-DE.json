@@ -25,5 +25,7 @@
   "show_upload_queue": "Upload-Warteschlange anzeigen",
   "show_uploaded_photos_list": "Liste der hochgeladenen Fotos anzeigen",
   "show_failed_uploads_list": "Liste der fehlgeschlagenen Uploads anzeigen",
-  "select_albums_for_auto_upload": "Alben für den automatischen Upload auswählen"
+  "select_albums_for_auto_upload": "Alben für den automatischen Upload auswählen",
+  "display_settings": "Display Settings",
+  "include_private_content": "Include Private Content"
 }

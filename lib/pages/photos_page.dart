@@ -16,6 +16,7 @@ import 'package:draggable_scrollbar/draggable_scrollbar.dart';
 import 'package:photoprism/widgets/selectable_tile.dart';
 import 'package:provider/provider.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:photoprism/widgets/display_settings.dart';
 
 class PhotosPage extends StatelessWidget {
   const PhotosPage({Key key, this.albumId, this.videosPage = false})
@@ -172,11 +173,25 @@ class PhotosPage extends StatelessWidget {
                   PopupMenuItem<int>(
                     value: 0,
                     child: const Text('upload_photo').tr(),
+                  ),
+                  PopupMenuItem<int>(
+                    value: 1,
+                    child: const Text('display_settings').tr(),
                   )
                 ],
                 onSelected: (int choice) {
-                  if (choice == 0) {
-                    model.photoprismUploader.selectPhotoAndUpload(context);
+                  switch (choice) {
+                    case 0:
+                      model.photoprismUploader.selectPhotoAndUpload(context);
+                      break;
+                    case 1:
+                      // TODO: Open display settings popup widget
+                      showDialog<void>(
+                          context: context,
+                          builder: (BuildContext context) => DisplaySettings(
+                                context: context,
+                              ));
+                      break;
                   }
                 },
               ),
