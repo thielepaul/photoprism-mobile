@@ -52,6 +52,15 @@ class _FilterPhotosDialogState extends State<FilterPhotosDialog> {
             },
             value: filter.archived,
           ),
+          SwitchListTile(
+            title: const Text('private_photos').tr(),
+            onChanged: (bool value) {
+              setState(() {
+                filter.private = value;
+              });
+            },
+            value: filter.private,
+          ),
           DropdownButton<moor.OrderingMode>(
             value: filter.order,
             onChanged: (moor.OrderingMode newValue) {

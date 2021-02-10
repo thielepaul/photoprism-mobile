@@ -133,6 +133,10 @@ class MyDatabase extends _$MyDatabase {
         sortColumn = photos.takenAt;
     }
 
+    if (filterPhotos.private == false) {
+      query = query..where(photos.private.not());
+    }
+
     query = query
       ..where(isNotNull(files.hash) &
           isNotNull(files.primary) &

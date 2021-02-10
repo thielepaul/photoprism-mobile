@@ -33,8 +33,8 @@ class Photos extends Table {
   // IntColumn get stack => integer().nullable()();
   // @JsonKey('Favorite')
   // BoolColumn get favorite => boolean().nullable()();
-  // @JsonKey('Private')
-  // BoolColumn get private => boolean().nullable()();
+  @JsonKey('Private')
+  BoolColumn get private => boolean().nullable()();
   // @JsonKey('Scan')
   // BoolColumn get scan => boolean().nullable()();
   // @JsonKey('Panorama')

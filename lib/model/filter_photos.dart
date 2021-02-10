@@ -11,4 +11,5 @@ class FilterPhotos {
   Iterable<String> get typesAsString =>
       EnumToString.toList(types.toList()).map((String s) => s.toLowerCase());
   bool archived = false;
+  bool private = true;
 }
