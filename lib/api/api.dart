@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io' as io;
 
 import 'package:http/http.dart' as http;
 import 'package:moor/ffi.dart';
@@ -219,11 +220,12 @@ class Api {
   }
 
   static Future<bool> upload(PhotoprismModel model, String fileId,
-      String fileName, List<int> file) async {
+      String fileName, io.File file) async {
     try {
       final http.MultipartRequest request = http.MultipartRequest(
           'POST', Uri.parse('${model.photoprismUrl}/api/v1/upload/$fileId'));
-      request.files.add(http.MultipartFile.fromBytes('files', file,
+      request.files.add(http.MultipartFile(
+          'files', file.openRead(), await file.length(),
           filename: fileName, contentType: MediaType('image', 'jpeg')));
       request.headers.addAll(model.photoprismAuth.getAuthHeaders());
       final http.StreamedResponse response =

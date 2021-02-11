@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io' as io;
 import 'dart:math';
-import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
 import 'package:device_info/device_info.dart';
@@ -261,6 +260,8 @@ class PhotoprismUploader {
     // Set date and time when background routine was run last time.
     setAutoUploadLastTimeActive();
 
+    await getPhotosToUpload(photoprismModel);
+
     deviceName = await getNameOfCurrentDevice(model);
     model.addLogEntry('AutoUploader', 'Getting device name: ' + deviceName);
 
@@ -384,8 +385,8 @@ class PhotoprismUploader {
       }
 
       final String filename = await assets[id].titleAsync;
-      final Uint8List imageBytes = await assets[id].originBytes;
-      final String filehash = sha1.convert(imageBytes).toString();
+      final io.File imageFile = await assets[id].file;
+      final String filehash = sha1.bind(imageFile.openRead()).toString();
 
       model.addLogEntry('AutoUploader',
           "Next photo: '" + filename + "' and ID: '" + id + "'.");
@@ -402,7 +403,7 @@ class PhotoprismUploader {
 
       model.addLogEntry('AutoUploader', "Uploading photo '" + filename + "'.");
       final bool status =
-          await Api.upload(photoprismModel, filehash, filename, imageBytes);
+          await Api.upload(photoprismModel, filehash, filename, imageFile);
       if (status) {
         model.addLogEntry(
             'AutoUploader', "Uploading photo $filename successful'.");
