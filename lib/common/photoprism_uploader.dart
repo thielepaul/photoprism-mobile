@@ -1,7 +1,6 @@
 import 'dart:async';
-import 'dart:io';
+import 'dart:io' as io;
 import 'dart:math';
-import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
 import 'package:device_info/device_info.dart';
@@ -110,14 +109,14 @@ class PhotoprismUploader {
 
   /// Starts image file picker, uploads photo(s) and imports them.
   Future<void> selectPhotoAndUpload(BuildContext context) async {
-    final List<File> files = await FilePicker.getMultiFile();
+    final List<io.File> files = await FilePicker.getMultiFile();
 
     // list for flutter uploader
     final List<FileItem> filesToUpload = <FileItem>[];
 
     // check if at least one file was selected
     if (files != null) {
-      filesToUpload.addAll(files.map<FileItem>((File file) => FileItem(
+      filesToUpload.addAll(files.map<FileItem>((io.File file) => FileItem(
           filename: basename(file.path),
           savedDir: dirname(file.path),
           fieldname: 'files')));
@@ -253,6 +252,8 @@ class PhotoprismUploader {
     // Set date and time when background routine was run last time.
     setAutoUploadLastTimeActive();
 
+    await getPhotosToUpload(photoprismModel);
+
     deviceName = await getNameOfCurrentDevice(model);
     model.addLogEntry('AutoUploader', 'Getting device name: ' + deviceName);
 
@@ -374,8 +375,8 @@ class PhotoprismUploader {
       }
 
       final String filename = await assets[id].titleAsync;
-      final Uint8List imageBytes = await assets[id].originBytes;
-      final String filehash = sha1.convert(imageBytes).toString();
+      final io.File imageFile = await assets[id].file;
+      final String filehash = sha1.bind(imageFile.openRead()).toString();
 
       model.addLogEntry('AutoUploader',
           "Next photo: '" + filename + "' and ID: '" + id + "'.");
@@ -392,7 +393,7 @@ class PhotoprismUploader {
 
       model.addLogEntry('AutoUploader', "Uploading photo '" + filename + "'.");
       final bool status =
-          await Api.upload(photoprismModel, filehash, filename, imageBytes);
+          await Api.upload(photoprismModel, filehash, filename, imageFile);
       if (status) {
         model.addLogEntry('AutoUploader', "Uploading photo successful'.");
       } else {
@@ -497,10 +498,10 @@ class PhotoprismUploader {
   // Returns the device name of the current device (smartphone).
   static Future<String> getNameOfCurrentDevice(PhotoprismModel model) async {
     final DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
-    if (Platform.isAndroid) {
+    if (io.Platform.isAndroid) {
       final AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
       return androidInfo.model;
-    } else if (Platform.isIOS) {
+    } else if (io.Platform.isIOS) {
       final IosDeviceInfo iosInfo = await deviceInfo.iosInfo;
       return iosInfo.name;
     }
