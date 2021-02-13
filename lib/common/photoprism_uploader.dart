@@ -386,7 +386,8 @@ class PhotoprismUploader {
 
       final String filename = await assets[id].titleAsync;
       final io.File imageFile = await assets[id].file;
-      final String filehash = sha1.bind(imageFile.openRead()).toString();
+      final String filehash =
+          (await sha1.bind(imageFile.openRead()).first).toString();
 
       model.addLogEntry('AutoUploader',
           "Next photo: '" + filename + "' and ID: '" + id + "'.");
