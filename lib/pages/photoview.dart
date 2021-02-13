@@ -145,6 +145,7 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
             model.photos[index].file.aspectRatio,
         fit: BoxFit.contain,
         alignment: Alignment.center,
+        cacheKey: model.photos[index].file.hash + 'tile_224',
         imageUrl:
             PhotoManager.getPhotoThumbnailUrl(context, index, widget.albumId),
       ),
@@ -156,6 +157,7 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
             '/' +
             model.config.previewToken +
             '/fit_1920',
+        cacheKey: model.photos[index].file.hash + 'fit_1920',
         headers: model.photoprismAuth.getAuthHeaders(),
       ),
       initialScale: PhotoViewComputedScale.contained,
@@ -255,6 +257,7 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
                   return RectTween(begin: begin, end: end);
                 },
                 child: CachedNetworkImage(
+                  cacheKey: model.photos[index].file.hash + 'tile_224',
                   httpHeaders: Provider.of<PhotoprismModel>(context)
                       .photoprismAuth
                       .getAuthHeaders(),

@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:photoprism/api/api.dart';
+import 'package:photoprism/api/db_api.dart';
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:provider/provider.dart';
 
@@ -15,7 +16,7 @@ class PhotoManager {
     final int status = await Api.archivePhotos(photoUUIDs, model);
     if (status == 0) {
       model.gridController.clear();
-      await Api.updateDb(model);
+      await DbApi.updateDb(model);
       model.photoprismLoadingScreen.hideLoadingScreen();
     } else {
       model.photoprismLoadingScreen.hideLoadingScreen();

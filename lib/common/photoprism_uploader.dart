@@ -8,10 +8,11 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_uploader/flutter_uploader.dart';
 import 'package:intl/intl.dart';
+import 'package:photoprism/api/api.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path/path.dart';
 import 'package:background_fetch/background_fetch.dart';
-import 'package:photoprism/api/api.dart';
+import 'package:photoprism/api/db_api.dart';
 import 'package:photoprism/common/db.dart';
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:photo_manager/photo_manager.dart' as photolib;
@@ -155,7 +156,7 @@ class PhotoprismUploader {
         final int status = await Api.importPhotoEvent(photoprismModel, event);
 
         if (status == 0) {
-          await Api.updateDb(photoprismModel);
+          await DbApi.updateDb(photoprismModel);
           await photoprismModel.photoprismLoadingScreen.hideLoadingScreen();
           photoprismModel.photoprismMessage
               .showMessage('Uploading and importing successful.');
@@ -321,7 +322,7 @@ class PhotoprismUploader {
 
   Future<int> getRemoteAlbumsWithDeviceName(PhotoprismModel model) async {
     // Get list of albums from server which name is the device name of the smartphone.
-    await Api.updateDb(model);
+    await DbApi.updateDb(model);
     final List<Album> deviceAlbumList = model.albums
         .where((Album album) => album.title.contains(deviceName))
         .toList();
@@ -417,7 +418,7 @@ class PhotoprismUploader {
       // add uploaded photo to shared pref
       if (await Api.importPhotos(
           photoprismModel.photoprismUrl, photoprismModel, filehash)) {
-        await Api.updateDb(model);
+        await DbApi.updateDb(model);
         if (await isPhotoOnServerAndAddToAlbum(
             photoprismModel, id, filehash, albumId)) {
           model.addLogEntry('AutoUploader',

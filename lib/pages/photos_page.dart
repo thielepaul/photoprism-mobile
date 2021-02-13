@@ -4,6 +4,7 @@ import 'package:esys_flutter_share/esys_flutter_share.dart';
 import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photoprism/api/api.dart';
+import 'package:photoprism/api/db_api.dart';
 import 'package:photoprism/common/album_manager.dart';
 import 'package:photoprism/common/hexcolor.dart';
 import 'package:photoprism/common/photo_manager.dart';
@@ -36,7 +37,7 @@ class PhotosPage extends StatelessWidget {
     final PhotoprismModel model =
         Provider.of<PhotoprismModel>(context, listen: false);
     if (model.albums == null) {
-      Api.updateDb(model);
+      DbApi.updateDb(model);
     }
 
     showModalBottomSheet<void>(
@@ -111,6 +112,7 @@ class PhotosPage extends StatelessWidget {
       );
     }
     return CachedNetworkImage(
+      cacheKey: model.photos[index].file.hash + 'tile_224',
       httpHeaders: model.photoprismAuth.getAuthHeaders(),
       alignment: Alignment.center,
       fit: BoxFit.contain,
@@ -204,7 +206,7 @@ class PhotosPage extends StatelessWidget {
         Api.loadConfig(model);
       }
       if (model.dbTimestamps.isEmpty) {
-        Api.updateDb(model);
+        DbApi.updateDb(model);
         return const Text('', key: ValueKey<String>('photosGridView'));
       }
 
@@ -253,7 +255,7 @@ class PhotosPage extends StatelessWidget {
       );
     }), onRefresh: () async {
       await Api.loadConfig(model);
-      await Api.updateDb(model);
+      await DbApi.updateDb(model);
     });
   }
 }

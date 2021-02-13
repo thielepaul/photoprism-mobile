@@ -1,6 +1,7 @@
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
+import 'package:photoprism/api/api.dart';
 import 'package:photoprism/common/photoprism_uploader.dart';
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:photoprism/widgets/auth_dialog.dart';
@@ -62,6 +63,17 @@ class SettingsPage extends StatelessWidget {
               ),
               onTap: () {
                 emptyCache(context);
+              },
+            ),
+            ListTile(
+              title: const Text('preload_thumbnails').tr(),
+              leading: Container(
+                width: 10,
+                alignment: Alignment.center,
+                child: const Icon(Icons.delete),
+              ),
+              onTap: () {
+                Api.preloadThumbnails(model);
               },
             ),
             SwitchListTile(

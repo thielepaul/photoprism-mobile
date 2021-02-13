@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:photoprism/api/api.dart';
+import 'package:photoprism/api/db_api.dart';
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:provider/provider.dart';
 
@@ -15,7 +16,7 @@ class AlbumManager {
         model.albums[albumId].uid, photoUUIDs, model);
 
     if (status == 0) {
-      await Api.updateDb(model);
+      await DbApi.updateDb(model);
       await model.photoprismLoadingScreen.hideLoadingScreen();
       model.photoprismMessage
           .showMessage('Adding photos to album successfull.');

@@ -6,6 +6,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:intl/intl.dart';
 import 'package:moor/moor.dart';
 import 'package:photo_view/photo_view.dart';
+import 'package:photoprism/api/db_api.dart';
 import 'package:photoprism/common/db.dart';
 import 'package:photoprism/common/photoprism_auth.dart';
 import 'package:photoprism/common/photoprism_remote_config_loader.dart';
@@ -19,7 +20,6 @@ import 'package:photoprism/model/dbtimestamps.dart';
 import 'package:photoprism/model/filter_photos.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:synchronized/synchronized.dart';
-import 'package:photoprism/api/api.dart';
 
 class PhotoprismModel extends ChangeNotifier {
   PhotoprismModel(this.queryExecutor, this.secureStorage);
@@ -111,9 +111,9 @@ class PhotoprismModel extends ChangeNotifier {
 
     await photoprismCommonHelper.loadPhotoprismUrl();
 
-    await Api.updateDb(this);
     initialized = true;
     notifyListeners();
+    DbApi.updateDb(this);
   }
 
   Future<void> resetDatabase() async {

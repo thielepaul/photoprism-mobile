@@ -1,16 +1,16 @@
 import 'dart:convert';
 import 'dart:io' as io;
 
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:moor/ffi.dart';
+import 'package:photoprism/api/db_api.dart';
 import 'package:photoprism/model/config.dart';
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:photoprism/common/db.dart';
 import 'package:http_parser/http_parser.dart';
 
 class Api {
-  static const int resultCount = 1000;
-
   static Future<dynamic> httpAuth(PhotoprismModel model, Function call) async {
     dynamic response = await call();
     if ((response as http.BaseResponse).statusCode == 401) {
@@ -327,157 +327,52 @@ class Api {
         '/mp4';
   }
 
-  static Future<List<dynamic>> loadDbBatch(
-      PhotoprismModel model, String table, bool deleted, String since) async {
-    final String url = model.photoprismUrl +
-        '/api/v1/db' +
-        '?count=' +
-        resultCount.toString() +
-        '&table=' +
-        table +
-        '&deleted=' +
-        deleted.toString() +
-        (since != null ? '&since=' + since : '');
-    final http.Response response = await httpAuth(model,
-            () => http.get(url, headers: model.photoprismAuth.getAuthHeaders()))
-        as http.Response;
-    if (response.statusCode != 200) {
-      print('ERROR: api DB call failed ($url)');
-      return <dynamic>[];
+  static Future<void> preloadThumbnails(PhotoprismModel model) async {
+    if (model.photos == null || model.photos.isEmpty) {
+      await DbApi.updateDb(model);
     }
-    try {
-      return json.decode(response.body) as List<dynamic>;
-    } catch (error) {
-      print('decoding answer from db api failed: ' + error.toString());
-      return <dynamic>[];
+
+    if (model.config == null) {
+      await Api.loadConfig(model);
     }
-  }
 
-  static Future<List<dynamic>> loadDbBatchUpdated(
-      PhotoprismModel model, String table) async {
-    final String since = model.dbTimestamps.getUpdatedAt(table);
+    model.photoprismLoadingScreen.showLoadingScreen('Preloading thumbnails..');
 
-    final List<dynamic> parsed = await loadDbBatch(model, table, false, since);
+    int photosLoaded = 0;
+    int photosFailed = 0;
+    for (final PhotoWithFile photo in model.photos) {
+      final CachedNetworkImageProvider provider = CachedNetworkImageProvider(
+        model.photoprismUrl +
+            '/api/v1/t/' +
+            photo.file.hash +
+            '/' +
+            model.config.previewToken +
+            '/tile_224',
+        cacheKey: photo.file.hash + 'tile_224',
+        headers: model.photoprismAuth.getAuthHeaders(),
+      );
 
-    if (parsed.isNotEmpty && parsed.last['UpdatedAt'] != null) {
-      model.dbTimestamps
-          .setUpdatedAt(table, parsed.last['UpdatedAt'] as String);
-    }
-    return parsed;
-  }
-
-  static Future<List<dynamic>> loadDbBatchDeleted(
-      PhotoprismModel model, String table) async {
-    final String since = model.dbTimestamps.getDeletedAt(table);
-
-    final List<dynamic> parsed = await loadDbBatch(model, table, true, since);
-
-    if (parsed.isNotEmpty && parsed.last['DeletedAt'] != null) {
-      model.dbTimestamps
-          .setDeletedAt(table, parsed.last['DeletedAt'] as String);
-    }
-    return parsed;
-  }
-
-  static Future<List<dynamic>> loadDbAll(PhotoprismModel model, String table,
-      {bool deleted = true}) async {
-    final List<dynamic> rowsFromApiCollected = <dynamic>[];
-    List<dynamic> rowsFromApi;
-    while (rowsFromApi == null || rowsFromApi.length == resultCount) {
-      rowsFromApi = (await loadDbBatchUpdated(model, table)).toList();
-      print('download batch of rows from db based on updatedAt for table ' +
-          table +
-          ' got ' +
-          rowsFromApi.length.toString() +
-          ' rows');
-      rowsFromApiCollected.addAll(rowsFromApi);
-    }
-    if (deleted) {
-      rowsFromApi = null;
-      while (rowsFromApi == null || rowsFromApi.length == resultCount) {
-        rowsFromApi = (await loadDbBatchDeleted(model, table)).toList();
-        print('download batch of rows from db based on deletedAt for table ' +
-            table +
-            ' got ' +
-            rowsFromApi.length.toString() +
-            ' rows');
-        rowsFromApiCollected.addAll(rowsFromApi);
-      }
-    }
-    return rowsFromApiCollected;
-  }
-
-  static Future<Iterable<Photo>> loadPhotosDb(PhotoprismModel model) async {
-    final List<dynamic> parsed = await loadDbAll(model, 'photos');
-
-    return parsed.map((dynamic json) => Photo.fromJson(
-        json as Map<String, dynamic>,
-        serializer: const CustomSerializer()));
-  }
-
-  static Future<Iterable<File>> loadFilesDb(PhotoprismModel model) async {
-    final List<dynamic> parsed = await loadDbAll(model, 'files');
-
-    return parsed.map((dynamic json) => File.fromJson(
-        json as Map<String, dynamic>,
-        serializer: const CustomSerializer()));
-  }
-
-  static Future<Iterable<Album>> loadAlbumsDb(PhotoprismModel model) async {
-    final List<dynamic> parsed = await loadDbAll(model, 'albums');
-
-    return parsed.map((dynamic json) => Album.fromJson(
-        json as Map<String, dynamic>,
-        serializer: const CustomSerializer()));
-  }
-
-  static Future<Iterable<PhotosAlbum>> loadPhotosAlbumsDb(
-      PhotoprismModel model) async {
-    final List<dynamic> parsed =
-        await loadDbAll(model, 'photos_albums', deleted: false);
-
-    return parsed.map((dynamic json) => PhotosAlbum.fromJson(
-        json as Map<String, dynamic>,
-        serializer: const CustomSerializer()));
-  }
-
-  static Future<void> updateDb(PhotoprismModel model) async {
-    await model.dbLoadingLock.synchronized(() async {
-      if (model.dbTimestamps == null) {
-        return;
-      }
-
-      try {
-        final Iterable<Photo> photos = await loadPhotosDb(model);
-        if (photos.isNotEmpty) {
-          print('update Photo table');
-          await model.database.createOrUpdateMultiplePhotos(
-              photos.map((Photo p) => p.toCompanion(false)).toList());
+      final ImageErrorListener errorListener = (dynamic a, StackTrace b) {
+        photosFailed++;
+        model.photoprismLoadingScreen.updateLoadingScreen(
+            'Preloading thumbnails.. ($photosLoaded succcessful, $photosFailed failed)');
+        if (photosLoaded + photosFailed == model.photos.length) {
+          model.photoprismLoadingScreen.hideLoadingScreen();
         }
-        final Iterable<File> files = await loadFilesDb(model);
-        if (files.isNotEmpty) {
-          print('update File table');
-          await model.database.createOrUpdateMultipleFiles(
-              files.map((File p) => p.toCompanion(false)).toList());
+      };
+
+      final ImageStreamListener listener =
+          ImageStreamListener((ImageInfo info, _) {
+        photosLoaded++;
+        model.photoprismLoadingScreen.updateLoadingScreen(
+            'Preloading thumbnails.. ($photosLoaded succcessful, $photosFailed failed)');
+        if (photosLoaded + photosFailed == model.photos.length) {
+          model.photoprismLoadingScreen.hideLoadingScreen();
         }
-        final Iterable<Album> albums = await loadAlbumsDb(model);
-        if (albums.isNotEmpty) {
-          print('update Album table');
-          await model.database.createOrUpdateMultipleAlbums(
-              albums.map((Album p) => p.toCompanion(false)).toList());
-        }
-        final Iterable<PhotosAlbum> photosAlbums =
-            await loadPhotosAlbumsDb(model);
-        if (photosAlbums.isNotEmpty) {
-          print('update PhotosAlbum table');
-          await model.database.createOrUpdateMultiplePhotosAlbums(photosAlbums
-              .map((PhotosAlbum p) => p.toCompanion(false))
-              .toList());
-        }
-      } on SqliteException catch (e) {
-        print('cannot update db, will reset db: ' + e.toString());
-        model.resetDatabase();
-      }
-    });
+      }, onError: errorListener);
+      provider
+          .resolve(const ImageConfiguration(size: Size.infinite))
+          .addListener(listener);
+    }
   }
 }

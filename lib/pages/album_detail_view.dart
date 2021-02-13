@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:photoprism/api/api.dart';
+import 'package:photoprism/api/db_api.dart';
 import 'package:photoprism/pages/photos_page.dart';
 import 'package:photoprism/common/db.dart';
 import 'package:photoprism/model/photoprism_model.dart';
@@ -22,7 +23,7 @@ class AlbumDetailView extends StatelessWidget {
     final int status = await Api.renameAlbum(
         _album.uid, _renameAlbumTextFieldController.text, _model);
 
-    await Api.updateDb(_model);
+    await DbApi.updateDb(_model);
 
     await _model.photoprismLoadingScreen.hideLoadingScreen();
     // close rename dialog
@@ -50,7 +51,7 @@ class AlbumDetailView extends StatelessWidget {
     } else {
       // go back to albums view
       Navigator.pop(context);
-      await Api.updateDb(_model);
+      await DbApi.updateDb(_model);
     }
   }
 
@@ -72,7 +73,7 @@ class AlbumDetailView extends StatelessWidget {
       _model.photoprismMessage
           .showMessage('Removing photos from album failed.');
     } else {
-      await Api.updateDb(_model);
+      await DbApi.updateDb(_model);
     }
     // deselect selected photos
     _model.gridController.clear();

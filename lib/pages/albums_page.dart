@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:photoprism/api/api.dart';
+import 'package:photoprism/api/db_api.dart';
 import 'package:photoprism/common/hexcolor.dart';
 import 'package:photoprism/model/filter_photos.dart';
 import 'package:photoprism/model/photoprism_model.dart';
@@ -41,7 +42,7 @@ class AlbumsPage extends StatelessWidget {
       await model.photoprismLoadingScreen.hideLoadingScreen();
       model.photoprismMessage.showMessage('Creating album failed.');
     } else {
-      await Api.updateDb(model);
+      await DbApi.updateDb(model);
       model.albumUid = uuid;
       model.updatePhotosSubscription();
       await model.photoprismLoadingScreen.hideLoadingScreen();
@@ -88,7 +89,7 @@ class AlbumsPage extends StatelessWidget {
         body: RefreshIndicator(child: OrientationBuilder(
             builder: (BuildContext context, Orientation orientation) {
           if (model.dbTimestamps.isEmpty) {
-            Api.updateDb(model);
+            DbApi.updateDb(model);
             return const Text('', key: ValueKey<String>('albumsGridView'));
           }
           return GridView.builder(
@@ -140,7 +141,7 @@ class AlbumsPage extends StatelessWidget {
                         )));
               });
         }), onRefresh: () async {
-          return Api.updateDb(model);
+          return DbApi.updateDb(model);
         }));
   }
 }
