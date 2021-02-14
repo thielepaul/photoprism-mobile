@@ -1,10 +1,11 @@
 import 'dart:async';
+import 'dart:io' as io;
 
+import 'package:path_provider/path_provider.dart';
 import 'package:drag_select_grid_view/drag_select_grid_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:intl/intl.dart';
-import 'package:moor/moor.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photoprism/api/db_api.dart';
 import 'package:photoprism/common/db.dart';
@@ -16,13 +17,15 @@ import 'package:photoprism/common/photoprism_common_helper.dart';
 import 'package:photoprism/common/photoprism_uploader.dart';
 import 'package:photoprism/main.dart';
 import 'package:photoprism/model/config.dart';
+import 'package:photoprism/model/photos_from_db.dart';
 import 'package:photoprism/model/dbtimestamps.dart';
 import 'package:photoprism/model/filter_photos.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:synchronized/synchronized.dart';
+import 'package:sqlite3/sqlite3.dart';
 
 class PhotoprismModel extends ChangeNotifier {
-  PhotoprismModel(this.queryExecutor, this.secureStorage);
+  PhotoprismModel(this.dbConnection, this.secureStorage);
   // general
   String photoprismUrl = 'https://demo.photoprism.org';
   Config config;
@@ -32,8 +35,8 @@ class PhotoprismModel extends ChangeNotifier {
   bool initialized = false;
   List<String> log;
   MyDatabase database;
-  StreamSubscription<List<PhotoWithFile>> photosStreamSubscription;
-  List<PhotoWithFile> photos;
+  StreamSubscription<int> photosStreamSubscription;
+  PhotosFromDb photos;
   StreamSubscription<List<Album>> albumsStreamSubscription;
   List<Album> albums;
   StreamSubscription<Map<String, int>> albumCountsStreamSubscription;
@@ -41,7 +44,7 @@ class PhotoprismModel extends ChangeNotifier {
   DbTimestamps dbTimestamps;
   FilterPhotos filterPhotos = FilterPhotos();
   String albumUid;
-  QueryExecutor Function() queryExecutor;
+  Future<MyDatabase> Function() dbConnection;
   FlutterSecureStorage secureStorage;
 
   // theming
@@ -91,16 +94,22 @@ class PhotoprismModel extends ChangeNotifier {
     photoprismRemoteConfigLoader = PhotoprismRemoteSettingsLoader(this);
     photoprismCommonHelper = PhotoprismCommonHelper(this);
     photoprismMessage = PhotoprismMessage(this);
+    photos = PhotosFromDb(this);
 
     photoprismAuth = PhotoprismAuth(this, secureStorage);
 
-    database = MyDatabase(queryExecutor());
+    if (io.Platform.isAndroid) {
+      final String cachebase = (await getTemporaryDirectory()).path;
+      sqlite3.tempDirectory = cachebase;
+    }
+
+    database = await dbConnection();
 
     // uploader needs photoprismAuth to be initialized
     await photoprismAuth.initialize();
     photoprismUploader = PhotoprismUploader(this);
 
-    photoprismRemoteConfigLoader.loadApplicationColor();
+    await photoprismRemoteConfigLoader.loadApplicationColor();
     gridController.addListener(notifyListeners);
 
     updatePhotosSubscription();
@@ -113,7 +122,7 @@ class PhotoprismModel extends ChangeNotifier {
 
     initialized = true;
     notifyListeners();
-    DbApi.updateDb(this);
+    await DbApi.updateDb(this);
   }
 
   Future<void> resetDatabase() async {
@@ -124,7 +133,7 @@ class PhotoprismModel extends ChangeNotifier {
     await database.close();
     await database.deleteDatabase();
     print('create new database');
-    database = MyDatabase(queryExecutor());
+    database = await dbConnection();
     await updatePhotosSubscription();
     await updateAlbumsSubscription();
     await dbTimestamps.clear();
@@ -216,14 +225,16 @@ class PhotoprismModel extends ChangeNotifier {
     if (photosStreamSubscription != null) {
       await photosStreamSubscription.cancel();
     }
-    final Stream<List<PhotoWithFile>> photosStream =
-        database.photosWithFile(filterPhotos, albumUid: albumUid);
-    photosStreamSubscription = photosStream.listen((List<PhotoWithFile> value) {
-      if (photos != null && photos.isEmpty && value.isEmpty) {
+    final Stream<int> photosStream =
+        database.photosWithFileCount(filterPhotos, albumUid: albumUid);
+    photosStreamSubscription = photosStream.listen((int value) {
+      print('got photo update from database count: ' + value.toString());
+      photos ??= PhotosFromDb(this);
+      if (photos.length == 0 && value == 0) {
+        print('ignoring photo update because nothing changed');
         return;
       }
-      print('got photo update from database count: ' + value.length.toString());
-      photos = value;
+      photos.count = value;
       notifyListeners();
     });
   }

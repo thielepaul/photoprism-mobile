@@ -1,11 +1,13 @@
+import 'dart:io' as io;
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:drag_select_grid_view/drag_select_grid_view.dart';
-import 'package:esys_flutter_share/esys_flutter_share.dart';
 import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photoprism/api/api.dart';
 import 'package:photoprism/api/db_api.dart';
 import 'package:photoprism/common/album_manager.dart';
+import 'package:photoprism/common/db.dart';
 import 'package:photoprism/common/hexcolor.dart';
 import 'package:photoprism/common/photo_manager.dart';
 import 'package:photoprism/common/transparent_route.dart';
@@ -16,6 +18,7 @@ import 'package:photoprism/widgets/filter_photos_dialog.dart';
 import 'package:photoprism/widgets/selectable_tile.dart';
 import 'package:provider/provider.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:share/share.dart';
 
 class PhotosPage extends StatelessWidget {
   const PhotosPage({Key key, this.albumId}) : super(key: key);
@@ -25,12 +28,13 @@ class PhotosPage extends StatelessWidget {
   static Future<void> archiveSelectedPhotos(BuildContext context) async {
     final PhotoprismModel model =
         Provider.of<PhotoprismModel>(context, listen: false);
-    final List<String> selectedPhotos = model
+    final List<Future<String>> selectedPhotos = model
         .gridController.value.selectedIndexes
-        .map<String>((int element) => model.photos[element].photo.uid)
+        .map<Future<String>>(
+            (int element) async => (await model.photos[element]).photo.uid)
         .toList();
 
-    PhotoManager.archivePhotos(context, selectedPhotos);
+    PhotoManager.archivePhotos(context, await Future.wait(selectedPhotos));
   }
 
   static void _selectAlbumBottomSheet(BuildContext context) {
@@ -59,20 +63,20 @@ class PhotosPage extends StatelessWidget {
   static Future<void> _sharePhotos(BuildContext context) async {
     final PhotoprismModel model =
         Provider.of<PhotoprismModel>(context, listen: false);
-    final Map<String, List<int>> photos = <String, List<int>>{};
     model.photoprismLoadingScreen
         .showLoadingScreen('Preparing photos for sharing...');
+    final List<String> photoFiles = <String>[];
+    final List<String> mimeTypes = <String>[];
     for (final int index in model.gridController.value.selectedIndexes) {
-      final List<int> bytes =
-          await Api.downloadPhoto(model, model.photos[index].file.hash);
-      if (bytes == null) {
-        model.photoprismLoadingScreen.hideLoadingScreen();
-        return;
+      final io.File photoFile =
+          await Api.downloadPhoto(model, (await model.photos[index]).file.hash);
+      if (photoFile != null) {
+        photoFiles.add(photoFile.path);
+        mimeTypes.add('image/jpg');
       }
-      photos[model.photos[index].file.hash + '.jpg'] = bytes;
     }
     model.photoprismLoadingScreen.hideLoadingScreen();
-    Share.files('Photoprism Photos', photos, 'image/jpg');
+    await Share.shareFiles(photoFiles, mimeTypes: mimeTypes);
   }
 
   static Future<void> addPhotosToAlbum(
@@ -81,19 +85,25 @@ class PhotosPage extends StatelessWidget {
 
     final PhotoprismModel model =
         Provider.of<PhotoprismModel>(context, listen: false);
-    final List<String> selectedPhotos = model
+    final List<Future<String>> selectedPhotos = model
         .gridController.value.selectedIndexes
-        .map<String>((int element) => model.photos[element].photo.uid)
+        .map<Future<String>>(
+            (int element) async => (await model.photos[element]).photo.uid)
         .toList();
 
     model.gridController.clear();
-    AlbumManager.addPhotosToAlbum(context, albumId, selectedPhotos);
+    AlbumManager.addPhotosToAlbum(
+        context, albumId, await Future.wait(selectedPhotos));
   }
 
   Text getMonthFromOffset(BuildContext context) {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
-    final DateTime takenAt = model
-        .photos[PhotoManager.getPhotoIndexInScrollView(context)].photo.takenAt;
+    final PhotoWithFile photo =
+        model.photos.getNow(PhotoManager.getPhotoIndexInScrollView(context));
+    if (photo == null) {
+      return const Text('');
+    }
+    final DateTime takenAt = photo.photo.takenAt;
     return Text('${takenAt.month}/${takenAt.year}');
   }
 
@@ -104,25 +114,40 @@ class PhotosPage extends StatelessWidget {
         color: Colors.grey[300],
       );
     }
-    final String imageUrl =
-        PhotoManager.getPhotoThumbnailUrl(context, index, albumId);
-    if (imageUrl == null) {
-      return Container(
-        color: Colors.grey[300],
-      );
-    }
-    return CachedNetworkImage(
-      cacheKey: model.photos[index].file.hash + 'tile_224',
-      httpHeaders: model.photoprismAuth.getAuthHeaders(),
-      alignment: Alignment.center,
-      fit: BoxFit.contain,
-      imageUrl: imageUrl,
-      placeholder: (BuildContext context, String url) => Container(
-        color: Colors.grey[300],
-      ),
-      errorWidget: (BuildContext context, String url, Object error) =>
-          const Icon(Icons.error),
-    );
+
+    return FutureBuilder<PhotoWithFile>(
+        future: model.photos[index],
+        builder: (BuildContext context, AsyncSnapshot<PhotoWithFile> snapshot) {
+          if (snapshot.data == null) {
+            return Container(
+              color: Colors.grey[300],
+            );
+          }
+          final PhotoWithFile photo = snapshot.data;
+          final String imageUrl =
+              PhotoManager.getPhotoThumbnailUrl(context, photo);
+          if (imageUrl == null) {
+            return Container(
+              color: Colors.grey[300],
+            );
+          }
+          return CachedNetworkImage(
+            cacheKey: photo.file.hash + 'tile_224',
+            httpHeaders: model.photoprismAuth.getAuthHeaders(),
+            alignment: Alignment.center,
+            fit: BoxFit.contain,
+            imageUrl: imageUrl,
+            placeholder: (BuildContext context, String url) => Container(
+              color: Colors.grey[300],
+            ),
+            errorWidget: (BuildContext context, String url, Object error) =>
+                Container(
+              color: Colors.grey[300],
+              child: const Icon(Icons.error),
+              alignment: Alignment.center,
+            ),
+          );
+        });
   }
 
   static AppBar appBar(BuildContext context) {

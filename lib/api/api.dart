@@ -3,12 +3,14 @@ import 'dart:io' as io;
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:path/path.dart' as p;
 import 'package:http/http.dart' as http;
 import 'package:photoprism/api/db_api.dart';
 import 'package:photoprism/model/config.dart';
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:photoprism/common/db.dart';
 import 'package:http_parser/http_parser.dart';
+import 'package:path_provider/path_provider.dart';
 
 class Api {
   static Future<dynamic> httpAuth(PhotoprismModel model, Function call) async {
@@ -261,34 +263,52 @@ class Api {
     return false;
   }
 
-  static Future<List<int>> downloadVideo(
-      PhotoprismModel model, Photo photo) async {
-    final String videoUrl = await getVideoUrl(model, photo.uid);
+  static Future<io.File> downloadVideo(
+      PhotoprismModel model, Future<PhotoWithFile> photoFuture) async {
+    final String videoUrl = await getVideoUrl(model, photoFuture);
+    final PhotoWithFile photo = await photoFuture;
     if (videoUrl == null) {
-      print('found no video file for photo: ' + photo.uid);
+      print('found no video file for photo: ' + photo.photo.uid);
       return null;
     }
-    final http.Response response = await http.get(videoUrl);
-    if (response.statusCode == 200) {
-      return response.bodyBytes;
+    final File videoFile =
+        await model.database.getVideoFileForPhoto(photo.photo.uid);
+    String fileName;
+    if (photo.file.originalName != null && photo.file.originalName.isNotEmpty) {
+      fileName = videoFile.originalName;
     } else {
-      model.photoprismMessage
-          .showMessage('Error while sharing: No connection to server!');
+      fileName = p.basename(videoFile.name);
     }
-    return null;
+    return downloadAsFile(model, Uri.parse(videoUrl), fileName);
   }
 
-  static Future<List<int>> downloadPhoto(
+  static Future<io.File> downloadPhoto(
       PhotoprismModel model, String fileHash) async {
-    final http.Response response = await Api.httpWithDownloadToken(
+    return downloadAsFile(
         model,
-        () => http.get(
-            Uri.parse(
-                '${model.photoprismUrl}/api/v1/dl/$fileHash?t=${model.config.downloadToken}'),
-            headers: model.photoprismAuth.getAuthHeaders())) as http.Response;
+        Uri.parse(
+            '${model.photoprismUrl}/api/v1/dl/$fileHash?t=${model.config.downloadToken}'),
+        '$fileHash.jpg');
+  }
+
+  static Future<io.File> downloadAsFile(
+      PhotoprismModel model, Uri uri, String fileName) async {
+    final http.Client client = http.Client();
+    final http.Request request = http.Request('GET', uri);
+    model.photoprismAuth.getAuthHeaders().forEach((String k, String v) {
+      request.headers[k] = v;
+    });
+    final http.StreamedResponse response =
+        await httpAuth(model, () => client.send(request))
+            as http.StreamedResponse;
 
     if (response.statusCode == 200) {
-      return response.bodyBytes;
+      final io.Directory tempDir = await getTemporaryDirectory();
+      final io.File file = await io.File('${tempDir.path}/$fileName').create();
+      final io.IOSink sink = file.openWrite();
+      await sink.addStream(response.stream);
+      sink.close();
+      return file;
     } else {
       model.photoprismMessage
           .showMessage('Error while sharing: No connection to server!');
@@ -311,11 +331,12 @@ class Api {
   }
 
   static Future<String> getVideoUrl(
-      PhotoprismModel model, String photoUid) async {
+      PhotoprismModel model, Future<PhotoWithFile> photoWithFile) async {
     if (model.config == null) {
       return null;
     }
-    final File file = await model.database.getVideoFileForPhoto(photoUid);
+    final File file = await model.database
+        .getVideoFileForPhoto((await photoWithFile).photo.uid);
     if (file == null) {
       return null;
     }
@@ -340,7 +361,8 @@ class Api {
 
     int photosLoaded = 0;
     int photosFailed = 0;
-    for (final PhotoWithFile photo in model.photos) {
+    for (int i = 0; i < model.photos.length; i++) {
+      final PhotoWithFile photo = await model.photos[i];
       final CachedNetworkImageProvider provider = CachedNetworkImageProvider(
         model.photoprismUrl +
             '/api/v1/t/' +

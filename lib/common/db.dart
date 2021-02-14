@@ -1,5 +1,4 @@
 import 'dart:io' as io;
-import 'package:moor/ffi.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'package:moor/moor.dart';
@@ -12,17 +11,11 @@ import 'package:photoprism/model/photos_albums.dart';
 
 part 'db.g.dart';
 
-LazyDatabase openDbConnection() {
-  return LazyDatabase(() async {
-    final io.Directory dbFolder = await getApplicationDocumentsDirectory();
-    final io.File file = io.File(p.join(dbFolder.path, 'db.sqlite'));
-    return VmDatabase(file, logStatements: false);
-  });
-}
-
 @UseMoor(tables: <Type>[Photos, Files, Albums, PhotosAlbums])
 class MyDatabase extends _$MyDatabase {
   MyDatabase(QueryExecutor e) : super(e);
+
+  MyDatabase.connect(DatabaseConnection connection) : super.connect(connection);
 
   Future<void> deleteDatabase() async {
     final io.Directory dbFolder = await getApplicationDocumentsDirectory();
@@ -100,7 +93,8 @@ class MyDatabase extends _$MyDatabase {
         });
   }
 
-  Stream<List<PhotoWithFile>> photosWithFile(FilterPhotos filterPhotos,
+  JoinedSelectStatement<Table, DataClass> _photosWithFileQuery(
+      FilterPhotos filterPhotos,
       {String albumUid}) {
     JoinedSelectStatement<Table, DataClass> query;
     if (albumUid != null) {
@@ -137,10 +131,11 @@ class MyDatabase extends _$MyDatabase {
       query = query..where(photos.private.not());
     }
 
-    query = query
+    return query
       ..where(isNotNull(files.hash) &
           isNotNull(files.primary) &
           files.primary &
+          files.error.equals('') &
           isNull(files.deletedAt) &
           (filterPhotos.archived
               ? isNotNull(photos.deletedAt)
@@ -151,15 +146,31 @@ class MyDatabase extends _$MyDatabase {
       ..orderBy(<OrderingTerm>[
         OrderingTerm(expression: sortColumn, mode: filterPhotos.order)
       ]);
+  }
 
-    return query.watch().map((List<TypedResult> rows) {
-      return rows.map((TypedResult row) {
-        return PhotoWithFile(
-          row.readTable(photos),
-          row.readTable(files),
-        );
-      }).toList();
-    });
+  Future<Iterable<PhotoWithFile>> photosWithFile(
+      int limit, int offset, FilterPhotos filterPhotos,
+      {String albumUid}) {
+    final JoinedSelectStatement<Table, DataClass> query =
+        _photosWithFileQuery(filterPhotos, albumUid: albumUid);
+    final Selectable<PhotoWithFile> result = (query
+          ..limit(limit, offset: offset))
+        .map((TypedResult row) => PhotoWithFile(
+              row.readTable(photos),
+              row.readTable(files),
+            ));
+    return result.get();
+  }
+
+  Stream<int> photosWithFileCount(FilterPhotos filterPhotos,
+      {String albumUid}) {
+    final JoinedSelectStatement<Table, DataClass> query =
+        _photosWithFileQuery(filterPhotos, albumUid: albumUid);
+    final Expression<int> filesCount = files.hash.count();
+
+    return (query..addColumns(<Expression<int>>[filesCount]))
+        .watchSingle()
+        .map((TypedResult row) => row.read(filesCount));
   }
 
   @override

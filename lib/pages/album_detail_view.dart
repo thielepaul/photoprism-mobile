@@ -61,7 +61,7 @@ class AlbumDetailView extends StatelessWidget {
     // save all selected photos in list
     final List<String> selectedPhotos = <String>[];
     for (final int photoId in _model.gridController.value.selectedIndexes) {
-      selectedPhotos.add(_model.photos[photoId].photo.uid);
+      selectedPhotos.add((await _model.photos[photoId]).photo.uid);
     }
 
     // remove remote photos from album

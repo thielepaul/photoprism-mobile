@@ -1,11 +1,11 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:photoprism/common/db.dart';
 import 'package:photoprism/pages/albums_page.dart';
 import 'package:photoprism/pages/settings_page.dart';
 import 'package:provider/provider.dart';
 import 'package:photoprism/common/hexcolor.dart';
+import 'package:photoprism/common/db_init.dart';
 import 'package:photoprism/pages/photos_page.dart';
 import 'package:photoprism/model/photoprism_model.dart';
 // use this for debugging animations
@@ -27,7 +27,7 @@ void main() {
         fallbackLocale: const Locale('en', 'US'),
         child: ChangeNotifierProvider<PhotoprismModel>(
           create: (BuildContext context) =>
-              PhotoprismModel(openDbConnection, const FlutterSecureStorage()),
+              PhotoprismModel(connectDbAsync, const FlutterSecureStorage()),
           child: PhotoprismApp(),
         )),
   );
