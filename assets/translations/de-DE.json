@@ -23,6 +23,7 @@
   "cancel": "Abbrechen",
   "save": "Speichern",
   "apply": "Übernehmen",
+  "set_as_default": "Als Standard spreichern",
   "show_log": "Log anzeigen",
   "clear_log": "Log löschen",
   "auto_upload": "Automatisches Hochladen",

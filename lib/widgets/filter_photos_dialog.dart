@@ -32,9 +32,12 @@ class _FilterPhotosDialogState extends State<FilterPhotosDialog> {
 
   @override
   Widget build(BuildContext context) {
-    Future<void> saveAndPop() async {
+    Future<void> saveAndPop({bool asDefault}) async {
       model.filterPhotos = filter;
       await model.updatePhotosSubscription();
+      if (asDefault) {
+        filter.saveTosharedPrefs();
+      }
       Navigator.of(context).pop();
     }
 
@@ -121,9 +124,13 @@ class _FilterPhotosDialogState extends State<FilterPhotosDialog> {
           },
         ),
         FlatButton(
+          child: const Text('set_as_default').tr(),
+          onPressed: () => saveAndPop(asDefault: true),
+        ),
+        FlatButton(
           child: const Text('apply').tr(),
-          onPressed: () => saveAndPop(),
-        )
+          onPressed: () => saveAndPop(asDefault: false),
+        ),
       ],
     );
   }

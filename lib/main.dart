@@ -1,6 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:photoprism/model/filter_photos.dart';
 import 'package:photoprism/pages/albums_page.dart';
 import 'package:photoprism/pages/settings_page.dart';
 import 'package:provider/provider.dart';
@@ -112,6 +113,7 @@ class MainPage extends StatelessWidget {
           if (index != _pageController.page) {
             model.gridController.clear();
             model.albumUid = null;
+            model.filterPhotos = await FilterPhotos.fromSharedPrefs();
             model.updatePhotosSubscription();
           }
           _pageController.jumpToPage(index);

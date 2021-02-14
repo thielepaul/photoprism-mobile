@@ -23,6 +23,7 @@
   "cancel": "Cancel",
   "save": "Save",
   "apply": "Apply",
+  "set_as_default": "Set as default",
   "show_log": "Show log",
   "clear_log": "Clear log",
   "auto_upload": "Automatic upload",

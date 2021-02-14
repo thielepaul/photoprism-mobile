@@ -42,7 +42,7 @@ class PhotoprismModel extends ChangeNotifier {
   StreamSubscription<Map<String, int>> albumCountsStreamSubscription;
   Map<String, int> albumCounts;
   DbTimestamps dbTimestamps;
-  FilterPhotos filterPhotos = FilterPhotos();
+  FilterPhotos filterPhotos;
   String albumUid;
   Future<MyDatabase> Function() dbConnection;
   FlutterSecureStorage secureStorage;
@@ -107,16 +107,19 @@ class PhotoprismModel extends ChangeNotifier {
 
     // uploader needs photoprismAuth to be initialized
     await photoprismAuth.initialize();
-    photoprismUploader = PhotoprismUploader(this);
 
     await photoprismRemoteConfigLoader.loadApplicationColor();
     gridController.addListener(notifyListeners);
 
+    await loadLog();
+
+    photoprismUploader = PhotoprismUploader(this);
+
+    dbTimestamps = await DbTimestamps.fromSharedPrefs();
+    filterPhotos = await FilterPhotos.fromSharedPrefs();
+
     updatePhotosSubscription();
     updateAlbumsSubscription();
-
-    await loadLog();
-    dbTimestamps = await DbTimestamps.fromSharedPrefs();
 
     await photoprismCommonHelper.loadPhotoprismUrl();
 
