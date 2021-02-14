@@ -11,6 +11,9 @@ class PhotoprismLoadingScreen {
   BuildContext context;
 
   void showLoadingScreen(String message) {
+    if (pr != null) {
+      return;
+    }
     pr = ProgressDialog(context);
     pr.style(message: message);
     pr.show();
@@ -18,18 +21,23 @@ class PhotoprismLoadingScreen {
   }
 
   void updateLoadingScreen(String message) {
-    pr.update(message: message);
+    if (pr != null) {
+      pr.update(message: message);
+    }
   }
 
-  Future<void> hideLoadingScreen() {
-    Completer<void> hideLoadingScreenCompleter;
-    Future<void>.delayed(const Duration(milliseconds: 500)).then((_) {
-      pr.hide().whenComplete(() {
-        hideLoadingScreenCompleter.complete();
+  Future<void> hideLoadingScreen() async {
+    if (pr != null) {
+      Completer<void> hideLoadingScreenCompleter;
+      Future<void>.delayed(const Duration(milliseconds: 500)).then((_) {
+        pr.hide().whenComplete(() {
+          hideLoadingScreenCompleter.complete();
+          pr = null;
+        });
       });
-    });
-    photoprismModel.notify();
-    hideLoadingScreenCompleter = Completer<void>();
-    return hideLoadingScreenCompleter.future;
+      photoprismModel.notify();
+      hideLoadingScreenCompleter = Completer<void>();
+      return hideLoadingScreenCompleter.future;
+    }
   }
 }

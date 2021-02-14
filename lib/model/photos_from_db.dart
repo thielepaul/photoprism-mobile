@@ -35,7 +35,7 @@ class PhotosFromDb {
       }
       final Stopwatch stopwatch = Stopwatch()..start();
       _cache = <int, PhotoWithFile>{};
-      const int limit = 1000;
+      const int limit = 500;
       final int offset = max(0, index - (limit / 2).round());
       final Iterable<PhotoWithFile> results = await _model.database
           .photosWithFile(limit, offset, _model.filterPhotos,
