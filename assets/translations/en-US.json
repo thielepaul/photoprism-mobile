@@ -25,5 +25,6 @@
   "show_upload_queue": "Show upload queue",
   "show_uploaded_photos_list": "Show uploaded photos list",
   "show_failed_uploads_list": "Show failed uploads list",
-  "select_albums_for_auto_upload": "Select albums for auto-upload"
+  "select_albums_for_auto_upload": "Select albums for auto-upload",
+  "auto_upload_wifi_only": "Only automatically upload on Wi-Fi"
 }
