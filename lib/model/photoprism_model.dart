@@ -52,6 +52,7 @@ class PhotoprismModel extends ChangeNotifier {
 
   // photoprism uploader
   bool autoUploadEnabled = false;
+  bool autoUploadWifiOnly = true;
   String autoUploadLastTimeCheckedForPhotos = 'Never';
   Set<String> _albumsToUpload = <String>{};
   Set<String> _photosToUpload = <String>{};

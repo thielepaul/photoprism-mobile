@@ -36,5 +36,6 @@
   "show_uploaded_photos_list": "Show uploaded photos list",
   "show_failed_uploads_list": "Show failed uploads list",
   "select_albums_for_auto_upload": "Select albums for auto-upload",
-  "share_photo_or_video": "Do you want to share the photo file or the video file?"
+  "share_photo_or_video": "Do you want to share the photo file or the video file?",
+  "auto_upload_wifi_only": "Only automatically upload on Wi-Fi"
 }

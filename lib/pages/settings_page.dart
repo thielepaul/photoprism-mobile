@@ -112,6 +112,15 @@ class SettingsPage extends StatelessWidget {
                 },
               ),
             if (model.autoUploadEnabled)
+              SwitchListTile(
+                title: Text('auto_upload_wifi_only'.tr()),
+                secondary: const Icon(Icons.wifi),
+                value: model.autoUploadWifiOnly,
+                onChanged: (bool newState) async {
+                  model.photoprismUploader.setAutoUploadWifiOnly(newState);
+                },
+              ),
+            if (model.autoUploadEnabled)
               ListTile(
                 title: const Text('last_time_checked_for_photos_to_be_uploaded')
                     .tr(),

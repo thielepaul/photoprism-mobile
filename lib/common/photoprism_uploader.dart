@@ -16,6 +16,7 @@ import 'package:photoprism/api/db_api.dart';
 import 'package:photoprism/common/db.dart';
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:photo_manager/photo_manager.dart' as photolib;
+import 'package:connectivity/connectivity.dart';
 
 class PhotoprismUploader {
   PhotoprismUploader(this.photoprismModel) {
@@ -93,6 +94,13 @@ class PhotoprismUploader {
     photoprismModel.autoUploadEnabled = autoUploadEnabledNew;
     photoprismModel.notify();
     getPhotosToUpload(photoprismModel);
+  }
+
+  Future<void> setAutoUploadWifiOnly(bool autoUploadWifiOnlyNew) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setBool('autoUploadWifiOnly', autoUploadWifiOnlyNew);
+    photoprismModel.autoUploadWifiOnly = autoUploadWifiOnlyNew;
+    photoprismModel.notify();
   }
 
   Future<void> setAutoUploadLastTimeActive() async {
@@ -250,6 +258,16 @@ class PhotoprismUploader {
       model.addLogEntry(
           'AutoUploader', 'Auto upload disabled. Stopping autoupload routine.');
       return;
+    }
+
+    if (photoprismModel.autoUploadWifiOnly) {
+      final ConnectivityResult connectivityResult =
+          await Connectivity().checkConnectivity();
+      if (connectivityResult != ConnectivityResult.wifi) {
+        model.addLogEntry('AutoUploader',
+            'Auto upload requires Wi-Fi. Stopping autoupload routine.');
+        return;
+      }
     }
 
     if (photoprismModel.photoprismUrl == 'https://demo.photoprism.org') {
