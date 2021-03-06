@@ -231,7 +231,7 @@ class PhotosPage extends StatelessWidget {
         Api.loadConfig(model);
       }
       if (model.dbTimestamps.isEmpty) {
-        DbApi.updateDb(model);
+        DbApi.updateDb(model, context: context);
         return const Text('', key: ValueKey<String>('photosGridView'));
       }
 

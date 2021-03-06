@@ -1,10 +1,19 @@
 import 'dart:convert';
+import 'dart:io';
 
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:moor/ffi.dart';
 import 'package:photoprism/common/db.dart';
 import 'package:photoprism/api/api.dart';
 import 'package:photoprism/model/photoprism_model.dart';
+
+class DbApiException implements Exception {
+  const DbApiException(this.msg);
+  final String msg;
+  @override
+  String toString() => 'DbApiException: $msg';
+}
 
 class DbApi {
   static const int resultCount = 1000;
@@ -23,13 +32,27 @@ class DbApi {
     final http.Response response = await Api.httpAuth(model,
             () => http.get(url, headers: model.photoprismAuth.getAuthHeaders()))
         as http.Response;
+    if (response == null) {
+      print('ERROR: api DB call failed with response null ($url)');
+      throw const DbApiException('no-connection');
+    }
     if (response.statusCode != 200) {
-      print('ERROR: api DB call failed ($url)');
-      return <dynamic>[];
+      print(
+          'ERROR: api DB call failed with return type ${response.statusCode} ($url)');
+      if (response.statusCode == 401) {
+        throw const DbApiException('auth-missing');
+      }
+      throw const DbApiException('wrong-status-code');
+    }
+    if (response.headers['content-type'] != 'application/json; charset=utf-8') {
+      print(
+          'ERROR: api DB call failed, content type is ${response.headers["content-type"]} ($url)');
+      throw const DbApiException('api-fail');
     }
     try {
       return json.decode(response.body) as List<dynamic>;
     } catch (error) {
+      print(response);
       print('decoding answer from db api failed: ' + error.toString());
       return <dynamic>[];
     }
@@ -131,42 +154,69 @@ class DbApi {
         serializer: const CustomSerializer()));
   }
 
-  static Future<void> updateDb(PhotoprismModel model) async {
+  static Future<void> _updateDbSynced(PhotoprismModel model) async {
+    try {
+      final Iterable<Photo> photos = await _loadPhotosDb(model);
+      if (photos.isNotEmpty) {
+        print('update Photo table');
+        await model.database.createOrUpdateMultiplePhotos(
+            photos.map((Photo p) => p.toCompanion(false)).toList());
+      }
+      final Iterable<File> files = await _loadFilesDb(model);
+      if (files.isNotEmpty) {
+        print('update File table');
+        await model.database.createOrUpdateMultipleFiles(
+            files.map((File p) => p.toCompanion(false)).toList());
+      }
+      final Iterable<Album> albums = await _loadAlbumsDb(model);
+      if (albums.isNotEmpty) {
+        print('update Album table');
+        await model.database.createOrUpdateMultipleAlbums(
+            albums.map((Album p) => p.toCompanion(false)).toList());
+      }
+      final Iterable<PhotosAlbum> photosAlbums =
+          await _loadPhotosAlbumsDb(model);
+      if (photosAlbums.isNotEmpty) {
+        print('update PhotosAlbum table');
+        await model.database.createOrUpdateMultiplePhotosAlbums(
+            photosAlbums.map((PhotosAlbum p) => p.toCompanion(false)).toList());
+      }
+    } on SqliteException catch (e) {
+      print('cannot update db, will reset db: ' + e.toString());
+      model.resetDatabase();
+    }
+  }
+
+  static Future<void> updateDb(PhotoprismModel model,
+      {BuildContext context}) async {
     await model.dbLoadingLock.synchronized(() async {
       if (model.dbTimestamps == null) {
         return;
       }
-
       try {
-        final Iterable<Photo> photos = await _loadPhotosDb(model);
-        if (photos.isNotEmpty) {
-          print('update Photo table');
-          await model.database.createOrUpdateMultiplePhotos(
-              photos.map((Photo p) => p.toCompanion(false)).toList());
+        await _updateDbSynced(model);
+      } on DbApiException catch (e) {
+        print('Exception: ${e.toString()}');
+        if (context != null) {
+          String msg;
+          if (e.msg == 'no-connection' && model.dbTimestamps.isEmpty) {
+            msg = 'Can not connect to server ${model.photoprismUrl}';
+          } else if (e.msg == 'auth-missing') {
+            msg = 'Server requires authentification';
+          } else if (e.msg == 'api-fail') {
+            msg = 'Server API is not compatible with this version of the app';
+          }
+          if (msg != null) {
+            await showDialog<AlertDialog>(
+                context: context,
+                builder: (BuildContext context) {
+                  return AlertDialog(
+                    title: const Text('Error'),
+                    content: Text(msg),
+                  );
+                });
+          }
         }
-        final Iterable<File> files = await _loadFilesDb(model);
-        if (files.isNotEmpty) {
-          print('update File table');
-          await model.database.createOrUpdateMultipleFiles(
-              files.map((File p) => p.toCompanion(false)).toList());
-        }
-        final Iterable<Album> albums = await _loadAlbumsDb(model);
-        if (albums.isNotEmpty) {
-          print('update Album table');
-          await model.database.createOrUpdateMultipleAlbums(
-              albums.map((Album p) => p.toCompanion(false)).toList());
-        }
-        final Iterable<PhotosAlbum> photosAlbums =
-            await _loadPhotosAlbumsDb(model);
-        if (photosAlbums.isNotEmpty) {
-          print('update PhotosAlbum table');
-          await model.database.createOrUpdateMultiplePhotosAlbums(photosAlbums
-              .map((PhotosAlbum p) => p.toCompanion(false))
-              .toList());
-        }
-      } on SqliteException catch (e) {
-        print('cannot update db, will reset db: ' + e.toString());
-        model.resetDatabase();
       }
     });
     model.photoprismLoadingScreen.hideLoadingScreen();

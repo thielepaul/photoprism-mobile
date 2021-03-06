@@ -52,6 +52,7 @@ dependencies:
     git:
       url: git://github.com/thielepaul/flutter-draggable-scrollbar.git
   connectivity: ^2.0.2
+  validators: ^2.0.1
 
 dev_dependencies:
   moor_generator: ^3.4.1

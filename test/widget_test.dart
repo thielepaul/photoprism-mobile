@@ -119,18 +119,12 @@ void main() {
 
   testWidgets('album test', (WidgetTester tester) async {
     // TODO this test does not really make sense like it is now
-    await model.database.createOrUpdateMultipleAlbums(<AlbumsCompanion>[
-      Album(id: 0, title: 'New Album 1', type: 'album', uid: 'test')
-          .toCompanion(true),
-      Album(id: 1, title: 'New Album 2', type: 'album', uid: 'test2')
-          .toCompanion(true)
-    ]);
     await pumpPhotoPrism(tester, model);
     await tester.tap(find.byIcon(Icons.photo_album));
     await tester.pumpAndSettle();
-    expect(find.text('New Album 1'), findsOneWidget);
-    expect(find.text('New Album 2'), findsOneWidget);
-    await tester.tap(find.text('New Album 1'));
+    expect(find.text('Berlin'), findsOneWidget);
+    expect(find.text('California'), findsOneWidget);
+    await tester.tap(find.text('California'));
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey<String>('PhotoTile')), findsNWidgets(30));
   });

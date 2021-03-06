@@ -11,6 +11,7 @@ import 'package:photo_manager/photo_manager.dart' as photolib;
 import 'package:photoprism/pages/auto_upload_queue.dart';
 import 'package:photoprism/widgets/about.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:validators/sanitizers.dart';
 
 import 'log_view.dart';
 
@@ -317,7 +318,8 @@ class SettingsPage extends StatelessWidget {
               FlatButton(
                 child: Text('save'.tr()),
                 onPressed: () {
-                  setNewPhotoprismUrl(context, _urlTextFieldController.text);
+                  setNewPhotoprismUrl(
+                      context, rtrim(_urlTextFieldController.text, ' /'));
                 },
               )
             ],

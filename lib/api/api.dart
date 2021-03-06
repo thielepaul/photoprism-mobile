@@ -14,13 +14,17 @@ import 'package:path_provider/path_provider.dart';
 
 class Api {
   static Future<dynamic> httpAuth(PhotoprismModel model, Function call) async {
-    dynamic response = await call();
-    if ((response as http.BaseResponse).statusCode == 401) {
-      if (await getNewSession(model)) {
-        response = await call();
+    try {
+      dynamic response = await call();
+      if ((response as http.BaseResponse).statusCode == 401) {
+        if (await getNewSession(model)) {
+          response = await call();
+        }
       }
+      return response;
+    } on io.SocketException catch (e) {
+      print('SocketException: ${e.message}');
     }
-    return response;
   }
 
   static Future<dynamic> httpWithDownloadToken(
@@ -321,7 +325,7 @@ class Api {
         model,
         () => http.get(model.photoprismUrl + '/api/v1/config',
             headers: model.photoprismAuth.getAuthHeaders())) as http.Response;
-    if (response.statusCode != 200) {
+    if (response == null || response.statusCode != 200) {
       model.config = null;
       return false;
     }
