@@ -1,6 +1,16 @@
-# PhotoPrism App for iOS and Android
+# PhotoPrism Flutter App for iOS and Android (community maintained)
 
 ![alt text](assets/iphone_photo.png "iPhone App Photos View")
+
+## :warning: App is Currently Incompatible with Backend :warning:
+
+This app is currently incompatible with the latest version of the PhotoPrism backend (to get the latest compatible version, use the [legacy links below](#installation)).  
+The status of the pull request with the necessary backend api changes can be seen [here](https://github.com/photoprism/photoprism/pull/995).  
+If you want to use the latest version of the app until this is merged, you can either build the photoprism backend with the patches from [source](https://github.com/thielepaul/photoprism/tree/db-api) or use the docker image `thielepaul/photoprism:db-api`.
+
+Get the latest version of the mobile app including the backend incompatible changes:
+* [APK for Android](https://github.com/photoprism/photoprism-mobile/releases/download/latest-db-api/photoprism.apk)
+* Testflight for iOS (to come)
 
 ## Features
 - View your photoprism photos and albums
@@ -27,6 +37,8 @@ If you like the app and the project, please give us a star on GitHub. This keeps
 If you'd like to make an enhancement to the application, please see [the contributing docs](CONTRIBUTING.md) for information on how to build and run the application.
 
 ## Installation
+:warning: This is the legacy version of the app with many known bugs, please do not open issues regarding this version of the app. :warning:
+
 ### Android
 - The latest .apk file can be downloaded [here](https://github.com/photoprism/photoprism-mobile/releases/download/latest/photoprism.apk).
 

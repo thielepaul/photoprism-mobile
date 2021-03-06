@@ -1,15 +1,18 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:photoprism/model/filter_photos.dart';
 import 'package:photoprism/pages/albums_page.dart';
 import 'package:photoprism/pages/settings_page.dart';
 import 'package:provider/provider.dart';
 import 'package:photoprism/common/hexcolor.dart';
+import 'package:photoprism/common/db_init.dart';
 import 'package:photoprism/pages/photos_page.dart';
 import 'package:photoprism/model/photoprism_model.dart';
 // use this for debugging animations
 // import 'package:flutter/scheduler.dart' show timeDilation;
 
-enum PageIndex { Photos, Videos, Albums, Settings }
+enum PageIndex { Photos, Albums, Settings }
 
 void main() {
   // use this for debugging animations
@@ -24,7 +27,8 @@ void main() {
         path: 'assets/translations',
         fallbackLocale: const Locale('en', 'US'),
         child: ChangeNotifierProvider<PhotoprismModel>(
-          create: (BuildContext context) => PhotoprismModel(),
+          create: (BuildContext context) =>
+              PhotoprismModel(connectDbAsync, const FlutterSecureStorage()),
           child: PhotoprismApp(),
         )),
   );
@@ -68,6 +72,10 @@ class MainPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
+    if (!model.initialized) {
+      model.initialize();
+      return Container();
+    }
     model.photoprismLoadingScreen.context = context;
 
     if (!model.dataFromCacheLoaded) {
@@ -80,18 +88,13 @@ class MainPage extends StatelessWidget {
     }
 
     return Scaffold(
-      appBar: model.selectedPageIndex == PageIndex.Photos ||
-              model.selectedPageIndex == PageIndex.Videos
-          ? PhotosPage.appBar(
-              context, model.selectedPageIndex == PageIndex.Videos)
+      appBar: model.selectedPageIndex == PageIndex.Photos
+          ? PhotosPage.appBar(context)
           : null,
       body: PageView(
           controller: _pageController,
           children: <Widget>[
             const PhotosPage(),
-            const PhotosPage(
-              videosPage: true,
-            ),
             const AlbumsPage(),
             SettingsPage(),
           ],
@@ -101,16 +104,17 @@ class MainPage extends StatelessWidget {
           BottomNavigationBarItem(
               icon: const Icon(Icons.photo), label: 'photos'.tr()),
           BottomNavigationBarItem(
-              icon: const Icon(Icons.video_library), label: 'videos'.tr()),
-          BottomNavigationBarItem(
               icon: const Icon(Icons.photo_album), label: 'albums'.tr()),
           BottomNavigationBarItem(
               icon: const Icon(Icons.settings), label: 'settings'.tr()),
         ],
         currentIndex: model.selectedPageIndex.index,
-        onTap: (int index) {
+        onTap: (int index) async {
           if (index != _pageController.page) {
             model.gridController.clear();
+            model.albumUid = null;
+            model.filterPhotos = await FilterPhotos.fromSharedPrefs();
+            model.updatePhotosSubscription();
           }
           _pageController.jumpToPage(index);
           model.photoprismCommonHelper

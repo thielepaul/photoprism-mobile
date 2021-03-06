@@ -39,9 +39,8 @@
             },
             "problemMatcher": [],
             "dependsOn": [
-                "pub get",
+                "regenerate-db-files",
                 "generate-key-store",
-                "restart adb in docker container"
             ]
         },
         {
@@ -55,6 +54,22 @@
             "problemMatcher": [],
             "dependsOn": [
                 "build"
+            ]
+        },
+        {
+            "label": "regenerate-db-files",
+            "type": "process",
+            "command": "flutter",
+            "args": [
+                "packages",
+                "pub",
+                "run",
+                "build_runner",
+                "build"
+            ],
+            "problemMatcher": [],
+            "dependsOn": [
+                "pub get",
             ]
         },
         {

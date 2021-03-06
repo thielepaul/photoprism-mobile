@@ -1,25 +1,30 @@
 import 'dart:convert';
 import 'dart:io' as io;
 
-import 'package:flutter/widgets.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/material.dart';
+import 'package:path/path.dart' as p;
 import 'package:http/http.dart' as http;
-import 'package:photoprism/model/album.dart';
+import 'package:photoprism/api/db_api.dart';
 import 'package:photoprism/model/config.dart';
-import 'package:photoprism/model/moments_time.dart';
-import 'package:photoprism/model/photo.dart';
 import 'package:photoprism/model/photoprism_model.dart';
-import 'package:provider/provider.dart';
+import 'package:photoprism/common/db.dart';
 import 'package:http_parser/http_parser.dart';
+import 'package:path_provider/path_provider.dart';
 
 class Api {
   static Future<dynamic> httpAuth(PhotoprismModel model, Function call) async {
-    dynamic response = await call();
-    if ((response as http.BaseResponse).statusCode == 401) {
-      if (await getNewSession(model)) {
-        response = await call();
+    try {
+      dynamic response = await call();
+      if ((response as http.BaseResponse).statusCode == 401) {
+        if (await getNewSession(model)) {
+          response = await call();
+        }
       }
+      return response;
+    } on io.SocketException catch (e) {
+      print('SocketException: ${e.message}');
     }
-    return response;
   }
 
   static Future<dynamic> httpWithDownloadToken(
@@ -55,29 +60,6 @@ class Api {
       }
     } catch (_) {
       return '-1';
-    }
-  }
-
-  static Future<List<Album>> searchAlbums(
-      PhotoprismModel model, String query) async {
-    try {
-      final http.Response response = await httpAuth(
-          model,
-          () => http.get(
-              model.photoprismUrl + '/api/v1/albums?count=1000&q=$query',
-              headers: model.photoprismAuth.getAuthHeaders())) as http.Response;
-      if (response.statusCode != 200) {
-        print('searchAlbums: Statuscode not 200. Instead: ' +
-            response.statusCode.toString());
-        return null;
-      }
-      return json
-          .decode(response.body)
-          .map<Album>(
-              (dynamic value) => Album.fromJson(value as Map<String, dynamic>))
-          .toList() as List<Album>;
-    } catch (_) {
-      return null;
     }
   }
 
@@ -243,98 +225,6 @@ class Api {
     }
   }
 
-  static Future<List<MomentsTime>> loadMomentsTime(BuildContext context) async {
-    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
-    final http.Response response = await httpAuth(
-        model,
-        () => http.get(model.photoprismUrl + '/api/v1/moments/time',
-            headers: model.photoprismAuth.getAuthHeaders())) as http.Response;
-    if (response.statusCode != 200) {
-      return <MomentsTime>[];
-    }
-    return json
-        .decode(response.body)
-        .map<MomentsTime>((dynamic value) =>
-            MomentsTime.fromJson(value as Map<String, dynamic>))
-        .toList() as List<MomentsTime>;
-  }
-
-  static Future<Map<int, Photo>> loadPhotos(
-      BuildContext context, int albumId, int offset,
-      {bool videosPage = false}) async {
-    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
-
-    String albumIdUrlParam = '';
-    if (albumId != null &&
-        model.albums != null &&
-        model.albums[albumId] != null) {
-      albumIdUrlParam = model.albums[albumId].id;
-    }
-
-    final String type = videosPage ? '&video=true' : '&photo=true';
-    final http.Response response = await httpAuth(
-        model,
-        () => http.get(
-            model.photoprismUrl +
-                '/api/v1/photos' +
-                '?count=100' +
-                '&merged=true' +
-                type +
-                '&offset=' +
-                offset.toString() +
-                '&album=' +
-                albumIdUrlParam,
-            headers: model.photoprismAuth.getAuthHeaders())) as http.Response;
-    final List<dynamic> parsed = json.decode(response.body) as List<dynamic>;
-    return Map<int, Photo>.fromIterables(
-        List<int>.generate(parsed.length, (int i) => i + offset),
-        parsed
-            .map<Photo>(
-                (dynamic json) => Photo.fromJson(json as Map<String, dynamic>))
-            .toList());
-  }
-
-  static Future<Map<int, Album>> loadAlbums(
-      BuildContext context, int offset) async {
-    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
-
-    final http.Response response = await httpAuth(
-        model,
-        () => http.get(
-            model.photoprismUrl +
-                '/api/v1/albums' +
-                '?count=1000' +
-                '&type=album' +
-                '&offset=' +
-                offset.toString(),
-            headers: model.photoprismAuth.getAuthHeaders())) as http.Response;
-    final List<dynamic> parsed = json.decode(response.body) as List<dynamic>;
-
-    return Map<int, Album>.fromIterables(
-        List<int>.generate(parsed.length, (int i) => i + offset),
-        parsed
-            .map<Album>(
-                (dynamic json) => Album.fromJson(json as Map<String, dynamic>))
-            .toList());
-  }
-
-  static Future<String> getUuidFromHash(
-      PhotoprismModel model, String filehash) async {
-    final http.Response response = await httpAuth(
-        model,
-        () => http.get(model.photoprismUrl + '/api/v1/files/$filehash',
-            headers: model.photoprismAuth.getAuthHeaders())) as http.Response;
-    if (response.statusCode != 200) {
-      return '';
-    }
-    final Map<String, dynamic> parsed =
-        json.decode(response.body) as Map<String, dynamic>;
-    if (parsed.containsKey('PhotoUID')) {
-      return parsed['PhotoUID'] as String;
-    }
-    return parsed['Photo']['UID'] as String;
-  }
-
   static Future<bool> upload(PhotoprismModel model, String fileId,
       String fileName, io.File file) async {
     try {
@@ -377,29 +267,52 @@ class Api {
     return false;
   }
 
-  static Future<List<int>> downloadVideo(
-      PhotoprismModel model, Photo photo) async {
-    final http.Response response = await http.get(videoUrl(model, photo));
-    if (response.statusCode == 200) {
-      return response.bodyBytes;
-    } else {
-      model.photoprismMessage
-          .showMessage('Error while sharing: No connection to server!');
+  static Future<io.File> downloadVideo(
+      PhotoprismModel model, Future<PhotoWithFile> photoFuture) async {
+    final String videoUrl = await getVideoUrl(model, photoFuture);
+    final PhotoWithFile photo = await photoFuture;
+    if (videoUrl == null) {
+      print('found no video file for photo: ' + photo.photo.uid);
+      return null;
     }
-    return null;
+    final File videoFile =
+        await model.database.getVideoFileForPhoto(photo.photo.uid);
+    String fileName;
+    if (photo.file.originalName != null && photo.file.originalName.isNotEmpty) {
+      fileName = videoFile.originalName;
+    } else {
+      fileName = p.basename(videoFile.name);
+    }
+    return downloadAsFile(model, Uri.parse(videoUrl), fileName);
   }
 
-  static Future<List<int>> downloadPhoto(
+  static Future<io.File> downloadPhoto(
       PhotoprismModel model, String fileHash) async {
-    final http.Response response = await Api.httpWithDownloadToken(
+    return downloadAsFile(
         model,
-        () => http.get(
-            Uri.parse(
-                '${model.photoprismUrl}/api/v1/dl/$fileHash?t=${model.config.downloadToken}'),
-            headers: model.photoprismAuth.getAuthHeaders())) as http.Response;
+        Uri.parse(
+            '${model.photoprismUrl}/api/v1/dl/$fileHash?t=${model.config.downloadToken}'),
+        '$fileHash.jpg');
+  }
+
+  static Future<io.File> downloadAsFile(
+      PhotoprismModel model, Uri uri, String fileName) async {
+    final http.Client client = http.Client();
+    final http.Request request = http.Request('GET', uri);
+    model.photoprismAuth.getAuthHeaders().forEach((String k, String v) {
+      request.headers[k] = v;
+    });
+    final http.StreamedResponse response =
+        await httpAuth(model, () => client.send(request))
+            as http.StreamedResponse;
 
     if (response.statusCode == 200) {
-      return response.bodyBytes;
+      final io.Directory tempDir = await getTemporaryDirectory();
+      final io.File file = await io.File('${tempDir.path}/$fileName').create();
+      final io.IOSink sink = file.openWrite();
+      await sink.addStream(response.stream);
+      sink.close();
+      return file;
     } else {
       model.photoprismMessage
           .showMessage('Error while sharing: No connection to server!');
@@ -412,7 +325,7 @@ class Api {
         model,
         () => http.get(model.photoprismUrl + '/api/v1/config',
             headers: model.photoprismAuth.getAuthHeaders())) as http.Response;
-    if (response.statusCode != 200) {
+    if (response == null || response.statusCode != 200) {
       model.config = null;
       return false;
     }
@@ -421,15 +334,71 @@ class Api {
     return true;
   }
 
-  static String videoUrl(PhotoprismModel model, Photo photo) {
+  static Future<String> getVideoUrl(
+      PhotoprismModel model, Future<PhotoWithFile> photoWithFile) async {
     if (model.config == null) {
+      return null;
+    }
+    final File file = await model.database
+        .getVideoFileForPhoto((await photoWithFile).photo.uid);
+    if (file == null) {
       return null;
     }
     return model.photoprismUrl +
         '/api/v1/videos/' +
-        photo.videoHash +
+        file.hash +
         '/' +
         model.config.previewToken +
         '/mp4';
+  }
+
+  static Future<void> preloadThumbnails(PhotoprismModel model) async {
+    if (model.photos == null || model.photos.isEmpty) {
+      await DbApi.updateDb(model);
+    }
+
+    if (model.config == null) {
+      await Api.loadConfig(model);
+    }
+
+    model.photoprismLoadingScreen.showLoadingScreen('Preloading thumbnails..');
+
+    int photosLoaded = 0;
+    int photosFailed = 0;
+    for (int i = 0; i < model.photos.length; i++) {
+      final PhotoWithFile photo = await model.photos[i];
+      final CachedNetworkImageProvider provider = CachedNetworkImageProvider(
+        model.photoprismUrl +
+            '/api/v1/t/' +
+            photo.file.hash +
+            '/' +
+            model.config.previewToken +
+            '/tile_224',
+        cacheKey: photo.file.hash + 'tile_224',
+        headers: model.photoprismAuth.getAuthHeaders(),
+      );
+
+      final ImageErrorListener errorListener = (dynamic a, StackTrace b) {
+        photosFailed++;
+        model.photoprismLoadingScreen.updateLoadingScreen(
+            'Preloading thumbnails.. ($photosLoaded succcessful, $photosFailed failed)');
+        if (photosLoaded + photosFailed == model.photos.length) {
+          model.photoprismLoadingScreen.hideLoadingScreen();
+        }
+      };
+
+      final ImageStreamListener listener =
+          ImageStreamListener((ImageInfo info, _) {
+        photosLoaded++;
+        model.photoprismLoadingScreen.updateLoadingScreen(
+            'Preloading thumbnails.. ($photosLoaded succcessful, $photosFailed failed)');
+        if (photosLoaded + photosFailed == model.photos.length) {
+          model.photoprismLoadingScreen.hideLoadingScreen();
+        }
+      }, onError: errorListener);
+      provider
+          .resolve(const ImageConfiguration(size: Size.infinite))
+          .addListener(listener);
+    }
   }
 }

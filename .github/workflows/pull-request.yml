@@ -4,8 +4,14 @@ on: [pull_request]
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    services:
+      photoprism:
+        image: thielepaul/photoprism:db-api-demo
+        ports:
+          - 2342:2342
+    runs-on: ubuntu-20.04
     steps:
+      - run: sudo apt install libsqlite3-dev
       - uses: actions/checkout@v1
       - uses: actions/setup-java@v1
         with:
@@ -14,7 +20,9 @@ jobs:
         with:
           flutter-version: "1.22.x"
           channel: "stable"
+      - run: flutter pub get
       - run: flutter format --dry-run --set-exit-if-changed lib
+      - run: flutter packages pub run build_runner build
       - run: flutter analyze --pub
       - run: flutter test --coverage
       - run: flutter build apk --pub --profile --flavor dev --no-shrink

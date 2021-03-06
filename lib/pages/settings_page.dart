@@ -1,17 +1,17 @@
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
+import 'package:photoprism/api/api.dart';
 import 'package:photoprism/common/photoprism_uploader.dart';
-import 'package:photoprism/model/photo.dart';
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:photoprism/widgets/auth_dialog.dart';
 import 'package:photoprism/widgets/multi_select_dialog.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:photo_manager/photo_manager.dart' as photolib;
 import 'package:photoprism/pages/auto_upload_queue.dart';
 import 'package:photoprism/widgets/about.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:validators/sanitizers.dart';
 
 import 'log_view.dart';
 
@@ -66,6 +66,17 @@ class SettingsPage extends StatelessWidget {
                 emptyCache(context);
               },
             ),
+            ListTile(
+              title: const Text('preload_thumbnails').tr(),
+              leading: Container(
+                width: 10,
+                alignment: Alignment.center,
+                child: const Icon(Icons.delete),
+              ),
+              onTap: () {
+                Api.preloadThumbnails(model);
+              },
+            ),
             SwitchListTile(
               title: Text('auto_upload'.tr()),
               secondary: const Icon(Icons.cloud_upload),
@@ -75,6 +86,7 @@ class SettingsPage extends StatelessWidget {
                     await photolib.PhotoManager.requestPermission();
                 if (result) {
                   model.photoprismUploader.setAutoUpload(newState);
+                  model.photoprismUploader.initialize();
                   if (newState) {
                     configureAlbumsToUpload(context);
                   }
@@ -241,7 +253,8 @@ class SettingsPage extends StatelessWidget {
   }
 
   Future<void> configureAlbumsToUpload(BuildContext context) async {
-    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
+    final PhotoprismModel model =
+        Provider.of<PhotoprismModel>(context, listen: false);
 
     if (!await photolib.PhotoManager.requestPermission()) {
       model.photoprismMessage
@@ -280,7 +293,8 @@ class SettingsPage extends StatelessWidget {
   }
 
   Future<void> _settingsDisplayUrlDialog(BuildContext context) async {
-    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
+    final PhotoprismModel model =
+        Provider.of<PhotoprismModel>(context, listen: false);
     _urlTextFieldController.text = model.photoprismUrl;
 
     return showDialog(
@@ -304,7 +318,8 @@ class SettingsPage extends StatelessWidget {
               FlatButton(
                 child: Text('save'.tr()),
                 onPressed: () {
-                  setNewPhotoprismUrl(context, _urlTextFieldController.text);
+                  setNewPhotoprismUrl(
+                      context, rtrim(_urlTextFieldController.text, ' /'));
                 },
               )
             ],
@@ -313,31 +328,22 @@ class SettingsPage extends StatelessWidget {
   }
 
   Future<void> setNewPhotoprismUrl(BuildContext context, String url) async {
-    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
+    final PhotoprismModel model =
+        Provider.of<PhotoprismModel>(context, listen: false);
     Navigator.of(context).pop();
     await model.photoprismCommonHelper.setPhotoprismUrl(url);
     model.photoprismRemoteConfigLoader.loadApplicationColor();
-    emptyCache(context);
+    await emptyCache(context);
   }
 
   static Future<void> emptyCache(BuildContext context) async {
-    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
-    final SharedPreferences sp = await SharedPreferences.getInstance();
-    sp.remove('momentsTime');
-    sp.remove('photos');
-    sp.remove('videos');
-    sp.remove('albums');
-    if (model.albums != null) {
-      for (final int albumId in model.albums.keys) {
-        sp.remove('photos' + albumId.toString());
-      }
-    }
+    final PhotoprismModel model =
+        Provider.of<PhotoprismModel>(context, listen: false);
     model.photos = null;
-    model.videos = <int, Photo>{};
-    model.momentsTime = null;
     model.albums = null;
     model.config = null;
     await DefaultCacheManager().emptyCache();
+    await model.resetDatabase();
   }
 
   Widget _albumsToUploadText() => FutureBuilder<List<photolib.AssetPathEntity>>(

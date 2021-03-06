@@ -55,7 +55,8 @@ class _AuthDialogState extends State<AuthDialog> {
     return AlertDialog(
       title: const Text('authentication').tr(),
       content: SingleChildScrollView(
-          child: ListBody(
+          child: AutofillGroup(
+              child: ListBody(
         children: <Widget>[
           SwitchListTile(
             title: const Text('PhotoPrism'),
@@ -74,6 +75,7 @@ class _AuthDialogState extends State<AuthDialog> {
                     key: const ValueKey<String>('user'),
                     controller: _userController,
                     decoration: const InputDecoration(hintText: 'user'),
+                    autofillHints: const <String>[AutofillHints.username],
                   ))),
           Visibility(
               visible: enabled,
@@ -84,6 +86,7 @@ class _AuthDialogState extends State<AuthDialog> {
                     controller: _passwordController,
                     decoration: const InputDecoration(hintText: 'password'),
                     obscureText: true,
+                    autofillHints: const <String>[AutofillHints.password],
                   ))),
           SwitchListTile(
             title: const Text('HTTP Basic'),
@@ -102,6 +105,7 @@ class _AuthDialogState extends State<AuthDialog> {
                     key: const ValueKey<String>('httpBasicUserTextField'),
                     controller: _httpBasicUserController,
                     decoration: const InputDecoration(hintText: 'user'),
+                    autofillHints: const <String>[AutofillHints.username],
                   ))),
           Visibility(
               visible: httpBasicEnabled,
@@ -112,9 +116,10 @@ class _AuthDialogState extends State<AuthDialog> {
                     controller: _httpBasicPasswordController,
                     decoration: const InputDecoration(hintText: 'password'),
                     obscureText: true,
+                    autofillHints: const <String>[AutofillHints.password],
                   ))),
         ],
-      )),
+      ))),
       actions: <Widget>[
         FlatButton(
           child: const Text('cancel').tr(),

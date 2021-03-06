@@ -8,19 +8,36 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_uploader/flutter_uploader.dart';
 import 'package:intl/intl.dart';
-import 'package:photoprism/common/photo_manager.dart';
-import 'package:photoprism/model/album.dart';
+import 'package:photoprism/api/api.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path/path.dart';
 import 'package:background_fetch/background_fetch.dart';
-import 'package:photoprism/api/api.dart';
+import 'package:photoprism/api/db_api.dart';
+import 'package:photoprism/common/db.dart';
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:photo_manager/photo_manager.dart' as photolib;
 import 'package:connectivity/connectivity.dart';
 
 class PhotoprismUploader {
   PhotoprismUploader(this.photoprismModel) {
-    loadPreferences();
+    initialize();
+  }
+
+  PhotoprismModel photoprismModel;
+  Completer<int> uploadFinishedCompleter;
+  Completer<int> manualUploadFinishedCompleter;
+  FlutterUploader uploader;
+  String deviceName = '';
+  Map<String, Album> deviceAlbums = <String, Album>{};
+  int uploadsinProgress = 0;
+  int failedUploads = 0;
+
+  Future<void> initialize() async {
+    await loadPreferences();
+    if (!photoprismModel.autoUploadEnabled) {
+      print('photo upload disabled');
+      return;
+    }
     initPlatformState(photoprismModel);
     getPhotosToUpload(photoprismModel);
 
@@ -71,15 +88,6 @@ class PhotoprismUploader {
     });
   }
 
-  PhotoprismModel photoprismModel;
-  Completer<int> uploadFinishedCompleter;
-  Completer<int> manualUploadFinishedCompleter;
-  FlutterUploader uploader;
-  String deviceName = '';
-  Map<String, Album> deviceAlbums = <String, Album>{};
-  int uploadsinProgress = 0;
-  int failedUploads = 0;
-
   Future<void> setAutoUpload(bool autoUploadEnabledNew) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setBool('autoUploadEnabled', autoUploadEnabledNew);
@@ -117,19 +125,20 @@ class PhotoprismUploader {
 
   /// Starts image file picker, uploads photo(s) and imports them.
   Future<void> selectPhotoAndUpload(BuildContext context) async {
-    final List<io.File> files = await FilePicker.getMultiFile();
+    final FilePickerResult result = await FilePicker.platform.pickFiles();
 
     // list for flutter uploader
     final List<FileItem> filesToUpload = <FileItem>[];
 
     // check if at least one file was selected
-    if (files != null) {
-      filesToUpload.addAll(files.map<FileItem>((io.File file) => FileItem(
-          filename: basename(file.path),
-          savedDir: dirname(file.path),
-          fieldname: 'files')));
+    if (result != null) {
+      filesToUpload.addAll(result.files.map<FileItem>((PlatformFile file) =>
+          FileItem(
+              filename: basename(file.path),
+              savedDir: dirname(file.path),
+              fieldname: 'files')));
 
-      if (files.length > 1) {
+      if (result.count > 1) {
         photoprismModel.photoprismLoadingScreen
             .showLoadingScreen('Uploading photos..');
       } else {
@@ -155,7 +164,7 @@ class PhotoprismUploader {
         final int status = await Api.importPhotoEvent(photoprismModel, event);
 
         if (status == 0) {
-          await PhotoManager.loadMomentsTime(context, forceReload: true);
+          await DbApi.updateDb(photoprismModel);
           await photoprismModel.photoprismLoadingScreen.hideLoadingScreen();
           photoprismModel.photoprismMessage
               .showMessage('Uploading and importing successful.');
@@ -261,7 +270,8 @@ class PhotoprismUploader {
       }
     }
 
-    if (photoprismModel.photoprismUrl == 'https://demo.photoprism.org') {
+    if (photoprismModel.photoprismUrl == 'https://demo.photoprism.org' ||
+        photoprismModel.photoprismUrl == 'https://photoprism.p4u1.de') {
       model.addLogEntry('AutoUploader',
           'Auto upload disabled for demo page. Stopping autoupload routine.');
       return;
@@ -331,14 +341,16 @@ class PhotoprismUploader {
 
   Future<int> getRemoteAlbumsWithDeviceName(PhotoprismModel model) async {
     // Get list of albums from server which name is the device name of the smartphone.
-    final List<Album> deviceAlbumList =
-        await Api.searchAlbums(photoprismModel, deviceName);
+    await DbApi.updateDb(model);
+    final List<Album> deviceAlbumList = model.albums
+        .where((Album album) => album.title.contains(deviceName))
+        .toList();
     if (deviceAlbumList == null) {
       return -1;
     }
 
     deviceAlbums = Map<String, Album>.fromEntries(deviceAlbumList
-        .map((Album album) => MapEntry<String, Album>(album.name, album)));
+        .map((Album album) => MapEntry<String, Album>(album.title, album)));
 
     return 0;
   }
@@ -351,7 +363,7 @@ class PhotoprismUploader {
     final String albumName = '$deviceName – ${album.name}';
 
     if (deviceAlbums.containsKey(albumName)) {
-      albumId = deviceAlbums[albumName].id;
+      albumId = deviceAlbums[albumName].uid;
       model.addLogEntry(
           'AutoUploader',
           "Album '" +
@@ -404,7 +416,7 @@ class PhotoprismUploader {
           photoprismModel, id, filehash, albumId)) {
         model.addLogEntry(
             'AutoUploader',
-            "Photo was already uploaded and added to album '" +
+            "Photo $filename was already uploaded and added to album '" +
                 albumName +
                 "'. Skipping uploading and importing.");
         continue;
@@ -414,27 +426,30 @@ class PhotoprismUploader {
       final bool status =
           await Api.upload(photoprismModel, filehash, filename, imageFile);
       if (status) {
-        model.addLogEntry('AutoUploader', "Uploading photo successful'.");
-      } else {
         model.addLogEntry(
-            'AutoUploader', "Uploading photo failed'. Skipping to next photo.");
+            'AutoUploader', "Uploading photo $filename successful'.");
+      } else {
+        model.addLogEntry('AutoUploader',
+            "Uploading photo $filename failed'. Skipping to next photo.");
         continue;
       }
 
       // add uploaded photo to shared pref
       if (await Api.importPhotos(
           photoprismModel.photoprismUrl, photoprismModel, filehash)) {
+        await DbApi.updateDb(model);
         if (await isPhotoOnServerAndAddToAlbum(
             photoprismModel, id, filehash, albumId)) {
-          model.addLogEntry(
-              'AutoUploader', 'Photo was imported and added to album.');
+          model.addLogEntry('AutoUploader',
+              'Photo $filename was imported and added to album.');
           continue;
         }
       } else {
         model.addLogEntry(
-            'AutoUploader', 'ERROR: Photo could not be imported.');
+            'AutoUploader', 'ERROR: Photo $filename could not be imported.');
       }
-      model.addLogEntry('AutoUploader', 'Adding photo to failed upload list.');
+      model.addLogEntry(
+          'AutoUploader', 'Adding photo $filename to failed upload list.');
       saveAndSetPhotosUploadFailed(
           photoprismModel, photoprismModel.photosUploadFailed..add(id));
     }
@@ -442,12 +457,15 @@ class PhotoprismUploader {
 
   static Future<bool> isPhotoOnServerAndAddToAlbum(
       PhotoprismModel model, String id, String filehash, String albumId) async {
-    final String photoUUID = await Api.getUuidFromHash(model, filehash);
-    if (photoUUID.isEmpty) {
+    final File file = await model.database.getFileFromHash(filehash);
+    if (file == null || file.photoUID == null) {
       return false;
     }
-    if (await Api.addPhotosToAlbum(albumId, <String>[photoUUID], model) != 0) {
-      return false;
+    if (!await model.database.isPhotoAlbum(file.photoUID, albumId)) {
+      if (await Api.addPhotosToAlbum(albumId, <String>[file.photoUID], model) !=
+          0) {
+        return false;
+      }
     }
     saveAndSetAlreadyUploadedPhotos(
         model, model.alreadyUploadedPhotos..add(id));

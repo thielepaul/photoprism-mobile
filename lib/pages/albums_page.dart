@@ -1,8 +1,9 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:photoprism/api/api.dart';
-import 'package:photoprism/common/album_manager.dart';
+import 'package:photoprism/api/db_api.dart';
 import 'package:photoprism/common/hexcolor.dart';
+import 'package:photoprism/model/filter_photos.dart';
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:photoprism/pages/album_detail_view.dart';
 import 'package:provider/provider.dart';
@@ -14,12 +15,14 @@ class AlbumsPage extends StatelessWidget {
   static String getAlbumPreviewUrl(BuildContext context, int index) {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
     if (model.albums != null &&
+        model.albums.length - 1 >= index &&
         model.albums[index] != null &&
-        model.albums[index].imageCount > 0 &&
+        model.albumCounts != null &&
+        model.albumCounts[model.albums[index].uid] != null &&
         model.config != null) {
       return model.photoprismUrl +
           '/api/v1/albums/' +
-          model.albums[index].id +
+          model.albums[index].uid +
           '/t/' +
           model.config.previewToken +
           '/tile_500';
@@ -29,7 +32,8 @@ class AlbumsPage extends StatelessWidget {
   }
 
   Future<void> createAlbum(BuildContext context) async {
-    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
+    final PhotoprismModel model =
+        Provider.of<PhotoprismModel>(context, listen: false);
     model.photoprismLoadingScreen
         .showLoadingScreen('create_album'.tr() + '...');
     final String uuid = await Api.createAlbum('New album', model);
@@ -38,7 +42,9 @@ class AlbumsPage extends StatelessWidget {
       await model.photoprismLoadingScreen.hideLoadingScreen();
       model.photoprismMessage.showMessage('Creating album failed.');
     } else {
-      await AlbumManager.loadAlbums(context, 0, forceReload: true);
+      await DbApi.updateDb(model);
+      model.albumUid = uuid;
+      model.updatePhotosSubscription();
       await model.photoprismLoadingScreen.hideLoadingScreen();
 
       Navigator.push<void>(
@@ -50,6 +56,17 @@ class AlbumsPage extends StatelessWidget {
                 context)),
       );
     }
+  }
+
+  String _albumCount(PhotoprismModel model, int index) {
+    if (index >= model.albums.length) {
+      return '0';
+    }
+    final String uid = model.albums[index].uid;
+    if (model.albumCounts.containsKey(uid)) {
+      return model.albumCounts[uid].toString();
+    }
+    return '0';
   }
 
   @override
@@ -64,7 +81,6 @@ class AlbumsPage extends StatelessWidget {
               icon: const Icon(Icons.add),
               tooltip: 'create_album'.tr(),
               onPressed: () {
-                //model.photoprismAlbumManager.createAlbum();
                 createAlbum(context);
               },
             ),
@@ -72,8 +88,8 @@ class AlbumsPage extends StatelessWidget {
         ),
         body: RefreshIndicator(child: OrientationBuilder(
             builder: (BuildContext context, Orientation orientation) {
-          if (model.albums == null) {
-            AlbumManager.loadAlbums(context, 0);
+          if (model.dbTimestamps.isEmpty) {
+            DbApi.updateDb(model);
             return const Text('', key: ValueKey<String>('albumsGridView'));
           }
           return GridView.builder(
@@ -88,6 +104,9 @@ class AlbumsPage extends StatelessWidget {
               itemBuilder: (BuildContext context, int index) {
                 return GestureDetector(
                     onTap: () {
+                      model.albumUid = model.albums[index].uid;
+                      model.filterPhotos = FilterPhotos();
+                      model.updatePhotosSubscription();
                       Navigator.push<void>(
                           context,
                           MaterialPageRoute<void>(
@@ -110,16 +129,19 @@ class AlbumsPage extends StatelessWidget {
                             child: GridTileBar(
                               backgroundColor: Colors.black45,
                               trailing: Text(
-                                model.albums[index].imageCount.toString(),
+                                _albumCount(model, index),
                                 style: const TextStyle(color: Colors.white),
                               ),
-                              title: _GridTitleText(model.albums[index].name),
+                              title: _GridTitleText(
+                                  model.albums.length - 1 >= index
+                                      ? model.albums[index].title
+                                      : ''),
                             ),
                           ),
                         )));
               });
         }), onRefresh: () async {
-          return AlbumManager.loadAlbums(context, 0, forceReload: true);
+          return DbApi.updateDb(model);
         }));
   }
 }

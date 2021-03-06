@@ -1,45 +1,47 @@
+import 'dart:io' as io;
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:drag_select_grid_view/drag_select_grid_view.dart';
-import 'package:esys_flutter_share/esys_flutter_share.dart';
 import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photoprism/api/api.dart';
+import 'package:photoprism/api/db_api.dart';
 import 'package:photoprism/common/album_manager.dart';
+import 'package:photoprism/common/db.dart';
 import 'package:photoprism/common/hexcolor.dart';
 import 'package:photoprism/common/photo_manager.dart';
 import 'package:photoprism/common/transparent_route.dart';
-import 'package:photoprism/model/moments_time.dart';
-import 'package:photoprism/model/photo.dart';
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:photoprism/pages/photoview.dart';
 import 'package:draggable_scrollbar/draggable_scrollbar.dart';
+import 'package:photoprism/widgets/filter_photos_dialog.dart';
 import 'package:photoprism/widgets/selectable_tile.dart';
 import 'package:provider/provider.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:share/share.dart';
 
 class PhotosPage extends StatelessWidget {
-  const PhotosPage({Key key, this.albumId, this.videosPage = false})
-      : super(key: key);
+  const PhotosPage({Key key, this.albumId}) : super(key: key);
 
   final int albumId;
-  final bool videosPage;
 
-  static Future<void> archiveSelectedPhotos(
-      BuildContext context, bool videosPage) async {
-    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
-    final List<String> selectedPhotos = model
-        .gridController.selection.selectedIndexes
-        .map<String>((int element) =>
-            PhotoManager.getPhotos(context, null, videosPage)[element].uid)
+  static Future<void> archiveSelectedPhotos(BuildContext context) async {
+    final PhotoprismModel model =
+        Provider.of<PhotoprismModel>(context, listen: false);
+    final List<Future<String>> selectedPhotos = model
+        .gridController.value.selectedIndexes
+        .map<Future<String>>(
+            (int element) async => (await model.photos[element]).photo.uid)
         .toList();
 
-    PhotoManager.archivePhotos(context, selectedPhotos);
+    PhotoManager.archivePhotos(context, await Future.wait(selectedPhotos));
   }
 
-  static void _selectAlbumBottomSheet(BuildContext context, bool videosPage) {
-    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
+  static void _selectAlbumBottomSheet(BuildContext context) {
+    final PhotoprismModel model =
+        Provider.of<PhotoprismModel>(context, listen: false);
     if (model.albums == null) {
-      AlbumManager.loadAlbums(context, 0);
+      DbApi.updateDb(model);
     }
 
     showModalBottomSheet<void>(
@@ -49,9 +51,9 @@ class PhotosPage extends StatelessWidget {
               itemCount: model.albums == null ? 0 : model.albums.length,
               itemBuilder: (BuildContext ctxt, int index) {
                 return ListTile(
-                  title: Text(model.albums[index].name),
+                  title: Text(model.albums[index].title),
                   onTap: () {
-                    addPhotosToAlbum(index, context, videosPage);
+                    addPhotosToAlbum(index, context);
                   },
                 );
               });
@@ -59,82 +61,104 @@ class PhotosPage extends StatelessWidget {
   }
 
   static Future<void> _sharePhotos(BuildContext context) async {
-    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
-    final Map<String, List<int>> photos = <String, List<int>>{};
+    final PhotoprismModel model =
+        Provider.of<PhotoprismModel>(context, listen: false);
     model.photoprismLoadingScreen
         .showLoadingScreen('Preparing photos for sharing...');
-    for (final int index in model.gridController.selection.selectedIndexes) {
-      final List<int> bytes =
-          await Api.downloadPhoto(model, model.photos[index].hash);
-      if (bytes == null) {
-        model.photoprismLoadingScreen.hideLoadingScreen();
-        return;
+    final List<String> photoFiles = <String>[];
+    final List<String> mimeTypes = <String>[];
+    for (final int index in model.gridController.value.selectedIndexes) {
+      final io.File photoFile =
+          await Api.downloadPhoto(model, (await model.photos[index]).file.hash);
+      if (photoFile != null) {
+        photoFiles.add(photoFile.path);
+        mimeTypes.add('image/jpg');
       }
-      photos[model.photos[index].hash + '.jpg'] = bytes;
     }
     model.photoprismLoadingScreen.hideLoadingScreen();
-    Share.files('Photoprism Photos', photos, 'image/jpg');
+    await Share.shareFiles(photoFiles, mimeTypes: mimeTypes);
   }
 
   static Future<void> addPhotosToAlbum(
-      int albumId, BuildContext context, bool videosPage) async {
+      int albumId, BuildContext context) async {
     Navigator.pop(context);
 
-    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
-    final List<String> selectedPhotos = model
-        .gridController.selection.selectedIndexes
-        .map<String>((int element) =>
-            PhotoManager.getPhotos(context, null, videosPage)[element].uid)
+    final PhotoprismModel model =
+        Provider.of<PhotoprismModel>(context, listen: false);
+    final List<Future<String>> selectedPhotos = model
+        .gridController.value.selectedIndexes
+        .map<Future<String>>(
+            (int element) async => (await model.photos[element]).photo.uid)
         .toList();
 
     model.gridController.clear();
-    AlbumManager.addPhotosToAlbum(context, albumId, selectedPhotos);
+    AlbumManager.addPhotosToAlbum(
+        context, albumId, await Future.wait(selectedPhotos));
   }
 
-  Text getMonthFromOffset(
-      BuildContext context, ScrollController scrollController) {
-    for (final MomentsTime m
-        in PhotoManager.getCummulativeMonthCount(context)) {
-      if (m.count >= PhotoManager.getPhotoIndexInScrollView(context, albumId)) {
-        return Text('${m.month}/${m.year}');
-      }
+  Text getMonthFromOffset(BuildContext context) {
+    final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
+    final PhotoWithFile photo =
+        model.photos.getNow(PhotoManager.getPhotoIndexInScrollView(context));
+    if (photo == null) {
+      return const Text('');
     }
-    return const Text('');
+    final DateTime takenAt = photo.photo.takenAt;
+    return Text('${takenAt.month}/${takenAt.year}');
   }
 
   Widget displayPhotoIfUrlLoaded(BuildContext context, int index) {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
-    final String imageUrl =
-        PhotoManager.getPhotoThumbnailUrl(context, index, albumId, videosPage);
-    if (imageUrl == null) {
-      PhotoManager.loadPhoto(context, index, albumId, videosPage);
+    if (!(index < model.photos.length)) {
       return Container(
         color: Colors.grey[300],
       );
     }
-    return CachedNetworkImage(
-      httpHeaders: model.photoprismAuth.getAuthHeaders(),
-      alignment: Alignment.center,
-      fit: BoxFit.contain,
-      imageUrl: imageUrl,
-      placeholder: (BuildContext context, String url) => Container(
-        color: Colors.grey[300],
-      ),
-      errorWidget: (BuildContext context, String url, Object error) =>
-          const Icon(Icons.error),
-    );
+
+    return FutureBuilder<PhotoWithFile>(
+        future: model.photos[index],
+        builder: (BuildContext context, AsyncSnapshot<PhotoWithFile> snapshot) {
+          if (snapshot.data == null) {
+            return Container(
+              color: Colors.grey[300],
+            );
+          }
+          final PhotoWithFile photo = snapshot.data;
+          final String imageUrl =
+              PhotoManager.getPhotoThumbnailUrl(context, photo);
+          if (imageUrl == null) {
+            return Container(
+              color: Colors.grey[300],
+            );
+          }
+          return CachedNetworkImage(
+            cacheKey: photo.file.hash + 'tile_224',
+            httpHeaders: model.photoprismAuth.getAuthHeaders(),
+            alignment: Alignment.center,
+            fit: BoxFit.contain,
+            imageUrl: imageUrl,
+            placeholder: (BuildContext context, String url) => Container(
+              color: Colors.grey[300],
+            ),
+            errorWidget: (BuildContext context, String url, Object error) =>
+                Container(
+              color: Colors.grey[300],
+              child: const Icon(Icons.error),
+              alignment: Alignment.center,
+            ),
+          );
+        });
   }
 
-  static AppBar appBar(BuildContext context, bool videosPage) {
+  static AppBar appBar(BuildContext context) {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
 
     return AppBar(
-      title: model.gridController.selection.selectedIndexes.isNotEmpty
-          ? Text(
-              model.gridController.selection.selectedIndexes.length.toString())
+      title: model.gridController.value.selectedIndexes.isNotEmpty
+          ? Text(model.gridController.value.selectedIndexes.length.toString())
           : const Text('PhotoPrism'),
       backgroundColor: HexColor(model.applicationColor),
-      leading: model.gridController.selection.selectedIndexes.isNotEmpty
+      leading: model.gridController.value.selectedIndexes.isNotEmpty
           ? IconButton(
               icon: const Icon(Icons.close),
               onPressed: () {
@@ -142,20 +166,20 @@ class PhotosPage extends StatelessWidget {
               },
             )
           : null,
-      actions: model.gridController.selection.selectedIndexes.isNotEmpty
+      actions: model.gridController.value.selectedIndexes.isNotEmpty
           ? <Widget>[
               IconButton(
                 icon: const Icon(Icons.archive),
                 tooltip: 'archive_photos'.tr(),
                 onPressed: () {
-                  archiveSelectedPhotos(context, videosPage);
+                  archiveSelectedPhotos(context);
                 },
               ),
               IconButton(
                 icon: const Icon(Icons.add),
                 tooltip: 'add_to_album'.tr(),
                 onPressed: () {
-                  _selectAlbumBottomSheet(context, videosPage);
+                  _selectAlbumBottomSheet(context);
                 },
               ),
               IconButton(
@@ -172,11 +196,17 @@ class PhotosPage extends StatelessWidget {
                   PopupMenuItem<int>(
                     value: 0,
                     child: const Text('upload_photo').tr(),
+                  ),
+                  PopupMenuItem<int>(
+                    value: 1,
+                    child: const Text('filter_and_sort').tr(),
                   )
                 ],
                 onSelected: (int choice) {
                   if (choice == 0) {
                     model.photoprismUploader.selectPhotoAndUpload(context);
+                  } else if (choice == 1) {
+                    FilterPhotosDialog.show(context);
                   }
                 },
               ),
@@ -187,34 +217,26 @@ class PhotosPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
+
     final ScrollController _scrollController = model.scrollController;
 
     final DragSelectGridViewController gridController =
         Provider.of<PhotoprismModel>(context).gridController;
 
-    final int tileCount =
-        PhotoManager.getPhotosCount(context, albumId, videosPage);
+    final int tileCount = model.photos != null ? model.photos.length : 0;
 
-    //if (Photos.getPhotoList(context, albumId).length == 0) {
-    //  return IconButton(onPressed: () => {}, icon: Icon(Icons.add));
-    //}
     return RefreshIndicator(child: OrientationBuilder(
         builder: (BuildContext context, Orientation orientation) {
       if (model.config == null) {
         Api.loadConfig(model);
       }
-      if (videosPage) {
-        return const Text('', key: ValueKey<String>('videosGridView'));
-      }
-      if (albumId == null && model.momentsTime == null) {
-        PhotoManager.loadMomentsTime(context);
+      if (model.dbTimestamps.isEmpty) {
+        DbApi.updateDb(model, context: context);
         return const Text('', key: ValueKey<String>('photosGridView'));
       }
 
       return DraggableScrollbar.semicircle(
-        labelTextBuilder: albumId == null
-            ? (double offset) => getMonthFromOffset(context, _scrollController)
-            : null,
+        labelTextBuilder: (double offset) => getMonthFromOffset(context),
         heightScrollThumb: 50.0,
         controller: _scrollController,
         child: DragSelectGridView(
@@ -237,15 +259,14 @@ class PhotosPage extends StatelessWidget {
                   gridController: gridController,
                   selected: selected,
                   onTap: () {
-                    Provider.of<PhotoprismModel>(context)
+                    Provider.of<PhotoprismModel>(context, listen: false)
                         .photoprismCommonHelper
                         .setPhotoViewScaleState(PhotoViewScaleState.initial);
                     Navigator.push(
                         context,
                         TransparentRoute(
                           builder: (BuildContext context) =>
-                              FullscreenPhotoGallery(
-                                  index, albumId, videosPage),
+                              FullscreenPhotoGallery(index, albumId),
                         ));
                   },
                   child: Hero(
@@ -258,15 +279,8 @@ class PhotosPage extends StatelessWidget {
             }),
       );
     }), onRefresh: () async {
-      if (albumId != null) {
-        await AlbumManager.loadAlbums(context, 0,
-            forceReload: true, loadPhotosForAlbumId: albumId);
-      } else if (videosPage) {
-        PhotoManager.saveAndSetPhotos(context, <int, Photo>{}, null, true);
-        await Api.loadConfig(model);
-      } else {
-        return await PhotoManager.loadMomentsTime(context, forceReload: true);
-      }
+      await Api.loadConfig(model);
+      await DbApi.updateDb(model);
     });
   }
 }
