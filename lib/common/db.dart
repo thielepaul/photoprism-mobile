@@ -46,22 +46,22 @@ class MyDatabase extends _$MyDatabase {
 
   Stream<List<Album>> get allAlbums => (select(albums)
         ..where(($AlbumsTable tbl) =>
-            isNull(tbl.deletedAt) & tbl.type.equals('album')))
+            tbl.deletedAt.isNull() & tbl.type.equals('album')))
       .watch();
 
   Future<File> getFileFromHash(String hash) => ((select(files)
         ..where(
-            ($FilesTable tbl) => isNotNull(tbl.hash) & tbl.hash.equals(hash)))
+            ($FilesTable tbl) => tbl.hash.isNotNull() & tbl.hash.equals(hash)))
         ..limit(1))
       .getSingle();
 
   Future<File> getVideoFileForPhoto(String photoUid) => ((select(files)
         ..where(($FilesTable tbl) =>
-            isNotNull(tbl.photoUID) &
+            tbl.photoUID.isNotNull() &
             tbl.photoUID.equals(photoUid) &
-            isNotNull(tbl.video) &
+            tbl.video.isNotNull() &
             tbl.video &
-            isNotNull(tbl.hash)))
+            tbl.hash.isNotNull()))
         ..limit(1))
       .getSingle();
 
@@ -78,7 +78,7 @@ class MyDatabase extends _$MyDatabase {
 
     final JoinedSelectStatement<Table, DataClass> query = (select(albums)
           ..where(($AlbumsTable tbl) =>
-              isNull(tbl.deletedAt) & tbl.type.equals('album')))
+              tbl.deletedAt.isNull() & tbl.type.equals('album')))
         .join(<Join<Table, DataClass>>[
       innerJoin(photosAlbums, photosAlbums.albumUID.equalsExp(albums.uid),
           useColumns: false)
@@ -132,16 +132,16 @@ class MyDatabase extends _$MyDatabase {
     }
 
     return query
-      ..where(isNotNull(files.hash) &
-          isNotNull(files.primary) &
+      ..where(files.hash.isNotNull() &
+          files.primary.isNotNull() &
           files.primary &
           files.error.equals('') &
-          isNull(files.deletedAt) &
+          files.deletedAt.isNull() &
           (filterPhotos.archived
-              ? isNotNull(photos.deletedAt)
-              : isNull(photos.deletedAt)) &
-          isNotNull(photos.takenAt) &
-          isNotNull(photos.type) &
+              ? photos.deletedAt.isNotNull()
+              : photos.deletedAt.isNull()) &
+          photos.takenAt.isNotNull() &
+          photos.type.isNotNull() &
           photos.type.isIn(filterPhotos.typesAsString))
       ..orderBy(<OrderingTerm>[
         OrderingTerm(expression: sortColumn, mode: filterPhotos.order)

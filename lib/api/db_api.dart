@@ -20,7 +20,7 @@ class DbApi {
 
   static Future<List<dynamic>> _loadDbBatch(
       PhotoprismModel model, String table, bool deleted, String since) async {
-    final String url = model.photoprismUrl +
+    final Uri url = Uri.parse(model.photoprismUrl +
         '/api/v1/db' +
         '?count=' +
         resultCount.toString() +
@@ -28,7 +28,7 @@ class DbApi {
         table +
         '&deleted=' +
         deleted.toString() +
-        (since != null ? '&since=' + since : '');
+        (since != null ? '&since=' + since : ''));
     final http.Response response = await Api.httpAuth(model,
             () => http.get(url, headers: model.photoprismAuth.getAuthHeaders()))
         as http.Response;

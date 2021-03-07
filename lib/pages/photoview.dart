@@ -179,7 +179,7 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
           );
 
           final Widget videoChild =
-              (videoController != null && videoController.value.initialized)
+              (videoController != null && videoController.value.isInitialized)
                   ? AspectRatio(
                       aspectRatio: videoController.value.aspectRatio,
                       child: VideoPlayer(videoController),
@@ -447,14 +447,14 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
             return AlertDialog(
               title: const Text('share_photo_or_video').tr(),
               actions: <Widget>[
-                FlatButton(
+                TextButton(
                   child: const Text('video').tr(),
                   onPressed: () {
                     shareVideoFile(index, model);
                     Navigator.of(context).pop();
                   },
                 ),
-                FlatButton(
+                TextButton(
                   child: const Text('photo').tr(),
                   onPressed: () {
                     sharePhotoFile(index, model);

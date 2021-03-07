@@ -121,13 +121,13 @@ class _AuthDialogState extends State<AuthDialog> {
         ],
       ))),
       actions: <Widget>[
-        FlatButton(
+        TextButton(
           child: const Text('cancel').tr(),
           onPressed: () {
             Navigator.of(context).pop();
           },
         ),
-        FlatButton(
+        TextButton(
           child: const Text('save').tr(),
           onPressed: () => saveAndPop(),
         )

@@ -24,7 +24,8 @@ class PhotoprismRemoteSettingsLoader {
     try {
       final http.Response response = await Api.httpAuth(
               photoprismModel,
-              () => http.get(photoprismModel.photoprismUrl + '/api/v1/settings',
+              () => http.get(
+                  Uri.parse(photoprismModel.photoprismUrl + '/api/v1/settings'),
                   headers: photoprismModel.photoprismAuth.getAuthHeaders()))
           as http.Response;
 

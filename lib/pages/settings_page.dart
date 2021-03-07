@@ -11,7 +11,6 @@ import 'package:photo_manager/photo_manager.dart' as photolib;
 import 'package:photoprism/pages/auto_upload_queue.dart';
 import 'package:photoprism/widgets/about.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:validators/sanitizers.dart';
 
 import 'log_view.dart';
 
@@ -309,17 +308,20 @@ class SettingsPage extends StatelessWidget {
                   hintText: 'https://demo.photoprism.org'),
             ),
             actions: <Widget>[
-              FlatButton(
+              TextButton(
                 child: Text('cancel'.tr()),
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
               ),
-              FlatButton(
+              TextButton(
                 child: Text('save'.tr()),
                 onPressed: () {
-                  setNewPhotoprismUrl(
-                      context, rtrim(_urlTextFieldController.text, ' /'));
+                  String url = _urlTextFieldController.text;
+                  if (url.endsWith('/')) {
+                    url = url.substring(0, url.length - 1);
+                  }
+                  setNewPhotoprismUrl(context, url);
                 },
               )
             ],
