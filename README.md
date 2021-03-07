@@ -10,7 +10,7 @@ If you want to use the latest version of the app until this is merged, you can e
 
 Get the latest version of the mobile app including the backend incompatible changes:
 * [APK for Android](https://github.com/photoprism/photoprism-mobile/releases/download/latest-db-api/photoprism.apk)
-* Testflight for iOS (to come)
+* [Testflight for iOS](https://testflight.apple.com/join/3NL12xyh)
 
 ## Features
 - View your photoprism photos and albums
