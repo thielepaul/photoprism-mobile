@@ -14,9 +14,15 @@ import 'package:photoprism/model/photoprism_model.dart';
 
 enum PageIndex { Photos, Albums, Settings }
 
-void main() {
+// https://github.com/aissat/easy_localization#%EF%B8%8F-configuration-app
+// ignore: avoid_void_async
+void main() async {
   // use this for debugging animations
   // timeDilation = 10.0;
+
+  WidgetsFlutterBinding.ensureInitialized();
+  await EasyLocalization.ensureInitialized();
+
   runApp(
     EasyLocalization(
         supportedLocales: const <Locale>[
@@ -51,9 +57,10 @@ class PhotoprismApp extends StatelessWidget {
         colorScheme: ColorScheme.light(
           primary: applicationColor,
         ),
-        textSelectionColor: applicationColor,
-        textSelectionHandleColor: applicationColor,
-        cursorColor: applicationColor,
+        textSelectionTheme: TextSelectionThemeData(
+            cursorColor: applicationColor,
+            selectionColor: applicationColor,
+            selectionHandleColor: applicationColor),
         floatingActionButtonTheme: FloatingActionButtonThemeData(
             backgroundColor: applicationColor, foregroundColor: Colors.white),
         inputDecorationTheme: InputDecorationTheme(

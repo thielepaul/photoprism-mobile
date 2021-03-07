@@ -42,11 +42,11 @@ class _MultiSelectDialogState extends State<MultiSelectDialog> {
                         },
                         value: selected.contains(widget.ids[position])))),
         actions: <Widget>[
-          FlatButton(
+          TextButton(
             child: Text('cancel'.tr()),
             onPressed: () => Navigator.of(context).pop(widget.selected.toSet()),
           ),
-          FlatButton(
+          TextButton(
             child: Text('save'.tr()),
             onPressed: () => Navigator.of(context).pop(selected),
           )

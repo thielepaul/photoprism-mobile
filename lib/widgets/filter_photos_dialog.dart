@@ -117,17 +117,17 @@ class _FilterPhotosDialogState extends State<FilterPhotosDialog> {
         ],
       )),
       actions: <Widget>[
-        FlatButton(
+        TextButton(
           child: const Text('cancel').tr(),
           onPressed: () {
             Navigator.of(context).pop();
           },
         ),
-        FlatButton(
+        TextButton(
           child: const Text('set_as_default').tr(),
           onPressed: () => saveAndPop(asDefault: true),
         ),
-        FlatButton(
+        TextButton(
           child: const Text('apply').tr(),
           onPressed: () => saveAndPop(asDefault: false),
         ),

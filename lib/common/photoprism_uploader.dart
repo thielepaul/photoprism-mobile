@@ -125,7 +125,8 @@ class PhotoprismUploader {
 
   /// Starts image file picker, uploads photo(s) and imports them.
   Future<void> selectPhotoAndUpload(BuildContext context) async {
-    final FilePickerResult result = await FilePicker.platform.pickFiles();
+    final FilePickerResult result =
+        await FilePicker.platform.pickFiles(type: FileType.media);
 
     // list for flutter uploader
     final List<FileItem> filesToUpload = <FileItem>[];

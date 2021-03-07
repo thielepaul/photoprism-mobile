@@ -160,13 +160,13 @@ class AlbumDetailView extends StatelessWidget {
               controller: _renameAlbumTextFieldController,
             ),
             actions: <Widget>[
-              FlatButton(
+              TextButton(
                 child: const Text('Cancel'),
                 onPressed: () {
                   Navigator.pop(context);
                 },
               ),
-              FlatButton(
+              TextButton(
                 child: const Text('Rename album'),
                 onPressed: () {
                   _renameAlbum(context);
@@ -186,13 +186,13 @@ class AlbumDetailView extends StatelessWidget {
             content: const Text(
                 'Are you sure you want to delete this album? Your photos will not be deleted.'),
             actions: <Widget>[
-              FlatButton(
+              TextButton(
                 child: const Text('Cancel'),
                 onPressed: () {
                   Navigator.pop(context);
                 },
               ),
-              FlatButton(
+              TextButton(
                 child: const Text('Delete album'),
                 onPressed: () {
                   _deleteAlbum(albumContext);

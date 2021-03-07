@@ -48,7 +48,7 @@ class Api {
     try {
       final http.Response response = await httpAuth(
           model,
-          () => http.post(model.photoprismUrl + '/api/v1/albums',
+          () => http.post(Uri.parse(model.photoprismUrl + '/api/v1/albums'),
               body: body,
               headers: model.photoprismAuth.getAuthHeaders())) as http.Response;
 
@@ -70,7 +70,8 @@ class Api {
     try {
       final http.Response response = await httpAuth(
           model,
-          () => http.put(model.photoprismUrl + '/api/v1/albums/' + albumId,
+          () => http.put(
+              Uri.parse(model.photoprismUrl + '/api/v1/albums/' + albumId),
               body: body,
               headers: model.photoprismAuth.getAuthHeaders())) as http.Response;
 
@@ -90,7 +91,8 @@ class Api {
     try {
       final http.Response response = await httpAuth(
           model,
-          () => http.post(model.photoprismUrl + '/api/v1/batch/albums/delete',
+          () => http.post(
+              Uri.parse(model.photoprismUrl + '/api/v1/batch/albums/delete'),
               body: body,
               headers: model.photoprismAuth.getAuthHeaders())) as http.Response;
 
@@ -117,7 +119,10 @@ class Api {
       final http.Response response = await httpAuth(
           model,
           () => http.post(
-              model.photoprismUrl + '/api/v1/albums/' + albumId + '/photos',
+              Uri.parse(model.photoprismUrl +
+                  '/api/v1/albums/' +
+                  albumId +
+                  '/photos'),
               body: body,
               headers: model.photoprismAuth.getAuthHeaders())) as http.Response;
       if (response.statusCode == 200) {
@@ -173,7 +178,8 @@ class Api {
     try {
       final http.Response response = await httpAuth(
           model,
-          () => http.post(model.photoprismUrl + '/api/v1/batch/photos/archive',
+          () => http.post(
+              Uri.parse(model.photoprismUrl + '/api/v1/batch/photos/archive'),
               body: body,
               headers: model.photoprismAuth.getAuthHeaders())) as http.Response;
       if (response.statusCode == 200) {
@@ -191,7 +197,8 @@ class Api {
     try {
       final http.Response response = await httpAuth(
           model,
-          () => http.post(photoprismUrl + '/api/v1/import/upload/$fileHash',
+          () => http.post(
+              Uri.parse(photoprismUrl + '/api/v1/import/upload/$fileHash'),
               body: '{}',
               headers: model.photoprismAuth.getAuthHeaders())) as http.Response;
       return response.statusCode == 200;
@@ -207,7 +214,7 @@ class Api {
       final http.Response response = await httpAuth(
           model,
           () => http.post(
-              model.photoprismUrl + '/api/v1/import/upload/' + event,
+              Uri.parse(model.photoprismUrl + '/api/v1/import/upload/' + event),
               body: '{}',
               headers: model.photoprismAuth.getAuthHeaders())) as http.Response;
       if (response.statusCode == 200) {
@@ -255,7 +262,7 @@ class Api {
     }
 
     final http.Response response = await http.post(
-        model.photoprismUrl + '/api/v1/session',
+        Uri.parse(model.photoprismUrl + '/api/v1/session'),
         headers: model.photoprismAuth.getAuthHeaders(),
         body:
             '{"username":"${model.photoprismAuth.user}", "password":"${model.photoprismAuth.password}"}');
@@ -323,7 +330,7 @@ class Api {
   static Future<bool> loadConfig(PhotoprismModel model) async {
     final http.Response response = await httpAuth(
         model,
-        () => http.get(model.photoprismUrl + '/api/v1/config',
+        () => http.get(Uri.parse(model.photoprismUrl + '/api/v1/config'),
             headers: model.photoprismAuth.getAuthHeaders())) as http.Response;
     if (response == null || response.statusCode != 200) {
       model.config = null;

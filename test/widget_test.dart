@@ -16,6 +16,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 class TestHttpOverrides extends HttpOverrides {}
 
 Future<void> pumpPhotoPrism(WidgetTester tester, PhotoprismModel model) async {
+  await EasyLocalization.ensureInitialized();
+
   await tester.runAsync(() async {
     await tester.pumpWidget(
       EasyLocalization(
