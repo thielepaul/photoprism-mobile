@@ -49,11 +49,11 @@ class MyDatabase extends _$MyDatabase {
             tbl.deletedAt.isNull() & tbl.type.equals('album')))
       .watch();
 
-  Future<File> getFileFromHash(String hash) => ((select(files)
+  Future<List<File>> getFileFromHash(String hash) => ((select(files)
         ..where(
             ($FilesTable tbl) => tbl.hash.isNotNull() & tbl.hash.equals(hash)))
         ..limit(1))
-      .getSingle();
+      .get();
 
   Future<File> getVideoFileForPhoto(String photoUid) => ((select(files)
         ..where(($FilesTable tbl) =>
@@ -66,11 +66,11 @@ class MyDatabase extends _$MyDatabase {
       .getSingle();
 
   Future<bool> isPhotoAlbum(String photoUid, String albumUid) async {
-    final Future<PhotosAlbum> result = (select(photosAlbums)
+    final Future<List<PhotosAlbum>> result = (select(photosAlbums)
           ..where(($PhotosAlbumsTable tbl) =>
               tbl.photoUID.equals(photoUid) & tbl.albumUID.equals(albumUid)))
-        .getSingle();
-    return await result != null;
+        .get();
+    return (await result).isNotEmpty;
   }
 
   Stream<Map<String, int>> allAlbumCounts() {

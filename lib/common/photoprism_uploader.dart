@@ -458,12 +458,13 @@ class PhotoprismUploader {
 
   static Future<bool> isPhotoOnServerAndAddToAlbum(
       PhotoprismModel model, String id, String filehash, String albumId) async {
-    final File file = await model.database.getFileFromHash(filehash);
-    if (file == null || file.photoUID == null) {
+    final List<File> file = await model.database.getFileFromHash(filehash);
+    if (file == null || file.isEmpty || file[0].photoUID == null) {
       return false;
     }
-    if (!await model.database.isPhotoAlbum(file.photoUID, albumId)) {
-      if (await Api.addPhotosToAlbum(albumId, <String>[file.photoUID], model) !=
+    if (!await model.database.isPhotoAlbum(file[0].photoUID, albumId)) {
+      if (await Api.addPhotosToAlbum(
+              albumId, <String>[file[0].photoUID], model) !=
           0) {
         return false;
       }
