@@ -46,24 +46,6 @@ class _FilterPhotosDialogState extends State<FilterPhotosDialog> {
       content: SingleChildScrollView(
           child: Column(
         children: <Widget>[
-          SwitchListTile(
-            title: const Text('archived').tr(),
-            onChanged: (bool value) {
-              setState(() {
-                filter.archived = value;
-              });
-            },
-            value: filter.archived,
-          ),
-          SwitchListTile(
-            title: const Text('private_photos').tr(),
-            onChanged: (bool value) {
-              setState(() {
-                filter.private = value;
-              });
-            },
-            value: filter.private,
-          ),
           DropdownButton<moor.OrderingMode>(
             value: filter.order,
             onChanged: (moor.OrderingMode newValue) {

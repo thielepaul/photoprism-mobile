@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 enum PhotoSort { TakenAt, CreatedAt, UpdatedAt }
 enum PhotoType { Image, Live, Video }
+enum PhotoList { Default, Archive, Private }
 
 class FilterPhotos {
   FilterPhotos(
@@ -16,8 +17,7 @@ class FilterPhotos {
         PhotoType.Live,
         PhotoType.Video
       },
-      this.archived = false,
-      this.private = true}) {
+      this.list = PhotoList.Default}) {
     this.types = types.toSet();
   }
 
@@ -29,9 +29,7 @@ class FilterPhotos {
       types: (json['types'] as List<dynamic>)
           .map((dynamic v) =>
               EnumToString.fromString(PhotoType.values, v as String))
-          .toSet(),
-      archived: json['archived'] as bool,
-      private: json['private'] as bool,
+          .toSet()
     );
   }
 
@@ -59,16 +57,13 @@ class FilterPhotos {
         'sort': EnumToString.convertToString(sort),
         'types': types
             .map((PhotoType e) => EnumToString.convertToString(e))
-            .toList(),
-        'archived': archived,
-        'private': private,
+            .toList()
       };
 
   OrderingMode order = OrderingMode.desc;
   PhotoSort sort = PhotoSort.TakenAt;
   Set<PhotoType> types = <PhotoType>{PhotoType.Image, PhotoType.Live};
-  bool archived = false;
-  bool private = true;
+  PhotoList list = PhotoList.Default; 
 
   Iterable<String> get typesAsString =>
       EnumToString.toList(types.toList()).map((String s) => s.toLowerCase());

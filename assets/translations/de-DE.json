@@ -23,7 +23,7 @@
   "cancel": "Abbrechen",
   "save": "Speichern",
   "apply": "Übernehmen",
-  "set_as_default": "Als Standard spreichern",
+  "set_as_default": "Als Standard speichern",
   "show_log": "Log anzeigen",
   "clear_log": "Log löschen",
   "auto_upload": "Automatisches Hochladen",
@@ -36,5 +36,8 @@
   "show_uploaded_photos_list": "Liste der hochgeladenen Fotos anzeigen",
   "show_failed_uploads_list": "Liste der fehlgeschlagenen Uploads anzeigen",
   "select_albums_for_auto_upload": "Alben für den automatischen Upload auswählen",
-  "share_photo_or_video": "Foto- oder Video-Datei teilen?"
+  "share_photo_or_video": "Foto- oder Video-Datei teilen?",
+  "list_default": "Bilder",
+  "list_archive": "Archiv",
+  "list_private": "Privat"
 }
