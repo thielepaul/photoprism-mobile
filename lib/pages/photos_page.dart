@@ -200,35 +200,35 @@ class PhotosPage extends StatelessWidget {
                   ),
                   PopupMenuItem<int>(
                     value: 1,
-                    child: const Text('filter_and_sort').tr(),
-                  ),
-                  PopupMenuItem<int>(
-                    value: 2,
                     child: const Text('list_default').tr()
                   ),
                   PopupMenuItem<int>(
-                    value: 3,
+                    value: 2,
                     child: const Text('list_archive').tr()
                   ),
                   PopupMenuItem<int>(
-                    value: 4,
+                    value: 3,
                     child: const Text('list_private').tr()
+                  ),
+                  PopupMenuItem<int>(
+                    value: 4,
+                    child: const Text('filter_and_sort').tr(),
                   )
                 ],
                 onSelected: (int choice) {
                   if (choice == 0) {
                     model.photoprismUploader.selectPhotoAndUpload(context);
                   } else if (choice == 1) {
-                    FilterPhotosDialog.show(context);
-                  } else if (choice == 2) {
                     model.filterPhotos.list = PhotoList.Default;
                     model.updatePhotosSubscription();
-                  } else if (choice == 3) {
+                  } else if (choice == 2) {
                     model.filterPhotos.list = PhotoList.Archive;
                     model.updatePhotosSubscription();
-                  } else if (choice == 4) {
+                  } else if (choice == 3) {
                     model.filterPhotos.list = PhotoList.Private;
                     model.updatePhotosSubscription();
+                  } else if (choice == 4) {
+                    FilterPhotosDialog.show(context);
                   }
                 },
               ),
