@@ -30,6 +30,57 @@ class _FilterPhotosDialogState extends State<FilterPhotosDialog> {
   PhotoprismModel model;
   FilterPhotos filter;
 
+  List<Widget> _sortOptions(BuildContext context) {
+    final List<Widget> sort = PhotoSort.values.map((PhotoSort e) => RadioListTile<PhotoSort>(
+      title: Text(EnumToString.convertToString(e).tr()),
+      dense: true,
+      value: e,
+      groupValue: filter.sort,
+      onChanged: (PhotoSort value) => setState(() { filter.sort = value; }),
+    )).toList();
+
+    final List<Widget> order = moor.OrderingMode.values.map((moor.OrderingMode e) => RadioListTile<moor.OrderingMode>(
+      title: Text(EnumToString.convertToString(e).tr()),
+      dense: true,
+      value: e,
+      groupValue: filter.order,
+      onChanged: (moor.OrderingMode value) => setState(() { filter.order = value; })
+    )).toList();
+    return <Widget>[
+      _dialogHeading('sort'.tr()),
+      ...sort,
+      _dialogHeading('sort_order'.tr()),
+      ...order
+    ];
+  }
+
+  List<Widget> _filterOptions(BuildContext context) {
+    return <Widget>[
+      _dialogHeading('filter'.tr()),
+      ...PhotoType.values.map((PhotoType e) => CheckboxListTile(
+                            title: Text(EnumToString.convertToString(e)),
+                            dense: true,
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 25),
+                            onChanged: (bool value) {
+                              setState(() {
+                                if (value) {
+                                  filter.types.add(e);
+                                } else {
+                                  filter.types.remove(e);
+                                }
+                              });
+                            },
+                            value: filter.types.contains(e))).toList()
+    ];
+  }
+
+  Widget _dialogHeading(String title) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(25, 25, 10, 10),
+      child: Text(title)
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     Future<void> saveAndPop({bool asDefault}) async {
@@ -43,61 +94,16 @@ class _FilterPhotosDialogState extends State<FilterPhotosDialog> {
 
     return AlertDialog(
       title: const Text('filter_and_sort').tr(),
+      contentPadding: EdgeInsets.zero,
       content: SingleChildScrollView(
-          child: Column(
-        children: <Widget>[
-          DropdownButton<moor.OrderingMode>(
-            value: filter.order,
-            onChanged: (moor.OrderingMode newValue) {
-              setState(() {
-                filter.order = newValue;
-              });
-            },
-            items: moor.OrderingMode.values
-                .map<DropdownMenuItem<moor.OrderingMode>>(
-                    (moor.OrderingMode value) {
-              return DropdownMenuItem<moor.OrderingMode>(
-                value: value,
-                child: Text(EnumToString.convertToString(value)).tr(),
-              );
-            }).toList(),
-          ),
-          DropdownButton<PhotoSort>(
-            value: filter.sort,
-            onChanged: (PhotoSort newValue) {
-              setState(() {
-                filter.sort = newValue;
-              });
-            },
-            items: PhotoSort.values
-                .map<DropdownMenuItem<PhotoSort>>((PhotoSort value) {
-              return DropdownMenuItem<PhotoSort>(
-                value: value,
-                child: Text(EnumToString.convertToString(value)),
-              );
-            }).toList(),
-          ),
-          Container(
-              height: double.maxFinite,
-              width: double.maxFinite,
-              child: ListView.builder(
-                  itemCount: PhotoType.values.length,
-                  itemBuilder: (BuildContext context, int i) =>
-                      CheckboxListTile(
-                          title: Text(EnumToString.convertToString(
-                              PhotoType.values[i])),
-                          onChanged: (bool value) {
-                            setState(() {
-                              if (value) {
-                                filter.types.add(PhotoType.values[i]);
-                              } else {
-                                filter.types.remove(PhotoType.values[i]);
-                              }
-                            });
-                          },
-                          value: filter.types.contains(PhotoType.values[i])))),
-        ],
-      )),
+        child: Column(
+          children: <Widget>[
+            ..._sortOptions(context),
+            ..._filterOptions(context)
+          ],
+          crossAxisAlignment: CrossAxisAlignment.start,
+        )
+      ),
       actions: <Widget>[
         TextButton(
           child: const Text('cancel').tr(),

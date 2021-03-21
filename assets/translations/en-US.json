@@ -40,5 +40,11 @@
   "auto_upload_wifi_only": "Only automatically upload on Wi-Fi",
   "list_default": "Pictures",
   "list_archive": "Archive",
-  "list_private": "Private"
+  "list_private": "Private",
+  "sort": "Sort",
+  "sort_order": "Sort order",
+  "filter": "Filter",
+  "TakenAt": "Taken At",
+  "UpdatedAt": "Updated At",
+  "CreatedAt": "Created At"
 }

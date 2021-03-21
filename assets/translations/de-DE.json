@@ -39,5 +39,11 @@
   "share_photo_or_video": "Foto- oder Video-Datei teilen?",
   "list_default": "Bilder",
   "list_archive": "Archiv",
-  "list_private": "Privat"
+  "list_private": "Privat",
+  "sort": "Sortierung",
+  "sort_order": "Richtung",
+  "filter": "Filter",
+  "TakenAt": "Aufnahme",
+  "UpdatedAt": "Aktualisierung",
+  "CreatedAt": "Erstellung"
 }
