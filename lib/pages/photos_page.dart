@@ -199,17 +199,11 @@ class PhotosPage extends StatelessWidget {
                     child: const Text('upload_photo').tr(),
                   ),
                   PopupMenuItem<int>(
-                    value: 1,
-                    child: const Text('list_default').tr()
-                  ),
+                      value: 1, child: const Text('list_default').tr()),
                   PopupMenuItem<int>(
-                    value: 2,
-                    child: const Text('list_archive').tr()
-                  ),
+                      value: 2, child: const Text('list_archive').tr()),
                   PopupMenuItem<int>(
-                    value: 3,
-                    child: const Text('list_private').tr()
-                  ),
+                      value: 3, child: const Text('list_private').tr()),
                   PopupMenuItem<int>(
                     value: 4,
                     child: const Text('filter_and_sort').tr(),

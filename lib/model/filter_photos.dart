@@ -23,14 +23,13 @@ class FilterPhotos {
 
   factory FilterPhotos.fromJson(Map<String, dynamic> json) {
     return FilterPhotos(
-      order:
-          EnumToString.fromString(OrderingMode.values, json['order'] as String),
-      sort: EnumToString.fromString(PhotoSort.values, json['sort'] as String),
-      types: (json['types'] as List<dynamic>)
-          .map((dynamic v) =>
-              EnumToString.fromString(PhotoType.values, v as String))
-          .toSet()
-    );
+        order: EnumToString.fromString(
+            OrderingMode.values, json['order'] as String),
+        sort: EnumToString.fromString(PhotoSort.values, json['sort'] as String),
+        types: (json['types'] as List<dynamic>)
+            .map((dynamic v) =>
+                EnumToString.fromString(PhotoType.values, v as String))
+            .toSet());
   }
 
   static Future<FilterPhotos> fromSharedPrefs() async {
@@ -55,15 +54,14 @@ class FilterPhotos {
   Map<String, dynamic> toJson() => <String, dynamic>{
         'order': EnumToString.convertToString(order),
         'sort': EnumToString.convertToString(sort),
-        'types': types
-            .map((PhotoType e) => EnumToString.convertToString(e))
-            .toList()
+        'types':
+            types.map((PhotoType e) => EnumToString.convertToString(e)).toList()
       };
 
   OrderingMode order = OrderingMode.desc;
   PhotoSort sort = PhotoSort.TakenAt;
   Set<PhotoType> types = <PhotoType>{PhotoType.Image, PhotoType.Live};
-  PhotoList list = PhotoList.Default; 
+  PhotoList list = PhotoList.Default;
 
   Iterable<String> get typesAsString =>
       EnumToString.toList(types.toList()).map((String s) => s.toLowerCase());

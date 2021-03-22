@@ -31,21 +31,28 @@ class _FilterPhotosDialogState extends State<FilterPhotosDialog> {
   FilterPhotos filter;
 
   List<Widget> _sortOptions(BuildContext context) {
-    final List<Widget> sort = PhotoSort.values.map((PhotoSort e) => RadioListTile<PhotoSort>(
-      title: Text(EnumToString.convertToString(e).tr()),
-      dense: true,
-      value: e,
-      groupValue: filter.sort,
-      onChanged: (PhotoSort value) => setState(() { filter.sort = value; }),
-    )).toList();
+    final List<Widget> sort = PhotoSort.values
+        .map((PhotoSort e) => RadioListTile<PhotoSort>(
+              title: Text(EnumToString.convertToString(e).tr()),
+              dense: true,
+              value: e,
+              groupValue: filter.sort,
+              onChanged: (PhotoSort value) => setState(() {
+                filter.sort = value;
+              }),
+            ))
+        .toList();
 
-    final List<Widget> order = moor.OrderingMode.values.map((moor.OrderingMode e) => RadioListTile<moor.OrderingMode>(
-      title: Text(EnumToString.convertToString(e).tr()),
-      dense: true,
-      value: e,
-      groupValue: filter.order,
-      onChanged: (moor.OrderingMode value) => setState(() { filter.order = value; })
-    )).toList();
+    final List<Widget> order = moor.OrderingMode.values
+        .map((moor.OrderingMode e) => RadioListTile<moor.OrderingMode>(
+            title: Text(EnumToString.convertToString(e).tr()),
+            dense: true,
+            value: e,
+            groupValue: filter.order,
+            onChanged: (moor.OrderingMode value) => setState(() {
+                  filter.order = value;
+                })))
+        .toList();
     return <Widget>[
       _dialogHeading('sort'.tr()),
       ...sort,
@@ -57,28 +64,28 @@ class _FilterPhotosDialogState extends State<FilterPhotosDialog> {
   List<Widget> _filterOptions(BuildContext context) {
     return <Widget>[
       _dialogHeading('filter'.tr()),
-      ...PhotoType.values.map((PhotoType e) => CheckboxListTile(
-                            title: Text(EnumToString.convertToString(e)),
-                            dense: true,
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 25),
-                            onChanged: (bool value) {
-                              setState(() {
-                                if (value) {
-                                  filter.types.add(e);
-                                } else {
-                                  filter.types.remove(e);
-                                }
-                              });
-                            },
-                            value: filter.types.contains(e))).toList()
+      ...PhotoType.values
+          .map((PhotoType e) => CheckboxListTile(
+              title: Text(EnumToString.convertToString(e)),
+              dense: true,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 25),
+              onChanged: (bool value) {
+                setState(() {
+                  if (value) {
+                    filter.types.add(e);
+                  } else {
+                    filter.types.remove(e);
+                  }
+                });
+              },
+              value: filter.types.contains(e)))
+          .toList()
     ];
   }
 
   Widget _dialogHeading(String title) {
     return Container(
-      margin: const EdgeInsets.fromLTRB(25, 25, 10, 10),
-      child: Text(title)
-    );
+        margin: const EdgeInsets.fromLTRB(25, 25, 10, 10), child: Text(title));
   }
 
   @override
@@ -96,14 +103,13 @@ class _FilterPhotosDialogState extends State<FilterPhotosDialog> {
       title: const Text('filter_and_sort').tr(),
       contentPadding: EdgeInsets.zero,
       content: SingleChildScrollView(
-        child: Column(
-          children: <Widget>[
-            ..._sortOptions(context),
-            ..._filterOptions(context)
-          ],
-          crossAxisAlignment: CrossAxisAlignment.start,
-        )
-      ),
+          child: Column(
+        children: <Widget>[
+          ..._sortOptions(context),
+          ..._filterOptions(context)
+        ],
+        crossAxisAlignment: CrossAxisAlignment.start,
+      )),
       actions: <Widget>[
         TextButton(
           child: const Text('cancel').tr(),

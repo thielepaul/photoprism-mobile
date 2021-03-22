@@ -125,13 +125,13 @@ class MyDatabase extends _$MyDatabase {
     }
 
     switch (filterPhotos.list) {
-      case PhotoList.Archive: 
+      case PhotoList.Archive:
         query = query..where(photos.deletedAt.isNotNull());
         break;
       case PhotoList.Private:
         query = query..where(photos.private);
         break;
-      default: 
+      default:
         query = query..where(photos.deletedAt.isNull() & photos.private.not());
         break;
     }
