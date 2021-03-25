@@ -16,10 +16,9 @@ jobs:
       - uses: actions/setup-java@v1
         with:
           java-version: 1.8
-      - uses: subosito/flutter-action@v1
+      - uses: dart-lang/setup-dart@v1
         with:
-          flutter-version: "2.0.x"
-          channel: "stable"
+          sdk: 2.0.0
       - run: flutter pub get
       - run: flutter format --dry-run --set-exit-if-changed lib
       - run: flutter packages pub run build_runner build
