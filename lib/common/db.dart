@@ -55,15 +55,21 @@ class MyDatabase extends _$MyDatabase {
         ..limit(1))
       .get();
 
-  Future<File> getVideoFileForPhoto(String photoUid) => ((select(files)
-        ..where(($FilesTable tbl) =>
-            tbl.photoUID.isNotNull() &
-            tbl.photoUID.equals(photoUid) &
-            tbl.video.isNotNull() &
-            tbl.video &
-            tbl.hash.isNotNull()))
-        ..limit(1))
-      .getSingle();
+  Future<File> getVideoFileForPhoto(String photoUid) async {
+    final List<File> result = await ((select(files)
+          ..where(($FilesTable tbl) =>
+              tbl.photoUID.isNotNull() &
+              tbl.photoUID.equals(photoUid) &
+              tbl.video.isNotNull() &
+              tbl.video &
+              tbl.hash.isNotNull()))
+          ..limit(1))
+        .get();
+    if (result.length == 1) {
+      return result[0];
+    }
+    return null;
+  }
 
   Future<bool> isPhotoAlbum(String photoUid, String albumUid) async {
     final Future<List<PhotosAlbum>> result = (select(photosAlbums)
