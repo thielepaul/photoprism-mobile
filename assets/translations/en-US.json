@@ -37,5 +37,14 @@
   "show_failed_uploads_list": "Show failed uploads list",
   "select_albums_for_auto_upload": "Select albums for auto-upload",
   "share_photo_or_video": "Do you want to share the photo file or the video file?",
-  "auto_upload_wifi_only": "Only automatically upload on Wi-Fi"
+  "auto_upload_wifi_only": "Only automatically upload on Wi-Fi",
+  "list_default": "Pictures",
+  "list_archive": "Archive",
+  "list_private": "Private",
+  "sort": "Sort",
+  "sort_order": "Sort order",
+  "filter": "Filter",
+  "TakenAt": "Taken At",
+  "UpdatedAt": "Updated At",
+  "CreatedAt": "Created At"
 }

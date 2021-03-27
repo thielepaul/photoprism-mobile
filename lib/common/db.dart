@@ -117,9 +117,6 @@ class MyDatabase extends _$MyDatabase {
       case PhotoSort.CreatedAt:
         sortColumn = photos.createdAt;
         break;
-      case PhotoSort.TakenAt:
-        sortColumn = photos.takenAt;
-        break;
       case PhotoSort.UpdatedAt:
         sortColumn = photos.updatedAt;
         break;
@@ -127,8 +124,16 @@ class MyDatabase extends _$MyDatabase {
         sortColumn = photos.takenAt;
     }
 
-    if (filterPhotos.private == false) {
-      query = query..where(photos.private.not());
+    switch (filterPhotos.list) {
+      case PhotoList.Archive:
+        query = query..where(photos.deletedAt.isNotNull());
+        break;
+      case PhotoList.Private:
+        query = query..where(photos.private);
+        break;
+      default:
+        query = query..where(photos.deletedAt.isNull() & photos.private.not());
+        break;
     }
 
     return query
@@ -137,9 +142,6 @@ class MyDatabase extends _$MyDatabase {
           files.primary &
           files.error.equals('') &
           files.deletedAt.isNull() &
-          (filterPhotos.archived
-              ? photos.deletedAt.isNotNull()
-              : photos.deletedAt.isNull()) &
           photos.takenAt.isNotNull() &
           photos.type.isNotNull() &
           photos.type.isIn(filterPhotos.typesAsString))

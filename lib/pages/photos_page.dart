@@ -11,6 +11,7 @@ import 'package:photoprism/common/db.dart';
 import 'package:photoprism/common/hexcolor.dart';
 import 'package:photoprism/common/photo_manager.dart';
 import 'package:photoprism/common/transparent_route.dart';
+import 'package:photoprism/model/filter_photos.dart';
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:photoprism/pages/photoview.dart';
 import 'package:draggable_scrollbar/draggable_scrollbar.dart';
@@ -198,7 +199,13 @@ class PhotosPage extends StatelessWidget {
                     child: const Text('upload_photo').tr(),
                   ),
                   PopupMenuItem<int>(
-                    value: 1,
+                      value: 1, child: const Text('list_default').tr()),
+                  PopupMenuItem<int>(
+                      value: 2, child: const Text('list_archive').tr()),
+                  PopupMenuItem<int>(
+                      value: 3, child: const Text('list_private').tr()),
+                  PopupMenuItem<int>(
+                    value: 4,
                     child: const Text('filter_and_sort').tr(),
                   )
                 ],
@@ -206,6 +213,15 @@ class PhotosPage extends StatelessWidget {
                   if (choice == 0) {
                     model.photoprismUploader.selectPhotoAndUpload(context);
                   } else if (choice == 1) {
+                    model.filterPhotos.list = PhotoList.Default;
+                    model.updatePhotosSubscription();
+                  } else if (choice == 2) {
+                    model.filterPhotos.list = PhotoList.Archive;
+                    model.updatePhotosSubscription();
+                  } else if (choice == 3) {
+                    model.filterPhotos.list = PhotoList.Private;
+                    model.updatePhotosSubscription();
+                  } else if (choice == 4) {
                     FilterPhotosDialog.show(context);
                   }
                 },
