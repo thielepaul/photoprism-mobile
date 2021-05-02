@@ -2,27 +2,8 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
-class DbTimestamp {
-  DbTimestamp({this.updatedAt, this.deletedAt});
-
-  factory DbTimestamp.fromJson(Map<String, dynamic> json) {
-    return DbTimestamp(
-      updatedAt: json['updatedAt'] as String,
-      deletedAt: json['deletedAt'] as String,
-    );
-  }
-
-  String updatedAt;
-  String deletedAt;
-
-  Map<String, dynamic> toJson() => <String, String>{
-        'updatedAt': updatedAt,
-        'deletedAt': deletedAt,
-      };
-}
-
 class DbTimestamps {
-  DbTimestamps(Map<String, DbTimestamp> data) {
+  DbTimestamps(Map<String, String> data) {
     _d = data;
   }
 
@@ -37,45 +18,27 @@ class DbTimestamps {
       try {
         return DbTimestamps(
             (json.decode(sp.getString(_spKey)) as Map<String, dynamic>).map(
-                (String key, dynamic value) => MapEntry<String, DbTimestamp>(
-                    key, DbTimestamp.fromJson(value as Map<String, dynamic>))));
+                (String key, dynamic value) =>
+                    MapEntry<String, String>(key, value as String)));
       } catch (_) {
         sp.remove(_spKey);
       }
     }
-    return DbTimestamps(<String, DbTimestamp>{});
+    return DbTimestamps(<String, String>{});
   }
 
   static const String _spKey = 'dbTimestamps';
-  Map<String, DbTimestamp> _d;
+  Map<String, String> _d;
 
-  String getUpdatedAt(String table) {
+  String getQueryTimestamp(String table) {
     if (_d.containsKey(table)) {
-      return _d[table].updatedAt;
+      return _d[table];
     }
     return null;
   }
 
-  String getDeletedAt(String table) {
-    if (_d.containsKey(table)) {
-      return _d[table].deletedAt;
-    }
-    return null;
-  }
-
-  void setUpdatedAt(String table, String value) {
-    if (!_d.containsKey(table)) {
-      _d[table] = DbTimestamp();
-    }
-    _d[table].updatedAt = value;
-    _saveTosharedPrefs();
-  }
-
-  void setDeletedAt(String table, String value) {
-    if (!_d.containsKey(table)) {
-      _d[table] = DbTimestamp();
-    }
-    _d[table].deletedAt = value;
+  void setQueryTimestamp(String table, String value) {
+    _d[table] = value;
     _saveTosharedPrefs();
   }
 
@@ -87,7 +50,7 @@ class DbTimestamps {
   }
 
   Future<void> clear() async {
-    _d = <String, DbTimestamp>{};
+    _d = <String, String>{};
     _saveTosharedPrefs();
   }
 }

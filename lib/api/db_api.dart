@@ -18,16 +18,16 @@ class DbApiException implements Exception {
 class DbApi {
   static const int resultCount = 1000;
 
-  static Future<List<dynamic>> _loadDbBatch(
-      PhotoprismModel model, String table, bool deleted, String since) async {
+  static Future<Map<String, dynamic>> _loadDbBatch(
+      PhotoprismModel model, String table, int offset, String since) async {
     final Uri url = Uri.parse(model.photoprismUrl +
         '/api/v1/db' +
         '?count=' +
         resultCount.toString() +
         '&table=' +
         table +
-        '&deleted=' +
-        deleted.toString() +
+        '&offset=' +
+        offset.toString() +
         (since != null ? '&since=' + since : ''));
     final http.Response response = await Api.httpAuth(model,
             () => http.get(url, headers: model.photoprismAuth.getAuthHeaders()))
@@ -50,72 +50,52 @@ class DbApi {
       throw const DbApiException('api-fail');
     }
     try {
-      return json.decode(response.body) as List<dynamic>;
+      return json.decode(response.body) as Map<String, dynamic>;
     } catch (error) {
       print(response);
       print('decoding answer from db api failed: ' + error.toString());
-      return <dynamic>[];
+      throw const DbApiException('api-fail');
     }
   }
 
   static Future<List<dynamic>> _loadDbBatchUpdated(
-      PhotoprismModel model, String table) async {
-    final String since = model.dbTimestamps.getUpdatedAt(table);
+      PhotoprismModel model, String table, int offset, String since) async {
+    final Map<String, dynamic> parsed =
+        await _loadDbBatch(model, table, offset, since);
 
-    final List<dynamic> parsed = await _loadDbBatch(model, table, false, since);
-
-    if (parsed.isNotEmpty && parsed.last['UpdatedAt'] != null) {
+    if (offset == 0 &&
+        parsed.containsKey('QueryTimestamp') &&
+        parsed['QueryTimestamp'] != null) {
       model.dbTimestamps
-          .setUpdatedAt(table, parsed.last['UpdatedAt'] as String);
+          .setQueryTimestamp(table, parsed['QueryTimestamp'] as String);
     }
-    return parsed;
-  }
-
-  static Future<List<dynamic>> _loadDbBatchDeleted(
-      PhotoprismModel model, String table) async {
-    final String since = model.dbTimestamps.getDeletedAt(table);
-
-    final List<dynamic> parsed = await _loadDbBatch(model, table, true, since);
-
-    if (parsed.isNotEmpty && parsed.last['DeletedAt'] != null) {
-      model.dbTimestamps
-          .setDeletedAt(table, parsed.last['DeletedAt'] as String);
+    if (parsed.containsKey('Results') && parsed['Results'] is List) {
+      return parsed['Results'] as List<dynamic>;
     }
-    return parsed;
+    return <dynamic>[];
   }
 
   static Future<List<dynamic>> _loadDbAll(PhotoprismModel model, String table,
       {bool deleted = true}) async {
     final List<dynamic> rowsFromApiCollected = <dynamic>[];
     List<dynamic> rowsFromApi;
+    final String since = model.dbTimestamps.getQueryTimestamp(table);
+
     while (rowsFromApi == null || rowsFromApi.length == resultCount) {
       if (rowsFromApi != null) {
         model.photoprismLoadingScreen
             .showLoadingScreen('loading metadata from backend...');
       }
-      rowsFromApi = (await _loadDbBatchUpdated(model, table)).toList();
-      print('download batch of rows from db based on updatedAt for table ' +
-          table +
-          ' got ' +
-          rowsFromApi.length.toString() +
-          ' rows');
+      rowsFromApi = (await _loadDbBatchUpdated(
+              model, table, rowsFromApiCollected.length, since))
+          .toList();
+      print(
+          'download batch of rows from db based on QueryTimestamp for table ' +
+              table +
+              ' got ' +
+              rowsFromApi.length.toString() +
+              ' rows');
       rowsFromApiCollected.addAll(rowsFromApi);
-    }
-    if (deleted) {
-      rowsFromApi = null;
-      while (rowsFromApi == null || rowsFromApi.length == resultCount) {
-        if (rowsFromApi != null) {
-          model.photoprismLoadingScreen
-              .showLoadingScreen('loading metadata from backend...');
-        }
-        rowsFromApi = (await _loadDbBatchDeleted(model, table)).toList();
-        print('download batch of rows from db based on deletedAt for table ' +
-            table +
-            ' got ' +
-            rowsFromApi.length.toString() +
-            ' rows');
-        rowsFromApiCollected.addAll(rowsFromApi);
-      }
     }
     return rowsFromApiCollected;
   }
