@@ -146,7 +146,7 @@ class MyDatabase extends _$MyDatabase {
       ..where(files.hash.isNotNull() &
           files.primary.isNotNull() &
           files.primary &
-          files.error.equals('') &
+          (files.error.isNull() | files.error.equals('')) &
           files.deletedAt.isNull() &
           photos.takenAt.isNotNull() &
           photos.type.isNotNull() &
@@ -195,7 +195,7 @@ class CustomSerializer extends ValueSerializer {
       } else {
         return DateTime.parse(json.toString()) as T;
       }
-    } else if (T == double) {
+    } else if (T == double && json != null) {
       return double.parse(json.toString()) as T;
     } else {
       return json as T;
