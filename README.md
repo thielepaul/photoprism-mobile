@@ -1,8 +1,16 @@
-# PhotoPrism Flutter App for iOS and Android (community maintained)
+# Flutter App for PhotoPrism (iOS and Android)
+
+**PLEASE NOTE:**
+
+- The Flutter App for PhotoPrism® **is not official** and should be installed by developers and advanced users only
+- This repository is community-maintained, do not contact the core team if you need assistance
+- The latest version of the Flutter App is not compatible with current version of PhotoPrism (see below for details)
+
+## Screenshot
 
 ![alt text](assets/iphone_photo.png "iPhone App Photos View")
 
-## :warning: App is Currently Incompatible with Backend :warning:
+## Currently Incompatible with PhotoPrism :warning:
 
 This app is currently incompatible with the latest version of the PhotoPrism backend (to get the latest compatible version, use the [legacy links below](#installation)).  
 The status of the pull request with the necessary backend api changes can be seen [here](https://github.com/photoprism/photoprism/pull/995).  
@@ -49,11 +57,15 @@ If you'd like to make an enhancement to the application, please see [the contrib
 
 ![alt text](assets/qrcode_ios_testflight.png "TestFlight QR Code image")
 
-## Trademarks ##
+## PhotoPrism® is a registered trademark ##
 
-PhotoPrism® is a registered trademark of Michael Mayer. You may use it as required to describe 
-our software, run your server, for educational purposes, but not for offering commercial 
-goods, products, or services without prior written permission. 
+The official [Trademark and Brand Guidelines](https://photoprism.app/trademark), which may be updated
+from time to time, describe how PhotoPrism's Brand Assets may be used. You may generally not
+include the PhotoPrism trademark in the name of your app, product, or service, whether commercial 
+or non-commercial in nature. To indicate compatibility with PhotoPrism, please use one of the 
+following options:
 
-Feel free to reach out if you have questions:  
-https://photoprism.app/contact
+- *compatible with PhotoPrism*
+- *works with PhotoPrism*
+- *for use with PhotoPrism*
+- *for PhotoPrism*
