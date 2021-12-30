@@ -4,7 +4,7 @@
 
 - The Flutter App for PhotoPrism® **is not official** and should be installed by developers and advanced users only
 - This repository is community-maintained, do not contact the core team if you need assistance
-- The latest version of the Flutter App is not compatible with current version of PhotoPrism (see below for details)
+- The latest version is not compatible with the current version of PhotoPrism (see below for details)
 
 ## Screenshot
 
