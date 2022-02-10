@@ -2,21 +2,20 @@ import 'dart:async';
 import 'dart:io' as io;
 import 'dart:math';
 
+import 'package:background_fetch/background_fetch.dart';
+import 'package:connectivity/connectivity.dart';
 import 'package:crypto/crypto.dart';
 import 'package:device_info/device_info.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_uploader/flutter_uploader.dart';
 import 'package:intl/intl.dart';
+import 'package:photo_manager/photo_manager.dart' as photolib;
 import 'package:photoprism/api/api.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:path/path.dart';
-import 'package:background_fetch/background_fetch.dart';
 import 'package:photoprism/api/db_api.dart';
 import 'package:photoprism/common/db.dart';
 import 'package:photoprism/model/photoprism_model.dart';
-import 'package:photo_manager/photo_manager.dart' as photolib;
-import 'package:connectivity/connectivity.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class PhotoprismUploader {
   PhotoprismUploader(this.photoprismModel) {
@@ -24,7 +23,6 @@ class PhotoprismUploader {
   }
 
   PhotoprismModel photoprismModel;
-  Completer<int> uploadFinishedCompleter;
   Completer<int> manualUploadFinishedCompleter;
   FlutterUploader uploader;
   String deviceName = '';
@@ -60,12 +58,7 @@ class PhotoprismUploader {
 
       if (uploadsinProgress == 0) {
         print('Upload finished.');
-        if (result.tag == 'manual') {
-          manualUploadFinishedCompleter.complete(failedUploads == 0 ? 0 : 1);
-        } else {
-          print('Auto upload success!');
-          uploadFinishedCompleter.complete(failedUploads == 0 ? 0 : 1);
-        }
+        manualUploadFinishedCompleter.complete(failedUploads == 0 ? 0 : 1);
         // clear out the failedUploads count manually, to make sure we're
         // set up for the next upload
         failedUploads = 0;
@@ -73,14 +66,9 @@ class PhotoprismUploader {
     }, onError: (Object ex, StackTrace stacktrace) {
       uploadsinProgress--;
       failedUploads++;
-      final UploadException exp = ex as UploadException;
 
       if (uploadsinProgress == 0) {
-        if (exp.tag == 'manual') {
-          manualUploadFinishedCompleter.complete(failedUploads == 0 ? 0 : 1);
-        } else {
-          uploadFinishedCompleter.complete(failedUploads == 0 ? 0 : 1);
-        }
+        manualUploadFinishedCompleter.complete(failedUploads == 0 ? 0 : 1);
         // clear out the failedUploads count manually, to make sure we're
         // set up for the next upload
         failedUploads = 0;
@@ -133,11 +121,11 @@ class PhotoprismUploader {
 
     // check if at least one file was selected
     if (result != null) {
-      filesToUpload.addAll(result.files.map<FileItem>((PlatformFile file) =>
-          FileItem(
-              filename: basename(file.path),
-              savedDir: dirname(file.path),
-              fieldname: 'files')));
+      filesToUpload
+          .addAll(result.files.map<FileItem>((PlatformFile file) => FileItem(
+                field: 'files',
+                path: file.path,
+              )));
 
       if (result.count > 1) {
         photoprismModel.photoprismLoadingScreen
@@ -190,13 +178,12 @@ class PhotoprismUploader {
 
     await Api.getNewSession(photoprismModel);
     for (final FileItem fileToUpload in filesToUpload) {
-      await uploader.enqueue(
+      await uploader.enqueue(RawUpload(
           url: photoprismModel.photoprismUrl + '/api/v1/upload/' + event,
-          files: <FileItem>[fileToUpload],
+          path: fileToUpload.path,
           method: UploadMethod.POST,
-          showNotification: false,
           tag: 'manual',
-          headers: photoprismModel.photoprismAuth.getAuthHeaders());
+          headers: photoprismModel.photoprismAuth.getAuthHeaders()));
       uploadsinProgress += 1;
     }
 

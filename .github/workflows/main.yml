@@ -19,7 +19,7 @@ jobs:
           java-version: 1.8
       - uses: subosito/flutter-action@v1
         with:
-          flutter-version: "2.0.x"
+          flutter-version: "2.10.x"
           channel: "stable"
       - run: flutter pub get
       - run: flutter format --dry-run --set-exit-if-changed lib

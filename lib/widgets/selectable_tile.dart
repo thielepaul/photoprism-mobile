@@ -1,6 +1,5 @@
 import 'package:drag_select_grid_view/drag_select_grid_view.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:photoprism/common/hexcolor.dart';
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:provider/provider.dart';

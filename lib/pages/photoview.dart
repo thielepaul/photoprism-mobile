@@ -1,8 +1,7 @@
 import 'dart:io' as io;
 
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:share/share.dart';
-import 'package:flutter/foundation.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photoprism/api/api.dart';
@@ -10,8 +9,8 @@ import 'package:photoprism/common/db.dart';
 import 'package:photoprism/common/photo_manager.dart';
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:provider/provider.dart';
+import 'package:share/share.dart';
 import 'package:video_player/video_player.dart';
-import 'package:easy_localization/easy_localization.dart';
 
 class FullscreenPhotoGallery extends StatefulWidget {
   const FullscreenPhotoGallery(this.currentPhotoIndex, this.albumId);

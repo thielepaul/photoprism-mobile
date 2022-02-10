@@ -1,12 +1,11 @@
 import 'dart:io' as io;
-import 'package:path_provider/path_provider.dart';
-import 'package:path/path.dart' as p;
 import 'package:moor/moor.dart';
-import 'package:photoprism/model/filter_photos.dart';
-
-import 'package:photoprism/model/photos.dart';
-import 'package:photoprism/model/files.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 import 'package:photoprism/model/albums.dart';
+import 'package:photoprism/model/files.dart';
+import 'package:photoprism/model/filter_photos.dart';
+import 'package:photoprism/model/photos.dart';
 import 'package:photoprism/model/photos_albums.dart';
 
 part 'db.g.dart';
@@ -82,16 +81,16 @@ class MyDatabase extends _$MyDatabase {
   Stream<Map<String, int>> allAlbumCounts() {
     final Expression<int> photoCount = photosAlbums.photoUID.count();
 
-    final JoinedSelectStatement<Table, dynamic> query = (select(albums)
+    final JoinedSelectStatement<HasResultSet, dynamic> query = (select(albums)
           ..where(($AlbumsTable tbl) =>
               tbl.deletedAt.isNull() & tbl.type.equals('album')))
-        .join(<Join<Table, dynamic>>[
+        .join(<Join<HasResultSet, dynamic>>[
       innerJoin(photosAlbums, photosAlbums.albumUID.equalsExp(albums.uid),
           useColumns: false)
     ])
-          ..where(photosAlbums.hidden.not())
-          ..addColumns(<Expression<dynamic>>[photoCount])
-          ..groupBy(<Expression<dynamic>>[albums.uid]);
+      ..where(photosAlbums.hidden.not())
+      ..addColumns(<Expression<dynamic>>[photoCount])
+      ..groupBy(<Expression<dynamic>>[albums.uid]);
 
     return query.watch().map((List<TypedResult> rows) => <String, int>{
           for (TypedResult row in rows)
@@ -99,26 +98,26 @@ class MyDatabase extends _$MyDatabase {
         });
   }
 
-  JoinedSelectStatement<Table, dynamic> _photosWithFileQuery(
+  JoinedSelectStatement<HasResultSet, dynamic> _photosWithFileQuery(
       FilterPhotos filterPhotos,
       {String albumUid}) {
-    JoinedSelectStatement<Table, dynamic> query;
+    JoinedSelectStatement<HasResultSet, dynamic> query;
     if (albumUid != null) {
       query = (select(photosAlbums)
             ..where(($PhotosAlbumsTable tbl) =>
                 tbl.albumUID.equals(albumUid) & tbl.hidden.not()))
-          .join(<Join<Table, dynamic>>[
+          .join(<Join<HasResultSet, dynamic>>[
         innerJoin(photos, photos.uid.equalsExp(photosAlbums.photoUID)),
-      ]).join(<Join<Table, dynamic>>[
+      ]).join(<Join<HasResultSet, dynamic>>[
         innerJoin(files, files.photoUID.equalsExp(photos.uid)),
       ]);
     } else {
-      query = select(photos).join(<Join<Table, dynamic>>[
+      query = select(photos).join(<Join<HasResultSet, dynamic>>[
         innerJoin(files, files.photoUID.equalsExp(photos.uid)),
       ]);
     }
 
-    GeneratedDateTimeColumn sortColumn;
+    GeneratedColumn<DateTime> sortColumn;
     switch (filterPhotos.sort) {
       case PhotoSort.CreatedAt:
         sortColumn = photos.createdAt;
@@ -159,7 +158,7 @@ class MyDatabase extends _$MyDatabase {
   Future<Iterable<PhotoWithFile>> photosWithFile(
       int limit, int offset, FilterPhotos filterPhotos,
       {String albumUid}) {
-    final JoinedSelectStatement<Table, dynamic> query =
+    final JoinedSelectStatement<HasResultSet, dynamic> query =
         _photosWithFileQuery(filterPhotos, albumUid: albumUid);
     final Selectable<PhotoWithFile> result = (query
           ..limit(limit, offset: offset))
@@ -172,7 +171,7 @@ class MyDatabase extends _$MyDatabase {
 
   Stream<int> photosWithFileCount(FilterPhotos filterPhotos,
       {String albumUid}) {
-    final JoinedSelectStatement<Table, dynamic> query =
+    final JoinedSelectStatement<HasResultSet, dynamic> query =
         _photosWithFileQuery(filterPhotos, albumUid: albumUid);
     final Expression<int> filesCount = files.hash.count();
 

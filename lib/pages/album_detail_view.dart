@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:photoprism/api/api.dart';
 import 'package:photoprism/api/db_api.dart';
-import 'package:photoprism/pages/photos_page.dart';
 import 'package:photoprism/common/db.dart';
 import 'package:photoprism/model/photoprism_model.dart';
+import 'package:photoprism/pages/photos_page.dart';
 import 'package:provider/provider.dart';
 
 class AlbumDetailView extends StatelessWidget {

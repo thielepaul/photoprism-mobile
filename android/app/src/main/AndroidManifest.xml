@@ -8,14 +8,14 @@
          FlutterApplication and put your custom class here. -->
     <application
         tools:replace="android:label"
-        android:name="io.flutter.app.FlutterApplication"
+        android:name="${applicationName}"
         android:label="PhotoPrism"
         android:icon="@mipmap/ic_launcher"
         android:usesCleartextTraffic="true"
         android:allowBackup="false"
         android:fullBackupContent="false">
         <activity
-            android:name=".MainActivity"
+            android:name="io.flutter.embedding.android.FlutterActivity"
             android:launchMode="singleTop"
             android:theme="@style/LaunchTheme"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
@@ -27,10 +27,15 @@
             </intent-filter>
         </activity>
         <provider
-            android:name="androidx.work.impl.WorkManagerInitializer"
-            android:authorities="${applicationId}.workmanager-init"
-            android:enabled="false"
-            android:exported="false" />
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            android:exported="false"
+            tools:node="merge">
+            <meta-data
+                android:name="androidx.work.WorkManagerInitializer"
+                android:value="androidx.startup"
+                tools:node="remove" />
+        </provider>
 
         <provider
             android:name="com.bluechilli.flutteruploader.FlutterUploaderInitializer"

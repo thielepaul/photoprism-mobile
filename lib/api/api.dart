@@ -3,14 +3,14 @@ import 'dart:io' as io;
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:path/path.dart' as p;
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 import 'package:photoprism/api/db_api.dart';
+import 'package:photoprism/common/db.dart';
 import 'package:photoprism/model/config.dart';
 import 'package:photoprism/model/photoprism_model.dart';
-import 'package:photoprism/common/db.dart';
-import 'package:http_parser/http_parser.dart';
-import 'package:path_provider/path_provider.dart';
 
 class Api {
   static Future<dynamic> httpAuth(PhotoprismModel model, Function call) async {

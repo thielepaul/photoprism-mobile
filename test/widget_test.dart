@@ -1,16 +1,16 @@
 import 'dart:io';
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:easy_localization/easy_localization.dart';
 import 'package:mockito/mockito.dart';
 import 'package:moor/ffi.dart';
 
+import 'package:photoprism/common/db.dart';
 import 'package:photoprism/main.dart';
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:provider/provider.dart';
-import 'package:photoprism/common/db.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class TestHttpOverrides extends HttpOverrides {}

@@ -2,6 +2,8 @@ import 'dart:io' as io;
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:drag_select_grid_view/drag_select_grid_view.dart';
+import 'package:draggable_scrollbar/draggable_scrollbar.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photoprism/api/api.dart';
@@ -14,11 +16,9 @@ import 'package:photoprism/common/transparent_route.dart';
 import 'package:photoprism/model/filter_photos.dart';
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:photoprism/pages/photoview.dart';
-import 'package:draggable_scrollbar/draggable_scrollbar.dart';
 import 'package:photoprism/widgets/filter_photos_dialog.dart';
 import 'package:photoprism/widgets/selectable_tile.dart';
 import 'package:provider/provider.dart';
-import 'package:easy_localization/easy_localization.dart';
 import 'package:share/share.dart';
 
 class PhotosPage extends StatelessWidget {
@@ -93,7 +93,7 @@ class PhotosPage extends StatelessWidget {
         .toList();
 
     model.gridController.clear();
-    AlbumManager.addPhotosToAlbum(
+    albumManagerAddPhotosToAlbum(
         context, albumId, await Future.wait(selectedPhotos));
   }
 

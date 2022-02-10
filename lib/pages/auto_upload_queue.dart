@@ -2,8 +2,8 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:photoprism/common/photoprism_uploader.dart';
 import 'package:photo_manager/photo_manager.dart' as photolib;
+import 'package:photoprism/common/photoprism_uploader.dart';
 import 'package:photoprism/model/photoprism_model.dart';
 
 class FileList extends StatefulWidget {

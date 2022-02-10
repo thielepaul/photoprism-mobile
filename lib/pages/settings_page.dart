@@ -1,16 +1,16 @@
 import 'package:collection/collection.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
+import 'package:photo_manager/photo_manager.dart' as photolib;
 import 'package:photoprism/api/api.dart';
 import 'package:photoprism/common/photoprism_uploader.dart';
 import 'package:photoprism/model/photoprism_model.dart';
+import 'package:photoprism/pages/auto_upload_queue.dart';
+import 'package:photoprism/widgets/about.dart';
 import 'package:photoprism/widgets/auth_dialog.dart';
 import 'package:photoprism/widgets/multi_select_dialog.dart';
 import 'package:provider/provider.dart';
-import 'package:photo_manager/photo_manager.dart' as photolib;
-import 'package:photoprism/pages/auto_upload_queue.dart';
-import 'package:photoprism/widgets/about.dart';
-import 'package:easy_localization/easy_localization.dart';
 
 import 'log_view.dart';
 

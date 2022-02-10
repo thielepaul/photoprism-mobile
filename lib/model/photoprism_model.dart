@@ -1,28 +1,28 @@
 import 'dart:async';
 import 'dart:io' as io;
 
-import 'package:path_provider/path_provider.dart';
 import 'package:drag_select_grid_view/drag_select_grid_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:intl/intl.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photoprism/api/db_api.dart';
 import 'package:photoprism/common/db.dart';
 import 'package:photoprism/common/photoprism_auth.dart';
-import 'package:photoprism/common/photoprism_remote_config_loader.dart';
+import 'package:photoprism/common/photoprism_common_helper.dart';
 import 'package:photoprism/common/photoprism_loading_screen.dart';
 import 'package:photoprism/common/photoprism_message.dart';
-import 'package:photoprism/common/photoprism_common_helper.dart';
+import 'package:photoprism/common/photoprism_remote_config_loader.dart';
 import 'package:photoprism/common/photoprism_uploader.dart';
 import 'package:photoprism/main.dart';
 import 'package:photoprism/model/config.dart';
-import 'package:photoprism/model/photos_from_db.dart';
 import 'package:photoprism/model/dbtimestamps.dart';
 import 'package:photoprism/model/filter_photos.dart';
+import 'package:photoprism/model/photos_from_db.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:synchronized/synchronized.dart';
 import 'package:sqlite3/sqlite3.dart';
+import 'package:synchronized/synchronized.dart';
 
 class PhotoprismModel extends ChangeNotifier {
   PhotoprismModel(this.dbConnection, this.secureStorage);

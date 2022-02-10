@@ -1,10 +1,11 @@
 import 'dart:io' as io;
 import 'dart:isolate';
+
 import 'package:moor/ffi.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:path/path.dart' as p;
-import 'package:moor/moor.dart';
 import 'package:moor/isolate.dart';
+import 'package:moor/moor.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 import 'package:photoprism/common/db.dart';
 
 Future<MyDatabase> connectDbAsync() async {
