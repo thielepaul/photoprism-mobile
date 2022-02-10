@@ -58,7 +58,7 @@ class PhotoprismAuth {
       password = passwordStored;
     }
 
-    Api.getNewSession(model);
+    apiGetNewSession(model);
     model.notify();
     return 0;
   }

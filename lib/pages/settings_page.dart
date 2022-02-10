@@ -73,7 +73,7 @@ class SettingsPage extends StatelessWidget {
                 child: const Icon(Icons.delete),
               ),
               onTap: () {
-                Api.preloadThumbnails(model);
+                apiPreloadThumbnails(model);
               },
             ),
             SwitchListTile(

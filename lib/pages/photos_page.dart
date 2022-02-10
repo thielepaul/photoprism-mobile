@@ -42,7 +42,7 @@ class PhotosPage extends StatelessWidget {
     final PhotoprismModel model =
         Provider.of<PhotoprismModel>(context, listen: false);
     if (model.albums == null) {
-      DbApi.updateDb(model);
+      apiUpdateDb(model);
     }
 
     showModalBottomSheet<void>(
@@ -70,7 +70,7 @@ class PhotosPage extends StatelessWidget {
     final List<String> mimeTypes = <String>[];
     for (final int index in model.gridController.value.selectedIndexes) {
       final io.File photoFile =
-          await Api.downloadPhoto(model, (await model.photos[index]).file.hash);
+          await apiDownloadPhoto(model, (await model.photos[index]).file.hash);
       if (photoFile != null) {
         photoFiles.add(photoFile.path);
         mimeTypes.add('image/jpg');
@@ -244,10 +244,10 @@ class PhotosPage extends StatelessWidget {
     return RefreshIndicator(child: OrientationBuilder(
         builder: (BuildContext context, Orientation orientation) {
       if (model.config == null) {
-        Api.loadConfig(model);
+        apiLoadConfig(model);
       }
       if (model.dbTimestamps.isEmpty) {
-        DbApi.updateDb(model, context: context);
+        apiUpdateDb(model, context: context);
         return const Text('', key: ValueKey<String>('photosGridView'));
       }
 
@@ -295,8 +295,8 @@ class PhotosPage extends StatelessWidget {
             }),
       );
     }), onRefresh: () async {
-      await Api.loadConfig(model);
-      await DbApi.updateDb(model);
+      await apiLoadConfig(model);
+      await apiUpdateDb(model);
     });
   }
 }

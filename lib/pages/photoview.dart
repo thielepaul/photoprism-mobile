@@ -191,7 +191,7 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
                 : Orientation.portrait,
             animation: animation,
             child: FutureBuilder<String>(
-                future: Api.getVideoUrl(model, model.photos[currentPhotoIndex]),
+                future: apiGetVideoUrl(model, model.photos[currentPhotoIndex]),
                 builder:
                     (BuildContext context, AsyncSnapshot<String> snapshot) {
                   if (snapshot.data == null) {
@@ -437,7 +437,7 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
     final PhotoprismModel model =
         Provider.of<PhotoprismModel>(context, listen: false);
 
-    final String videoUrl = await Api.getVideoUrl(model, model.photos[index]);
+    final String videoUrl = await apiGetVideoUrl(model, model.photos[index]);
 
     if (videoUrl != null) {
       return showDialog(
@@ -470,7 +470,7 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
 
   Future<void> sharePhotoFile(int index, PhotoprismModel model) async {
     final io.File photoFile =
-        await Api.downloadPhoto(model, (await model.photos[index]).file.hash);
+        await apiDownloadPhoto(model, (await model.photos[index]).file.hash);
 
     if (photoFile != null) {
       await Share.shareFiles(<String>[photoFile.path],
@@ -480,7 +480,7 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
 
   Future<void> shareVideoFile(int index, PhotoprismModel model) async {
     final io.File videoFile =
-        await Api.downloadVideo(model, model.photos[index]);
+        await apiDownloadVideo(model, model.photos[index]);
 
     if (videoFile != null) {
       await Share.shareFiles(<String>[videoFile.path],

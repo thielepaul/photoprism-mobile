@@ -126,7 +126,7 @@ class PhotoprismModel extends ChangeNotifier {
 
     initialized = true;
     notifyListeners();
-    await DbApi.updateDb(this);
+    await apiUpdateDb(this);
   }
 
   Future<void> resetDatabase() async {

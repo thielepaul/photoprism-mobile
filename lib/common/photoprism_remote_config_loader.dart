@@ -22,7 +22,7 @@ class PhotoprismRemoteSettingsLoader {
 
     // load color scheme from server
     try {
-      final http.Response response = await Api.httpAuth(
+      final http.Response response = await apiHttpAuth(
               photoprismModel,
               () => http.get(
                   Uri.parse(photoprismModel.photoprismUrl + '/api/v1/settings'),

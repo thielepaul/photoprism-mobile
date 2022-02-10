@@ -150,10 +150,10 @@ class PhotoprismUploader {
         print('Importing photos..');
         photoprismModel.photoprismLoadingScreen
             .updateLoadingScreen('Importing photos..');
-        final int status = await Api.importPhotoEvent(photoprismModel, event);
+        final int status = await apiImportPhotoEvent(photoprismModel, event);
 
         if (status == 0) {
-          await DbApi.updateDb(photoprismModel);
+          await apiUpdateDb(photoprismModel);
           await photoprismModel.photoprismLoadingScreen.hideLoadingScreen();
           photoprismModel.photoprismMessage
               .showMessage('Uploading and importing successful.');
@@ -176,7 +176,7 @@ class PhotoprismUploader {
   Future<int> uploadPhoto(List<FileItem> filesToUpload, String event) async {
     manualUploadFinishedCompleter = Completer<int>();
 
-    await Api.getNewSession(photoprismModel);
+    await apiGetNewSession(photoprismModel);
     for (final FileItem fileToUpload in filesToUpload) {
       await uploader.enqueue(RawUpload(
           url: photoprismModel.photoprismUrl + '/api/v1/upload/' + event,
@@ -329,7 +329,7 @@ class PhotoprismUploader {
 
   Future<int> getRemoteAlbumsWithDeviceName(PhotoprismModel model) async {
     // Get list of albums from server which name is the device name of the smartphone.
-    await DbApi.updateDb(model);
+    await apiUpdateDb(model);
     final List<Album> deviceAlbumList = model.albums
         .where((Album album) => album.title.contains(deviceName))
         .toList();
@@ -362,7 +362,7 @@ class PhotoprismUploader {
     } else {
       model.addLogEntry('AutoUploader',
           "Album '" + albumName + "' not found, will be created.");
-      albumId = await Api.createAlbum(albumName, photoprismModel);
+      albumId = await apiCreateAlbum(albumName, photoprismModel);
       if (albumId == '-1') {
         model.addLogEntry('AutoUploader',
             "ERROR: Album creation of ' " + albumName + "' failed.");
@@ -412,7 +412,7 @@ class PhotoprismUploader {
 
       model.addLogEntry('AutoUploader', "Uploading photo '" + filename + "'.");
       final bool status =
-          await Api.upload(photoprismModel, filehash, filename, imageFile);
+          await apiUpload(photoprismModel, filehash, filename, imageFile);
       if (status) {
         model.addLogEntry(
             'AutoUploader', "Uploading photo $filename successful'.");
@@ -423,9 +423,9 @@ class PhotoprismUploader {
       }
 
       // add uploaded photo to shared pref
-      if (await Api.importPhotos(
+      if (await apiImportPhotos(
           photoprismModel.photoprismUrl, photoprismModel, filehash)) {
-        await DbApi.updateDb(model);
+        await apiUpdateDb(model);
         if (await isPhotoOnServerAndAddToAlbum(
             photoprismModel, id, filehash, albumId)) {
           model.addLogEntry('AutoUploader',
@@ -450,7 +450,7 @@ class PhotoprismUploader {
       return false;
     }
     if (!await model.database.isPhotoAlbum(file[0].photoUID, albumId)) {
-      if (await Api.addPhotosToAlbum(
+      if (await apiAddPhotosToAlbum(
               albumId, <String>[file[0].photoUID], model) !=
           0) {
         return false;

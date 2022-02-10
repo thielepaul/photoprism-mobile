@@ -20,10 +20,10 @@ class AlbumDetailView extends StatelessWidget {
     _model.photoprismLoadingScreen.showLoadingScreen('Renaming album...');
 
     // rename remote album
-    final int status = await Api.renameAlbum(
+    final int status = await apiRenameAlbum(
         _album.uid, _renameAlbumTextFieldController.text, _model);
 
-    await DbApi.updateDb(_model);
+    await apiUpdateDb(_model);
 
     await _model.photoprismLoadingScreen.hideLoadingScreen();
     // close rename dialog
@@ -39,7 +39,7 @@ class AlbumDetailView extends StatelessWidget {
     _model.photoprismLoadingScreen.showLoadingScreen('Deleting album...');
 
     // delete remote album
-    final int status = await Api.deleteAlbum(_album.uid, _model);
+    final int status = await apiDeleteAlbum(_album.uid, _model);
 
     await _model.photoprismLoadingScreen.hideLoadingScreen();
 
@@ -51,7 +51,7 @@ class AlbumDetailView extends StatelessWidget {
     } else {
       // go back to albums view
       Navigator.pop(context);
-      await DbApi.updateDb(_model);
+      await apiUpdateDb(_model);
     }
   }
 
@@ -66,14 +66,14 @@ class AlbumDetailView extends StatelessWidget {
 
     // remove remote photos from album
     final int status =
-        await Api.removePhotosFromAlbum(_album.uid, selectedPhotos, _model);
+        await apiRemovePhotosFromAlbum(_album.uid, selectedPhotos, _model);
 
     // check if successful
     if (status != 0) {
       _model.photoprismMessage
           .showMessage('Removing photos from album failed.');
     } else {
-      await DbApi.updateDb(_model);
+      await apiUpdateDb(_model);
     }
     // deselect selected photos
     _model.gridController.clear();

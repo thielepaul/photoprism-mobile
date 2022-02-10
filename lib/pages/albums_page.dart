@@ -36,13 +36,13 @@ class AlbumsPage extends StatelessWidget {
         Provider.of<PhotoprismModel>(context, listen: false);
     model.photoprismLoadingScreen
         .showLoadingScreen('create_album'.tr() + '...');
-    final String uuid = await Api.createAlbum('New album', model);
+    final String uuid = await apiCreateAlbum('New album', model);
 
     if (uuid == '-1') {
       await model.photoprismLoadingScreen.hideLoadingScreen();
       model.photoprismMessage.showMessage('Creating album failed.');
     } else {
-      await DbApi.updateDb(model);
+      await apiUpdateDb(model);
       model.albumUid = uuid;
       model.updatePhotosSubscription();
       await model.photoprismLoadingScreen.hideLoadingScreen();
@@ -89,7 +89,7 @@ class AlbumsPage extends StatelessWidget {
         body: RefreshIndicator(child: OrientationBuilder(
             builder: (BuildContext context, Orientation orientation) {
           if (model.dbTimestamps.isEmpty) {
-            DbApi.updateDb(model);
+            apiUpdateDb(model);
             return const Text('', key: ValueKey<String>('albumsGridView'));
           }
           return GridView.builder(
@@ -141,7 +141,7 @@ class AlbumsPage extends StatelessWidget {
                         )));
               });
         }), onRefresh: () async {
-          return DbApi.updateDb(model);
+          return apiUpdateDb(model);
         }));
   }
 }

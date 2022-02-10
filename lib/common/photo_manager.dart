@@ -14,10 +14,10 @@ class PhotoManager {
         Provider.of<PhotoprismModel>(context, listen: false);
 
     model.photoprismLoadingScreen.showLoadingScreen('Archive photos..');
-    final int status = await Api.archivePhotos(photoUUIDs, model);
+    final int status = await apiArchivePhotos(photoUUIDs, model);
     if (status == 0) {
       model.gridController.clear();
-      await DbApi.updateDb(model);
+      await apiUpdateDb(model);
       model.photoprismLoadingScreen.hideLoadingScreen();
     } else {
       model.photoprismLoadingScreen.hideLoadingScreen();

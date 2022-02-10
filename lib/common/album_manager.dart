@@ -12,10 +12,10 @@ Future<void> albumManagerAddPhotosToAlbum(
   print('Adding photos to album ' + model.albums[albumId].uid);
   model.photoprismLoadingScreen.showLoadingScreen('Adding photos to album..');
   final int status =
-      await Api.addPhotosToAlbum(model.albums[albumId].uid, photoUUIDs, model);
+      await apiAddPhotosToAlbum(model.albums[albumId].uid, photoUUIDs, model);
 
   if (status == 0) {
-    await DbApi.updateDb(model);
+    await apiUpdateDb(model);
     await model.photoprismLoadingScreen.hideLoadingScreen();
     model.photoprismMessage.showMessage('Adding photos to album successfull.');
   } else {
