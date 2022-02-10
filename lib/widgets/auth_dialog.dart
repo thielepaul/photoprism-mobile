@@ -35,14 +35,15 @@ class _AuthDialogState extends State<AuthDialog> {
   @override
   Widget build(BuildContext context) {
     Future<void> saveAndPop() async {
-      model.photoprismAuth.setHttpBasicEnabled(httpBasicEnabled);
-      model.photoprismAuth.setHttpBasicUser(_httpBasicUserController.text);
-      model.photoprismAuth
+      await model.photoprismAuth.setHttpBasicEnabled(httpBasicEnabled);
+      await model.photoprismAuth
+          .setHttpBasicUser(_httpBasicUserController.text);
+      await model.photoprismAuth
           .setHttpBasicPassword(_httpBasicPasswordController.text);
-      model.photoprismAuth.setEnabled(enabled);
-      model.photoprismAuth.setUser(_userController.text);
-      model.photoprismAuth.setPassword(_passwordController.text);
-      model.photoprismRemoteConfigLoader.loadApplicationColor();
+      await model.photoprismAuth.setEnabled(enabled);
+      await model.photoprismAuth.setUser(_userController.text);
+      await model.photoprismAuth.setPassword(_passwordController.text);
+      await model.photoprismRemoteConfigLoader.loadApplicationColor();
       await SettingsPage.emptyCache(context);
       Navigator.of(context).pop();
     }

@@ -82,10 +82,10 @@ class MyDatabase extends _$MyDatabase {
   Stream<Map<String, int>> allAlbumCounts() {
     final Expression<int> photoCount = photosAlbums.photoUID.count();
 
-    final JoinedSelectStatement<Table, DataClass> query = (select(albums)
+    final JoinedSelectStatement<Table, dynamic> query = (select(albums)
           ..where(($AlbumsTable tbl) =>
               tbl.deletedAt.isNull() & tbl.type.equals('album')))
-        .join(<Join<Table, DataClass>>[
+        .join(<Join<Table, dynamic>>[
       innerJoin(photosAlbums, photosAlbums.albumUID.equalsExp(albums.uid),
           useColumns: false)
     ])
@@ -99,21 +99,21 @@ class MyDatabase extends _$MyDatabase {
         });
   }
 
-  JoinedSelectStatement<Table, DataClass> _photosWithFileQuery(
+  JoinedSelectStatement<Table, dynamic> _photosWithFileQuery(
       FilterPhotos filterPhotos,
       {String albumUid}) {
-    JoinedSelectStatement<Table, DataClass> query;
+    JoinedSelectStatement<Table, dynamic> query;
     if (albumUid != null) {
       query = (select(photosAlbums)
             ..where(($PhotosAlbumsTable tbl) =>
                 tbl.albumUID.equals(albumUid) & tbl.hidden.not()))
-          .join(<Join<Table, DataClass>>[
+          .join(<Join<Table, dynamic>>[
         innerJoin(photos, photos.uid.equalsExp(photosAlbums.photoUID)),
-      ]).join(<Join<Table, DataClass>>[
+      ]).join(<Join<Table, dynamic>>[
         innerJoin(files, files.photoUID.equalsExp(photos.uid)),
       ]);
     } else {
-      query = select(photos).join(<Join<Table, DataClass>>[
+      query = select(photos).join(<Join<Table, dynamic>>[
         innerJoin(files, files.photoUID.equalsExp(photos.uid)),
       ]);
     }
@@ -159,7 +159,7 @@ class MyDatabase extends _$MyDatabase {
   Future<Iterable<PhotoWithFile>> photosWithFile(
       int limit, int offset, FilterPhotos filterPhotos,
       {String albumUid}) {
-    final JoinedSelectStatement<Table, DataClass> query =
+    final JoinedSelectStatement<Table, dynamic> query =
         _photosWithFileQuery(filterPhotos, albumUid: albumUid);
     final Selectable<PhotoWithFile> result = (query
           ..limit(limit, offset: offset))
@@ -172,7 +172,7 @@ class MyDatabase extends _$MyDatabase {
 
   Stream<int> photosWithFileCount(FilterPhotos filterPhotos,
       {String albumUid}) {
-    final JoinedSelectStatement<Table, DataClass> query =
+    final JoinedSelectStatement<Table, dynamic> query =
         _photosWithFileQuery(filterPhotos, albumUid: albumUid);
     final Expression<int> filesCount = files.hash.count();
 
