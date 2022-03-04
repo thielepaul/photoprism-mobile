@@ -5,7 +5,7 @@ import 'package:enum_to_string/enum_to_string.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 enum PhotoSort { TakenAt, CreatedAt, UpdatedAt }
-enum PhotoType { Image, Live, Video }
+enum PhotoType { Image, Live, Video, Raw }
 enum PhotoList { Default, Archive, Private }
 
 class FilterPhotos {
@@ -15,7 +15,8 @@ class FilterPhotos {
       Set<PhotoType> types = const <PhotoType>{
         PhotoType.Image,
         PhotoType.Live,
-        PhotoType.Video
+        PhotoType.Video,
+        PhotoType.Raw,
       },
       this.list = PhotoList.Default}) {
     this.types = types.toSet();
@@ -60,7 +61,11 @@ class FilterPhotos {
 
   OrderingMode order = OrderingMode.desc;
   PhotoSort sort = PhotoSort.TakenAt;
-  Set<PhotoType> types = <PhotoType>{PhotoType.Image, PhotoType.Live};
+  Set<PhotoType> types = <PhotoType>{
+    PhotoType.Image,
+    PhotoType.Live,
+    PhotoType.Raw,
+  };
   PhotoList list = PhotoList.Default;
 
   Iterable<String> get typesAsString =>
