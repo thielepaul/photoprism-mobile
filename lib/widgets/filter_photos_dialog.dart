@@ -1,7 +1,7 @@
+import 'package:drift/drift.dart' as moor;
 import 'package:easy_localization/easy_localization.dart';
 import 'package:enum_to_string/enum_to_string.dart';
 import 'package:flutter/material.dart';
-import 'package:moor/moor.dart' as moor;
 import 'package:photoprism/model/filter_photos.dart';
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:provider/provider.dart';

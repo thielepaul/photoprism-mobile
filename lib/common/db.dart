@@ -1,5 +1,5 @@
 import 'dart:io' as io;
-import 'package:moor/moor.dart';
+import 'package:drift/drift.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:photoprism/model/albums.dart';
@@ -10,7 +10,7 @@ import 'package:photoprism/model/photos_albums.dart';
 
 part 'db.g.dart';
 
-@UseMoor(tables: <Type>[Photos, Files, Albums, PhotosAlbums])
+@DriftDatabase(tables: <Type>[Photos, Files, Albums, PhotosAlbums])
 class MyDatabase extends _$MyDatabase {
   MyDatabase(QueryExecutor e) : super(e);
 

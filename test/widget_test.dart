@@ -1,12 +1,11 @@
 import 'dart:io';
 
+import 'package:drift/native.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
-import 'package:moor/ffi.dart';
-
 import 'package:photoprism/common/db.dart';
 import 'package:photoprism/main.dart';
 import 'package:photoprism/model/photoprism_model.dart';
@@ -48,7 +47,7 @@ void main() {
     HttpOverrides.global = TestHttpOverrides();
     final SecureStorageMock secureStorageMock = SecureStorageMock();
     model = PhotoprismModel(
-        () async => MyDatabase(VmDatabase.memory()), secureStorageMock);
+        () async => MyDatabase(NativeDatabase.memory()), secureStorageMock);
     await model.initialize();
   });
 

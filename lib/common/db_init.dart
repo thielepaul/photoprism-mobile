@@ -1,19 +1,19 @@
 import 'dart:io' as io;
 import 'dart:isolate';
 
-import 'package:moor/ffi.dart';
-import 'package:moor/isolate.dart';
-import 'package:moor/moor.dart';
+import 'package:drift/drift.dart';
+import 'package:drift/isolate.dart';
+import 'package:drift/native.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:photoprism/common/db.dart';
 
 Future<MyDatabase> connectDbAsync() async {
-  final MoorIsolate isolate = await _createMoorIsolate();
+  final DriftIsolate isolate = await _createMoorIsolate();
   return MyDatabase.connect(await isolate.connect());
 }
 
-Future<MoorIsolate> _createMoorIsolate() async {
+Future<DriftIsolate> _createMoorIsolate() async {
   final io.Directory dir = await getApplicationDocumentsDirectory();
   final String path = p.join(dir.path, 'db.sqlite');
   final ReceivePort receivePort = ReceivePort();
@@ -23,12 +23,12 @@ Future<MoorIsolate> _createMoorIsolate() async {
     _IsolateStartRequest(receivePort.sendPort, path),
   );
 
-  return await receivePort.first as MoorIsolate;
+  return await receivePort.first as DriftIsolate;
 }
 
 void _startBackground(_IsolateStartRequest request) {
-  final VmDatabase executor = VmDatabase(io.File(request.targetPath));
-  final MoorIsolate moorIsolate = MoorIsolate.inCurrent(
+  final NativeDatabase executor = NativeDatabase(io.File(request.targetPath));
+  final DriftIsolate moorIsolate = DriftIsolate.inCurrent(
     () => DatabaseConnection.fromExecutor(executor),
   );
   request.sendMoorIsolate.send(moorIsolate);
