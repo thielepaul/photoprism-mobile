@@ -62,7 +62,7 @@ class SettingsPage extends StatelessWidget {
                 child: const Icon(Icons.delete),
               ),
               onTap: () {
-                emptyCache(context);
+                emptyCache(model);
               },
             ),
             ListTile(
@@ -335,12 +335,10 @@ class SettingsPage extends StatelessWidget {
     Navigator.of(context).pop();
     await model.photoprismCommonHelper.setPhotoprismUrl(url);
     model.photoprismRemoteConfigLoader.loadApplicationColor();
-    await emptyCache(context);
+    await emptyCache(model);
   }
 
-  static Future<void> emptyCache(BuildContext context) async {
-    final PhotoprismModel model =
-        Provider.of<PhotoprismModel>(context, listen: false);
+  static Future<void> emptyCache(PhotoprismModel model) async {
     model.photos = null;
     model.albums = null;
     model.config = null;

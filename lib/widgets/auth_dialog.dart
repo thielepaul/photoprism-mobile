@@ -21,6 +21,10 @@ class _AuthDialogState extends State<AuthDialog> {
     _userController = TextEditingController();
     _passwordController = TextEditingController();
     enabled = model.photoprismAuth.enabled;
+    _httpBasicUserController.text = model.photoprismAuth.httpBasicUser;
+    _httpBasicPasswordController.text = model.photoprismAuth.httpBasicPassword;
+    _userController.text = model.photoprismAuth.user;
+    _passwordController.text = model.photoprismAuth.password;
   }
 
   PhotoprismModel model;
@@ -43,14 +47,9 @@ class _AuthDialogState extends State<AuthDialog> {
       await model.photoprismAuth.setUser(_userController.text);
       await model.photoprismAuth.setPassword(_passwordController.text);
       await model.photoprismRemoteConfigLoader.loadApplicationColor();
-      await SettingsPage.emptyCache(context);
+      await SettingsPage.emptyCache(model);
       Navigator.of(context).pop();
     }
-
-    _httpBasicUserController.text = model.photoprismAuth.httpBasicUser;
-    _httpBasicPasswordController.text = model.photoprismAuth.httpBasicPassword;
-    _userController.text = model.photoprismAuth.user;
-    _passwordController.text = model.photoprismAuth.password;
 
     return AlertDialog(
       title: const Text('authentication').tr(),
