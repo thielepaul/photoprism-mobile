@@ -43,7 +43,7 @@ class _FileListState extends State<FileList> {
                 leading: assets[id] == null
                     ? null
                     : FutureBuilder<Uint8List>(
-                        future: assets[id].thumbData,
+                        future: assets[id].thumbnailData,
                         builder: (BuildContext context,
                             AsyncSnapshot<Uint8List> snapshot) {
                           if (snapshot.data == null) {

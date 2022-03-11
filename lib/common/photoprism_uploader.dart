@@ -195,15 +195,22 @@ class PhotoprismUploader {
       return;
     }
 
-    if (await photolib.PhotoManager.requestPermission()) {
+    if ((await photolib.PhotoManager.requestPermissionExtend()).isAuth) {
       final List<photolib.AssetPathEntity> albums =
           await photolib.PhotoManager.getAssetPathList();
       final Set<String> photosToUpload = <String>{};
       for (final photolib.AssetPathEntity album in albums) {
         if (model.albumsToUpload.contains(album.id)) {
-          List<photolib.AssetEntity> entries = await album.assetList;
-          entries = filterForNonUploadedFiles(entries, model);
-          photosToUpload.addAll(entries.map((photolib.AssetEntity e) => e.id));
+          const int pageSize = 100;
+          int page = 0;
+          List<photolib.AssetEntity> entries;
+          do {
+            entries = await album.getAssetListPaged(page: page, size: pageSize);
+            entries = filterForNonUploadedFiles(entries, model);
+            photosToUpload
+                .addAll(entries.map((photolib.AssetEntity e) => e.id));
+            page++;
+          } while (entries.length == pageSize);
         }
       }
       model.photosToUpload = photosToUpload;
@@ -393,7 +400,7 @@ class PhotoprismUploader {
       }
 
       final String filename = await assets[id].titleAsync;
-      final io.File imageFile = await assets[id].file;
+      final io.File imageFile = await assets[id].originFile;
       final String filehash =
           (await sha1.bind(imageFile.openRead()).first).toString();
 
@@ -510,15 +517,23 @@ class PhotoprismUploader {
       String id) async {
     final List<photolib.AssetPathEntity> list =
         await photolib.PhotoManager.getAssetPathList();
+    final Map<String, photolib.AssetEntity> result =
+        <String, photolib.AssetEntity>{};
 
     for (final photolib.AssetPathEntity album in list) {
       if (album.id == id) {
-        return Map<String, photolib.AssetEntity>.fromEntries(
-            (await album.assetList).map((photolib.AssetEntity asset) =>
-                MapEntry<String, photolib.AssetEntity>(asset.id, asset)));
+        const int pageSize = 100;
+        int page = 0;
+        List<photolib.AssetEntity> entries;
+        do {
+          entries = await album.getAssetListPaged(page: page, size: pageSize);
+          result.addEntries(entries.map((photolib.AssetEntity asset) =>
+              MapEntry<String, photolib.AssetEntity>(asset.id, asset)));
+          page++;
+        } while (entries.length == pageSize);
       }
     }
-    return <String, photolib.AssetEntity>{};
+    return result;
   }
 
   // Returns the device name of the current device (smartphone).

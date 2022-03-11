@@ -81,9 +81,9 @@ class SettingsPage extends StatelessWidget {
               secondary: const Icon(Icons.cloud_upload),
               value: model.autoUploadEnabled,
               onChanged: (bool newState) async {
-                final bool result =
-                    await photolib.PhotoManager.requestPermission();
-                if (result) {
+                final photolib.PermissionState _ps =
+                    await photolib.PhotoManager.requestPermissionExtend();
+                if (_ps.isAuth) {
                   model.photoprismUploader.setAutoUpload(newState);
                   model.photoprismUploader.initialize();
                   if (newState) {
@@ -255,7 +255,7 @@ class SettingsPage extends StatelessWidget {
     final PhotoprismModel model =
         Provider.of<PhotoprismModel>(context, listen: false);
 
-    if (!await photolib.PhotoManager.requestPermission()) {
+    if (!(await photolib.PhotoManager.requestPermissionExtend()).isAuth) {
       model.photoprismMessage
           .showMessage('Permission to photo library denied!');
       return;
