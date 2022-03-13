@@ -3,7 +3,6 @@
 import 'dart:convert';
 
 import 'package:enum_to_string/enum_to_string.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photoprism/common/photoprism_uploader.dart';

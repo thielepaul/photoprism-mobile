@@ -7,7 +7,7 @@ import 'package:connectivity/connectivity.dart';
 import 'package:crypto/crypto.dart';
 import 'package:device_info/device_info.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_uploader/flutter_uploader.dart';
 import 'package:intl/intl.dart';
 import 'package:photo_manager/photo_manager.dart' as photolib;
