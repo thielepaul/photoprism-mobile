@@ -46,5 +46,9 @@
   "filter": "Filter",
   "TakenAt": "Taken At",
   "UpdatedAt": "Updated At",
-  "CreatedAt": "Created At"
+  "CreatedAt": "Created At",
+  "theme": "Theme",
+  "dark": "Dark",
+  "light": "Light",
+  "system": "System default"
 }

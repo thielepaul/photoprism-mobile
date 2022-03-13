@@ -49,6 +49,7 @@ class PhotoprismModel extends ChangeNotifier {
 
   // theming
   String applicationColor = '#424242';
+  ThemeMode _themeMode = ThemeMode.system;
 
   // photoprism uploader
   bool autoUploadEnabled = false;
@@ -214,6 +215,13 @@ class PhotoprismModel extends ChangeNotifier {
   Future<void> loadDataFromCache(BuildContext context) async {
     await PhotoprismCommonHelper.getCachedDataFromSharedPrefs(context);
     _dataFromCacheLoaded = true;
+    notifyListeners();
+  }
+
+  ThemeMode get themeMode => _themeMode;
+
+  set themeMode(ThemeMode newValue) {
+    _themeMode = newValue;
     notifyListeners();
   }
 

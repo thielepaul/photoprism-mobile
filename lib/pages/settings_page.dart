@@ -10,6 +10,7 @@ import 'package:photoprism/pages/auto_upload_queue.dart';
 import 'package:photoprism/widgets/about.dart';
 import 'package:photoprism/widgets/auth_dialog.dart';
 import 'package:photoprism/widgets/multi_select_dialog.dart';
+import 'package:photoprism/widgets/theme_dialog.dart';
 import 'package:provider/provider.dart';
 
 import 'log_view.dart';
@@ -75,6 +76,19 @@ class SettingsPage extends StatelessWidget {
               onTap: () {
                 apiPreloadThumbnails(model);
               },
+            ),
+            ListTile(
+              title: const Text('theme').tr(),
+              leading: Container(
+                width: 10,
+                alignment: Alignment.center,
+                child: const Icon(Icons.color_lens),
+              ),
+              onTap: () => showDialog<void>(
+                  context: context,
+                  builder: (BuildContext context) => ThemeDialog(
+                        context: context,
+                      )),
             ),
             SwitchListTile(
               title: Text('auto_upload'.tr()),

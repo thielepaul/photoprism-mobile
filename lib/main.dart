@@ -56,6 +56,7 @@ class PhotoprismApp extends StatelessWidget {
         colorScheme: ColorScheme.light(
           primary: applicationColor,
         ),
+        toggleableActiveColor: applicationColor,
         textSelectionTheme: TextSelectionThemeData(
             cursorColor: applicationColor,
             selectionColor: applicationColor,
@@ -66,6 +67,8 @@ class PhotoprismApp extends StatelessWidget {
             focusedBorder: UnderlineInputBorder(
                 borderSide: BorderSide(color: applicationColor))),
       ),
+      darkTheme: ThemeData.dark(),
+      themeMode: Provider.of<PhotoprismModel>(context).themeMode,
       home: MainPage(),
     );
   }

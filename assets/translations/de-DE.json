@@ -45,5 +45,9 @@
   "filter": "Filter",
   "TakenAt": "Aufnahme",
   "UpdatedAt": "Aktualisierung",
-  "CreatedAt": "Erstellung"
+  "CreatedAt": "Erstellung",
+  "theme": "Theme",
+  "dark": "Dunkel",
+  "light": "Hell",
+  "system": "System-Einstellung"
 }

@@ -2,7 +2,9 @@
 
 import 'dart:convert';
 
+import 'package:enum_to_string/enum_to_string.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photoprism/common/photoprism_uploader.dart';
 import 'package:photoprism/main.dart';
@@ -60,6 +62,15 @@ class PhotoprismCommonHelper {
             json.decode(sp.getString('config')) as Map<String, dynamic>);
       } catch (_) {
         sp.remove('config');
+      }
+    }
+
+    if (sp.containsKey('theme_mode')) {
+      try {
+        model.themeMode = EnumToString.fromString<ThemeMode>(
+            ThemeMode.values, sp.getString('theme_mode'));
+      } catch (_) {
+        sp.remove('theme_mode');
       }
     }
   }
