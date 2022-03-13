@@ -52,11 +52,6 @@ If you'd like to make an enhancement to the application, please see [the contrib
 
 ![alt text](assets/qrcode_android_apk.png "Android APK QR Code image")
 
-### iOS
-- On iOS you can use [testflight to install app](https://testflight.apple.com/join/Rxzv6JpC).
-
-![alt text](assets/qrcode_ios_testflight.png "TestFlight QR Code image")
-
 ## PhotoPrism® is a registered trademark ##
 
 The official [Trademark and Brand Guidelines](https://photoprism.app/trademark), which may be updated
