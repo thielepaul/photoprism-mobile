@@ -5,7 +5,9 @@ import 'package:enum_to_string/enum_to_string.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 enum PhotoSort { TakenAt, CreatedAt, UpdatedAt }
+
 enum PhotoType { Image, Live, Video, Raw }
+
 enum PhotoList { Default, Archive, Private }
 
 class FilterPhotos {
