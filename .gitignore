@@ -41,3 +41,10 @@ lib/generated_plugin_registrant.dart
 # signing keystore
 key.jks
 key.pass
+
+# appimage
+AppDir
+appimage-build
+PhotoPrism-latest-x86_64.AppImage
+
+macos

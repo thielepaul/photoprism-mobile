@@ -1,0 +1,168 @@
+# appimage-builder recipe see https://appimage-builder.readthedocs.io for details
+version: 1
+script: |
+  rm -rf AppDir
+  flutter build linux
+  cp -r build/linux/x64/release/bundle AppDir
+AppDir:
+  path: /workspaces/photoprism_app/AppDir
+  app_info:
+    id: photoprism
+    name: PhotoPrism
+    icon: application-vnd.appimage
+    version: latest
+    exec: photoprism_app
+    exec_args: $@
+  apt:
+    arch:
+    - amd64
+    allow_unauthenticated: true
+    sources:
+    - sourceline: deb http://archive.ubuntu.com/ubuntu/ focal main restricted
+    - sourceline: deb http://archive.ubuntu.com/ubuntu/ focal-updates main restricted
+    - sourceline: deb http://archive.ubuntu.com/ubuntu/ focal universe
+    - sourceline: deb http://archive.ubuntu.com/ubuntu/ focal-updates universe
+    - sourceline: deb http://archive.ubuntu.com/ubuntu/ focal multiverse
+    - sourceline: deb http://archive.ubuntu.com/ubuntu/ focal-updates multiverse
+    - sourceline: deb http://archive.ubuntu.com/ubuntu/ focal-backports main restricted
+        universe multiverse
+    - sourceline: deb http://security.ubuntu.com/ubuntu/ focal-security main restricted
+    - sourceline: deb http://security.ubuntu.com/ubuntu/ focal-security universe
+    - sourceline: deb http://security.ubuntu.com/ubuntu/ focal-security multiverse
+    include:
+    - adwaita-icon-theme
+    - fonts-dejavu-core
+    - fonts-dejavu-extra
+    - glib-networking:amd64
+    - hicolor-icon-theme
+    - libdbus-1-3:amd64
+    - libgpg-error0:amd64
+    - libgtk-3-0:amd64
+    - liblzma5:amd64
+    - libmount1:amd64
+    - libpcre3:amd64
+    - librsvg2-common:amd64
+    - libsystemd0:amd64
+    - libtinfo6:amd64
+    - libuuid1:amd64
+    - locales
+    - xkb-data
+  files:
+    include:
+    - /home/flutter/.local/share/org.photoprism.photoprism_app/libCachedImageData.json
+    - /home/flutter/.local/share/org.photoprism.photoprism_app/shared_preferences.json
+    - /home/flutter/db.sqlite
+    - /lib/x86_64-linux-gnu/libEGL_mesa.so.0
+    - /lib/x86_64-linux-gnu/libGLX.so.0
+    - /lib/x86_64-linux-gnu/libGLdispatch.so.0
+    - /lib/x86_64-linux-gnu/libLLVM-12.so.1
+    - /lib/x86_64-linux-gnu/libOpenGL.so.0
+    - /lib/x86_64-linux-gnu/libX11.so.6
+    - /lib/x86_64-linux-gnu/libXau.so.6
+    - /lib/x86_64-linux-gnu/libXcomposite.so.1
+    - /lib/x86_64-linux-gnu/libXcursor.so.1
+    - /lib/x86_64-linux-gnu/libXdamage.so.1
+    - /lib/x86_64-linux-gnu/libXdmcp.so.6
+    - /lib/x86_64-linux-gnu/libXext.so.6
+    - /lib/x86_64-linux-gnu/libXfixes.so.3
+    - /lib/x86_64-linux-gnu/libXi.so.6
+    - /lib/x86_64-linux-gnu/libXinerama.so.1
+    - /lib/x86_64-linux-gnu/libXrandr.so.2
+    - /lib/x86_64-linux-gnu/libXrender.so.1
+    - /lib/x86_64-linux-gnu/libatk-1.0.so.0
+    - /lib/x86_64-linux-gnu/libatk-bridge-2.0.so.0
+    - /lib/x86_64-linux-gnu/libatspi.so.0
+    - /lib/x86_64-linux-gnu/libbsd.so.0
+    - /lib/x86_64-linux-gnu/libcairo-gobject.so.2
+    - /lib/x86_64-linux-gnu/libcairo.so.2
+    - /lib/x86_64-linux-gnu/libdatrie.so.1
+    - /lib/x86_64-linux-gnu/libedit.so.2
+    - /lib/x86_64-linux-gnu/libelf.so.1
+    - /lib/x86_64-linux-gnu/libepoxy.so.0
+    - /lib/x86_64-linux-gnu/libffi.so.7
+    - /lib/x86_64-linux-gnu/libfontconfig.so.1
+    - /lib/x86_64-linux-gnu/libfreetype.so.6
+    - /lib/x86_64-linux-gnu/libfribidi.so.0
+    - /lib/x86_64-linux-gnu/libgbm.so.1
+    - /lib/x86_64-linux-gnu/libgcrypt.so.20
+    - /lib/x86_64-linux-gnu/libgdk-3.so.0
+    - /lib/x86_64-linux-gnu/libgdk_pixbuf-2.0.so.0
+    - /lib/x86_64-linux-gnu/libgio-2.0.so
+    - /lib/x86_64-linux-gnu/libgio-2.0.so.0
+    - /lib/x86_64-linux-gnu/libglapi.so.0
+    - /lib/x86_64-linux-gnu/libglib-2.0.so.0
+    - /lib/x86_64-linux-gnu/libgmodule-2.0.so.0
+    - /lib/x86_64-linux-gnu/libgmp.so.10
+    - /lib/x86_64-linux-gnu/libgnutls.so.30
+    - /lib/x86_64-linux-gnu/libgobject-2.0.so.0
+    - /lib/x86_64-linux-gnu/libgraphite2.so.3
+    - /lib/x86_64-linux-gnu/libgtk-3.so.0
+    - /lib/x86_64-linux-gnu/libharfbuzz.so.0
+    - /lib/x86_64-linux-gnu/libhogweed.so.5
+    - /lib/x86_64-linux-gnu/libicudata.so.66
+    - /lib/x86_64-linux-gnu/libicuuc.so.66
+    - /lib/x86_64-linux-gnu/libidn2.so.0
+    - /lib/x86_64-linux-gnu/libjsoncpp.so.1
+    - /lib/x86_64-linux-gnu/liblz4.so.1
+    - /lib/x86_64-linux-gnu/libnettle.so.7
+    - /lib/x86_64-linux-gnu/libp11-kit.so.0
+    - /lib/x86_64-linux-gnu/libpango-1.0.so.0
+    - /lib/x86_64-linux-gnu/libpangocairo-1.0.so.0
+    - /lib/x86_64-linux-gnu/libpangoft2-1.0.so.0
+    - /lib/x86_64-linux-gnu/libpcre2-8.so.0
+    - /lib/x86_64-linux-gnu/libpixman-1.so.0
+    - /lib/x86_64-linux-gnu/libpng16.so.16
+    - /lib/x86_64-linux-gnu/libproxy.so.1
+    - /lib/x86_64-linux-gnu/librsvg-2.so.2
+    - /lib/x86_64-linux-gnu/libsecret-1.so.0
+    - /lib/x86_64-linux-gnu/libsensors.so.5
+    - /lib/x86_64-linux-gnu/libstdc++.so.6
+    - /lib/x86_64-linux-gnu/libtasn1.so.6
+    - /lib/x86_64-linux-gnu/libthai.so.0
+    - /lib/x86_64-linux-gnu/libunistring.so.2
+    - /lib/x86_64-linux-gnu/libvulkan.so.1
+    - /lib/x86_64-linux-gnu/libwayland-client.so.0
+    - /lib/x86_64-linux-gnu/libwayland-cursor.so.0
+    - /lib/x86_64-linux-gnu/libwayland-egl.so.1
+    - /lib/x86_64-linux-gnu/libwayland-server.so.0
+    - /lib/x86_64-linux-gnu/libxcb-dri2.so.0
+    - /lib/x86_64-linux-gnu/libxcb-dri3.so.0
+    - /lib/x86_64-linux-gnu/libxcb-present.so.0
+    - /lib/x86_64-linux-gnu/libxcb-sync.so.1
+    - /lib/x86_64-linux-gnu/libxkbcommon.so.0
+    - /lib/x86_64-linux-gnu/libxml2.so.2
+    - /lib/x86_64-linux-gnu/libxshmfence.so.1
+    - /lib/x86_64-linux-gnu/libzstd.so.1
+    - /tmp/dconf/user
+    - /usr/lib/locale/locale-archive
+    - /usr/lib/x86_64-linux-gnu/gtk-3.0/3.0.0/immodules.cache
+    - /usr/share//mime//mime.cache
+    - /usr/share/icons/Adwaita/icon-theme.cache
+    - /usr/share/icons/hicolor/icon-theme.cache
+    - assets/themes.json
+    - assets/translations/en-US.json
+    exclude:
+    - usr/share/man
+    - usr/share/doc/*/README.*
+    - usr/share/doc/*/changelog.*
+    - usr/share/doc/*/NEWS.*
+    - usr/share/doc/*/TODO.*
+  test:
+    fedora-30:
+      image: appimagecrafters/tests-env:fedora-30
+      command: ./AppRun
+    debian-stable:
+      image: appimagecrafters/tests-env:debian-stable
+      command: ./AppRun
+    archlinux-latest:
+      image: appimagecrafters/tests-env:archlinux-latest
+      command: ./AppRun
+    centos-7:
+      image: appimagecrafters/tests-env:centos-7
+      command: ./AppRun
+    ubuntu-xenial:
+      image: appimagecrafters/tests-env:ubuntu-xenial
+      command: ./AppRun
+AppImage:
+  arch: x86_64
+  update-information: guess
