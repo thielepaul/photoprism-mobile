@@ -246,7 +246,7 @@ class PhotosPage extends StatelessWidget {
     return RefreshIndicator(
         child: ScrollConfiguration(
             behavior: ScrollConfiguration.of(context).copyWith(
-              dragDevices: {
+              dragDevices: <PointerDeviceKind>{
                 PointerDeviceKind.touch,
                 PointerDeviceKind.mouse,
               },

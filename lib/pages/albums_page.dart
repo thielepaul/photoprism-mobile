@@ -89,7 +89,7 @@ class AlbumsPage extends StatelessWidget {
         body: RefreshIndicator(
             child: ScrollConfiguration(
                 behavior: ScrollConfiguration.of(context).copyWith(
-                  dragDevices: {
+                  dragDevices: <PointerDeviceKind>{
                     PointerDeviceKind.touch,
                     PointerDeviceKind.mouse,
                   },
