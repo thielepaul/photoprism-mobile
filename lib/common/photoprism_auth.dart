@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -17,6 +18,8 @@ class PhotoprismAuth {
   bool? httpBasicEnabled = false;
   String httpBasicUser = '';
   String httpBasicPassword = '';
+  final Completer<void> _initCompleter = Completer<void>();
+  Future<void> get initialized => _initCompleter.future;
 
   Future<void> initialize() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -58,8 +61,8 @@ class PhotoprismAuth {
       password = passwordStored;
     }
 
-    apiGetNewSession(model);
-    model.notify();
+    _initCompleter.complete();
+    await apiGetNewSession(model);
   }
 
   Future<void> setHttpBasicEnabled(bool? value) async {

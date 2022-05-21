@@ -28,9 +28,13 @@ Future<Map<String, dynamic>?> _loadDbBatch(
       '&offset=' +
       offset.toString() +
       (since != null ? '&since=' + since : ''));
-  final http.Response response = await apiHttpAuth(model,
+  final http.Response? response = await apiHttpAuth(model,
           () => http.get(url, headers: model.photoprismAuth.getAuthHeaders()))
-      as http.Response;
+      as http.Response?;
+  if (response == null) {
+    print('ERROR: api DB call failed with response null ($url)');
+    throw const DbApiException('no-connection');
+  }
   if (response.statusCode != 200) {
     print(
         'ERROR: api DB call failed with return type ${response.statusCode} ($url)');

@@ -45,13 +45,13 @@ Future<String> apiCreateAlbum(String albumName, PhotoprismModel model) async {
   final String body = '{"Title":"' + albumName + '"}';
 
   try {
-    final http.Response response = await apiHttpAuth(
+    final http.Response? response = await apiHttpAuth(
         model,
         () => http.post(Uri.parse(model.photoprismUrl + '/api/v1/albums'),
             body: body,
-            headers: model.photoprismAuth.getAuthHeaders())) as http.Response;
+            headers: model.photoprismAuth.getAuthHeaders())) as http.Response?;
 
-    if (response.statusCode == 200) {
+    if (response != null && response.statusCode == 200) {
       final dynamic bodyjson = json.decode(response.body);
       return bodyjson['UID'].toString();
     } else {
@@ -67,14 +67,14 @@ Future<int> apiRenameAlbum(
   final String body = '{"Title":"' + newAlbumName + '"}';
 
   try {
-    final http.Response response = await apiHttpAuth(
+    final http.Response? response = await apiHttpAuth(
         model,
         () => http.put(
             Uri.parse(model.photoprismUrl + '/api/v1/albums/' + albumId!),
             body: body,
-            headers: model.photoprismAuth.getAuthHeaders())) as http.Response;
+            headers: model.photoprismAuth.getAuthHeaders())) as http.Response?;
 
-    if (response.statusCode == 200) {
+    if (response != null && response.statusCode == 200) {
       return 0;
     } else {
       return 2;
@@ -88,14 +88,14 @@ Future<int> apiDeleteAlbum(String albumId, PhotoprismModel model) async {
   final String body = '{"albums":["' + albumId + '"]}';
 
   try {
-    final http.Response response = await apiHttpAuth(
+    final http.Response? response = await apiHttpAuth(
         model,
         () => http.post(
             Uri.parse(model.photoprismUrl + '/api/v1/batch/albums/delete'),
             body: body,
-            headers: model.photoprismAuth.getAuthHeaders())) as http.Response;
+            headers: model.photoprismAuth.getAuthHeaders())) as http.Response?;
 
-    if (response.statusCode == 200) {
+    if (response != null && response.statusCode == 200) {
       return 0;
     } else {
       return 2;
@@ -115,14 +115,14 @@ Future<int> apiAddPhotosToAlbum(
   final String body = '{"photos":' + photoUUIDsWrapped.toString() + '}';
 
   try {
-    final http.Response response = await apiHttpAuth(
+    final http.Response? response = await apiHttpAuth(
         model,
         () => http.post(
             Uri.parse(
                 model.photoprismUrl + '/api/v1/albums/' + albumId! + '/photos'),
             body: body,
-            headers: model.photoprismAuth.getAuthHeaders())) as http.Response;
-    if (response.statusCode == 200) {
+            headers: model.photoprismAuth.getAuthHeaders())) as http.Response?;
+    if (response != null && response.statusCode == 200) {
       return 0;
     } else {
       return 2;
@@ -151,10 +151,10 @@ Future<int> apiRemovePhotosFromAlbum(
     model.photoprismAuth.getAuthHeaders().forEach((String k, String? v) {
       request.headers[k] = v!;
     });
-    final http.StreamedResponse response =
+    final http.StreamedResponse? response =
         await apiHttpAuth(model, () => client.send(request))
-            as http.StreamedResponse;
-    if (response.statusCode == 200) {
+            as http.StreamedResponse?;
+    if (response != null && response.statusCode == 200) {
       return 0;
     } else {
       return 2;
@@ -173,13 +173,13 @@ Future<int> apiArchivePhotos(
   final String body = '{"photos":' + photoUUIDsWrapped.toString() + '}';
 
   try {
-    final http.Response response = await apiHttpAuth(
+    final http.Response? response = await apiHttpAuth(
         model,
         () => http.post(
             Uri.parse(model.photoprismUrl + '/api/v1/batch/photos/archive'),
             body: body,
-            headers: model.photoprismAuth.getAuthHeaders())) as http.Response;
-    if (response.statusCode == 200) {
+            headers: model.photoprismAuth.getAuthHeaders())) as http.Response?;
+    if (response != null && response.statusCode == 200) {
       return 0;
     } else {
       return 2;
@@ -192,13 +192,13 @@ Future<int> apiArchivePhotos(
 Future<bool> apiImportPhotos(
     String photoprismUrl, PhotoprismModel model, String fileHash) async {
   try {
-    final http.Response response = await apiHttpAuth(
+    final http.Response? response = await apiHttpAuth(
         model,
         () => http.post(
             Uri.parse(photoprismUrl + '/api/v1/import/upload/$fileHash'),
             body: '{}',
-            headers: model.photoprismAuth.getAuthHeaders())) as http.Response;
-    return response.statusCode == 200;
+            headers: model.photoprismAuth.getAuthHeaders())) as http.Response?;
+    return response?.statusCode == 200;
   } catch (ex) {
     print(ex);
     return false;
@@ -207,13 +207,13 @@ Future<bool> apiImportPhotos(
 
 Future<int> apiImportPhotoEvent(PhotoprismModel model, String event) async {
   try {
-    final http.Response response = await apiHttpAuth(
+    final http.Response? response = await apiHttpAuth(
         model,
         () => http.post(
             Uri.parse(model.photoprismUrl + '/api/v1/import/upload/' + event),
             body: '{}',
-            headers: model.photoprismAuth.getAuthHeaders())) as http.Response;
-    if (response.statusCode == 200) {
+            headers: model.photoprismAuth.getAuthHeaders())) as http.Response?;
+    if (response != null && response.statusCode == 200) {
       // TODO: Check if import is really successful
       if (response.body == '{"message":"import completed in 0 s"}') {
         return 3;
@@ -237,13 +237,14 @@ Future<bool> apiUpload(
         'files', file.openRead(), await file.length(),
         filename: fileName, contentType: MediaType('image', 'jpeg')));
     request.headers.addAll(model.photoprismAuth.getAuthHeaders());
-    final http.StreamedResponse response =
-        await apiHttpAuth(model, () => request.send()) as http.StreamedResponse;
+    final http.StreamedResponse? response =
+        await apiHttpAuth(model, () => request.send())
+            as http.StreamedResponse?;
 
-    if (response.statusCode == 200) {
+    if (response != null && response.statusCode == 200) {
       return true;
     } else {
-      print('Upload failed: statusCode=${response.statusCode}');
+      print('Upload failed: statusCode=${response?.statusCode}');
       return false;
     }
   } catch (e) {
@@ -253,19 +254,23 @@ Future<bool> apiUpload(
 }
 
 Future<bool> apiGetNewSession(PhotoprismModel model) async {
+  await model.photoprismAuth.initialized;
+
   if (model.photoprismAuth.enabled == false) {
     return false;
   }
 
-  final http.Response response = await http.post(
+  final http.Response? response = await http.post(
       Uri.parse(model.photoprismUrl + '/api/v1/session'),
       headers: model.photoprismAuth.getAuthHeaders(),
       body:
           '{"username":"${model.photoprismAuth.user}", "password":"${model.photoprismAuth.password}"}');
-  if (response.statusCode == 200 &&
+  if (response != null &&
+      response.statusCode == 200 &&
       response.headers.containsKey('x-session-id')) {
     final String sessionId = response.headers['x-session-id'] ?? '';
     await model.photoprismAuth.setSessionId(sessionId);
+    model.notify();
     return true;
   }
   return false;
@@ -306,11 +311,11 @@ Future<io.File?> apiDownloadAsFile(
   model.photoprismAuth.getAuthHeaders().forEach((String k, String? v) {
     request.headers[k] = v!;
   });
-  final http.StreamedResponse response =
+  final http.StreamedResponse? response =
       await apiHttpAuth(model, () => client.send(request))
-          as http.StreamedResponse;
+          as http.StreamedResponse?;
 
-  if (response.statusCode == 200) {
+  if (response != null && response.statusCode == 200) {
     final io.Directory tempDir = await getTemporaryDirectory();
     final io.File file = await io.File('${tempDir.path}/$fileName').create();
     final io.IOSink sink = file.openWrite();
@@ -325,11 +330,11 @@ Future<io.File?> apiDownloadAsFile(
 }
 
 Future<bool> apiLoadConfig(PhotoprismModel model) async {
-  final http.Response response = await apiHttpAuth(
+  final http.Response? response = await apiHttpAuth(
       model,
       () => http.get(Uri.parse(model.photoprismUrl + '/api/v1/config'),
-          headers: model.photoprismAuth.getAuthHeaders())) as http.Response;
-  if (response.statusCode != 200) {
+          headers: model.photoprismAuth.getAuthHeaders())) as http.Response?;
+  if (response == null || response.statusCode != 200) {
     model.config = null;
     return false;
   }
