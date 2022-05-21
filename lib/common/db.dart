@@ -54,7 +54,7 @@ class MyDatabase extends _$MyDatabase {
         ..limit(1))
       .get();
 
-  Future<File> getVideoFileForPhoto(String photoUid) async {
+  Future<File?> getVideoFileForPhoto(String photoUid) async {
     final List<File> result = await ((select(files)
           ..where(($FilesTable tbl) =>
               tbl.photoUID.isNotNull() &
@@ -78,7 +78,7 @@ class MyDatabase extends _$MyDatabase {
     return (await result).isNotEmpty;
   }
 
-  Stream<Map<String, int>> allAlbumCounts() {
+  Stream<Map<String?, int>> allAlbumCounts() {
     final Expression<int> photoCount = photosAlbums.photoUID.count();
 
     final JoinedSelectStatement<HasResultSet, dynamic> query = (select(albums)
@@ -92,7 +92,7 @@ class MyDatabase extends _$MyDatabase {
       ..addColumns(<Expression<dynamic>>[photoCount])
       ..groupBy(<Expression<dynamic>>[albums.uid]);
 
-    return query.watch().map((List<TypedResult> rows) => <String, int>{
+    return query.watch().map((List<TypedResult> rows) => <String?, int>{
           for (TypedResult row in rows)
             row.read(albums.uid): row.read(photoCount),
         });
@@ -100,7 +100,7 @@ class MyDatabase extends _$MyDatabase {
 
   JoinedSelectStatement<HasResultSet, dynamic> _photosWithFileQuery(
       FilterPhotos filterPhotos,
-      {String albumUid}) {
+      {String? albumUid}) {
     JoinedSelectStatement<HasResultSet, dynamic> query;
     if (albumUid != null) {
       query = (select(photosAlbums)
@@ -117,7 +117,7 @@ class MyDatabase extends _$MyDatabase {
       ]);
     }
 
-    GeneratedColumn<DateTime> sortColumn;
+    GeneratedColumn<DateTime?> sortColumn;
     switch (filterPhotos.sort) {
       case PhotoSort.CreatedAt:
         sortColumn = photos.createdAt;
@@ -151,13 +151,13 @@ class MyDatabase extends _$MyDatabase {
           photos.type.isNotNull() &
           photos.type.isIn(filterPhotos.typesAsString))
       ..orderBy(<OrderingTerm>[
-        OrderingTerm(expression: sortColumn, mode: filterPhotos.order)
+        OrderingTerm(expression: sortColumn, mode: filterPhotos.order!)
       ]);
   }
 
   Future<Iterable<PhotoWithFile>> photosWithFile(
       int limit, int offset, FilterPhotos filterPhotos,
-      {String albumUid}) {
+      {String? albumUid}) {
     final JoinedSelectStatement<HasResultSet, dynamic> query =
         _photosWithFileQuery(filterPhotos, albumUid: albumUid);
     final Selectable<PhotoWithFile> result = (query
@@ -170,7 +170,7 @@ class MyDatabase extends _$MyDatabase {
   }
 
   Stream<int> photosWithFileCount(FilterPhotos filterPhotos,
-      {String albumUid}) {
+      {String? albumUid}) {
     final JoinedSelectStatement<HasResultSet, dynamic> query =
         _photosWithFileQuery(filterPhotos, albumUid: albumUid);
     final Expression<int> filesCount = files.hash.count();
@@ -184,17 +184,19 @@ class MyDatabase extends _$MyDatabase {
   int get schemaVersion => 1;
 }
 
+bool typesEqual<T1, T2>() => T1 == T2;
+
 class CustomSerializer extends ValueSerializer {
   const CustomSerializer();
   @override
   T fromJson<T>(dynamic json) {
-    if (T == DateTime) {
+    if (typesEqual<T, DateTime?>()) {
       if (json == null) {
-        return null;
+        return null as T;
       } else {
         return DateTime.parse(json.toString()) as T;
       }
-    } else if (T == double && json != null) {
+    } else if (typesEqual<T, double?>() && json != null) {
       return double.parse(json.toString()) as T;
     } else {
       return json as T;

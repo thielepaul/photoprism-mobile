@@ -31,7 +31,7 @@ class PhotoprismCommonHelper {
     if (sp.containsKey('alreadyUploadedPhotos')) {
       try {
         PhotoprismUploader.saveAndSetAlreadyUploadedPhotos(
-            model, sp.getStringList('alreadyUploadedPhotos').toSet());
+            model, sp.getStringList('alreadyUploadedPhotos')!.toSet());
       } catch (_) {
         sp.remove('alreadyUploadedPhotos');
       }
@@ -40,7 +40,7 @@ class PhotoprismCommonHelper {
     if (sp.containsKey('photosUploadFailed')) {
       try {
         PhotoprismUploader.saveAndSetPhotosUploadFailed(
-            model, sp.getStringList('photosUploadFailed').toSet());
+            model, sp.getStringList('photosUploadFailed')!.toSet());
       } catch (_) {
         sp.remove('photosUploadFailed');
       }
@@ -49,7 +49,7 @@ class PhotoprismCommonHelper {
     if (sp.containsKey('albumsToUpload')) {
       try {
         PhotoprismUploader.saveAndSetAlbumsToUpload(
-            model, sp.getStringList('albumsToUpload').toSet());
+            model, sp.getStringList('albumsToUpload')!.toSet());
       } catch (_) {
         sp.remove('albumsToUpload');
       }
@@ -58,7 +58,7 @@ class PhotoprismCommonHelper {
     if (sp.containsKey('config')) {
       try {
         model.config = Config.fromJson(
-            json.decode(sp.getString('config')) as Map<String, dynamic>);
+            json.decode(sp.getString('config')!) as Map<String, dynamic>);
       } catch (_) {
         sp.remove('config');
       }
@@ -67,7 +67,7 @@ class PhotoprismCommonHelper {
     if (sp.containsKey('theme_mode')) {
       try {
         model.themeMode = EnumToString.fromString<ThemeMode>(
-            ThemeMode.values, sp.getString('theme_mode'));
+            ThemeMode.values, sp.getString('theme_mode')!);
       } catch (_) {
         sp.remove('theme_mode');
       }
@@ -77,7 +77,7 @@ class PhotoprismCommonHelper {
   Future<void> loadPhotoprismUrl() async {
     // load photoprism url from shared preferences
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    final String photoprismUrl = prefs.getString('url');
+    final String? photoprismUrl = prefs.getString('url');
     if (photoprismUrl != null) {
       photoprismModel.photoprismUrl = photoprismUrl;
     }

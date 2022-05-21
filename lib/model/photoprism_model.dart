@@ -28,28 +28,28 @@ class PhotoprismModel extends ChangeNotifier {
   PhotoprismModel(this.dbConnection, this.secureStorage);
   // general
   String photoprismUrl = 'https://photoprism.p4u1.de';
-  Config config;
+  Config? config;
   Lock dbLoadingLock = Lock();
   bool _dataFromCacheLoaded = false;
   bool _initializing = false;
   bool initialized = false;
-  List<String> log;
-  MyDatabase database;
-  StreamSubscription<int> photosStreamSubscription;
-  PhotosFromDb photos;
-  StreamSubscription<List<Album>> albumsStreamSubscription;
-  List<Album> albums;
-  StreamSubscription<Map<String, int>> albumCountsStreamSubscription;
-  Map<String, int> albumCounts;
-  DbTimestamps dbTimestamps;
-  FilterPhotos filterPhotos;
-  String albumUid;
+  late List<String> log;
+  MyDatabase? database;
+  StreamSubscription<int>? photosStreamSubscription;
+  PhotosFromDb? photos;
+  StreamSubscription<List<Album>>? albumsStreamSubscription;
+  List<Album>? albums;
+  StreamSubscription<Map<String?, int>>? albumCountsStreamSubscription;
+  Map<String?, int>? albumCounts;
+  DbTimestamps? dbTimestamps;
+  FilterPhotos? filterPhotos;
+  String? albumUid;
   Future<MyDatabase> Function() dbConnection;
   FlutterSecureStorage secureStorage;
 
   // theming
-  String applicationColor = '#424242';
-  ThemeMode _themeMode = ThemeMode.system;
+  String? applicationColor = '#424242';
+  ThemeMode? _themeMode = ThemeMode.system;
 
   // photoprism uploader
   bool autoUploadEnabled = false;
@@ -76,15 +76,15 @@ class PhotoprismModel extends ChangeNotifier {
 
   ScrollController scrollController = ScrollController();
   PhotoViewScaleState photoViewScaleState = PhotoViewScaleState.initial;
-  BuildContext context;
+  BuildContext? context;
 
   // helpers
-  PhotoprismUploader photoprismUploader;
-  PhotoprismRemoteSettingsLoader photoprismRemoteConfigLoader;
-  PhotoprismCommonHelper photoprismCommonHelper;
-  PhotoprismLoadingScreen photoprismLoadingScreen;
-  PhotoprismMessage photoprismMessage;
-  PhotoprismAuth photoprismAuth;
+  late PhotoprismUploader photoprismUploader;
+  late PhotoprismRemoteSettingsLoader photoprismRemoteConfigLoader;
+  late PhotoprismCommonHelper photoprismCommonHelper;
+  late PhotoprismLoadingScreen photoprismLoadingScreen;
+  late PhotoprismMessage photoprismMessage;
+  late PhotoprismAuth photoprismAuth;
 
   Future<void> initialize() async {
     if (_initializing) {
@@ -135,18 +135,18 @@ class PhotoprismModel extends ChangeNotifier {
     albumsStreamSubscription = null;
     albumCountsStreamSubscription = null;
     print('closing database');
-    await database.close();
-    await database.deleteDatabase();
+    await database!.close();
+    await database!.deleteDatabase();
     print('create new database');
     database = await dbConnection();
     await updatePhotosSubscription();
     await updateAlbumsSubscription();
-    await dbTimestamps.clear();
+    await dbTimestamps!.clear();
   }
 
   Future<void> loadLog() async {
     final SharedPreferences sp = await SharedPreferences.getInstance();
-    final List<String> logList = sp.getStringList('photoprism_log');
+    final List<String>? logList = sp.getStringList('photoprism_log');
 
     if (logList == null) {
       log = <String>[];
@@ -154,7 +154,6 @@ class PhotoprismModel extends ChangeNotifier {
       log = logList;
     }
     notifyListeners();
-    return 0;
   }
 
   Future<void> addLogEntry(String type, String message) async {
@@ -165,16 +164,14 @@ class PhotoprismModel extends ChangeNotifier {
     final SharedPreferences sp = await SharedPreferences.getInstance();
     sp.setStringList('photoprism_log', log);
     notifyListeners();
-    return 0;
   }
 
   Future<void> clearLog() async {
     final SharedPreferences sp = await SharedPreferences.getInstance();
-    sp.setStringList('photoprism_log', null);
+    sp.setStringList('photoprism_log', <String>[]);
 
     log = <String>[];
     notifyListeners();
-    return 0;
   }
 
   void setConfig(Config newValue) {
@@ -218,9 +215,9 @@ class PhotoprismModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  ThemeMode get themeMode => _themeMode;
+  ThemeMode? get themeMode => _themeMode;
 
-  set themeMode(ThemeMode newValue) {
+  set themeMode(ThemeMode? newValue) {
     _themeMode = newValue;
     notifyListeners();
   }
@@ -235,18 +232,18 @@ class PhotoprismModel extends ChangeNotifier {
       return;
     }
     if (photosStreamSubscription != null) {
-      await photosStreamSubscription.cancel();
+      await photosStreamSubscription!.cancel();
     }
     final Stream<int> photosStream =
-        database.photosWithFileCount(filterPhotos, albumUid: albumUid);
+        database!.photosWithFileCount(filterPhotos!, albumUid: albumUid);
     photosStreamSubscription = photosStream.listen((int value) {
       print('got photo update from database count: ' + value.toString());
       photos ??= PhotosFromDb(this);
-      if (photos.length == 0 && value == 0) {
+      if (photos!.length == 0 && value == 0) {
         print('ignoring photo update because nothing changed');
         return;
       }
-      photos.count = value;
+      photos!.count = value;
       notifyListeners();
     });
   }
@@ -257,21 +254,21 @@ class PhotoprismModel extends ChangeNotifier {
       return;
     }
     if (albumsStreamSubscription != null) {
-      await albumsStreamSubscription.cancel();
+      await albumsStreamSubscription!.cancel();
     }
     if (albumCountsStreamSubscription != null) {
-      await albumCountsStreamSubscription.cancel();
+      await albumCountsStreamSubscription!.cancel();
     }
-    final Stream<List<Album>> albumsStream = database.allAlbums;
+    final Stream<List<Album>> albumsStream = database!.allAlbums;
     albumsStreamSubscription = albumsStream.listen((List<Album> value) {
       print('got album update from database count: ' + value.length.toString());
       albums = value;
       notifyListeners();
     });
-    final Stream<Map<String, int>> albumCountsStream =
-        database.allAlbumCounts();
+    final Stream<Map<String?, int>> albumCountsStream =
+        database!.allAlbumCounts();
     albumCountsStreamSubscription =
-        albumCountsStream.listen((Map<String, int> value) {
+        albumCountsStream.listen((Map<String?, int> value) {
       print('got albumCount update from database count: ' +
           value.length.toString());
       albumCounts = value;
@@ -283,6 +280,9 @@ class PhotoprismModel extends ChangeNotifier {
   Future<void> dispose() async {
     super.dispose();
     print('closing database');
-    await database.close();
+    await database!.close();
+    photosStreamSubscription?.cancel();
+    albumsStreamSubscription?.cancel();
+    albumCountsStreamSubscription?.cancel();
   }
 }

@@ -9,7 +9,7 @@ class PhotoManager {
   const PhotoManager();
 
   static Future<void> archivePhotos(
-      BuildContext context, List<String> photoUUIDs) async {
+      BuildContext context, List<String?> photoUUIDs) async {
     final PhotoprismModel model =
         Provider.of<PhotoprismModel>(context, listen: false);
 
@@ -25,25 +25,25 @@ class PhotoManager {
     }
   }
 
-  static String getPhotoThumbnailUrl(
-      BuildContext context, PhotoWithFile photo) {
+  static String? getPhotoThumbnailUrl(
+      BuildContext context, PhotoWithFile? photo) {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
     if (model.config == null) {
       return null;
     }
-    final String filehash = photo.file.hash;
+    final String filehash = photo!.file.hash;
     return model.photoprismUrl +
         '/api/v1/t/' +
         filehash +
         '/' +
-        model.config.previewToken +
+        model.config!.previewToken! +
         '/tile_224';
   }
 
   static int getPhotoIndexInScrollView(BuildContext context) {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
     try {
-      final double currentPhoto = (model.photos.length - 1) *
+      final double currentPhoto = (model.photos!.length - 1) *
           model.scrollController.offset /
           (model.scrollController.position.maxScrollExtent -
               model.scrollController.position.minScrollExtent);

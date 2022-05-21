@@ -59,9 +59,9 @@ class AlbumDetailView extends StatelessWidget {
     _model.photoprismLoadingScreen.showLoadingScreen('Removing photos...');
 
     // save all selected photos in list
-    final List<String> selectedPhotos = <String>[];
+    final List<String?> selectedPhotos = <String?>[];
     for (final int photoId in _model.gridController.value.selectedIndexes) {
-      selectedPhotos.add((await _model.photos[photoId]).photo.uid);
+      selectedPhotos.add((await _model.photos![photoId])!.photo.uid);
     }
 
     // remove remote photos from album
@@ -93,7 +93,7 @@ class AlbumDetailView extends StatelessWidget {
               flexibleSpace: FlexibleSpaceBar(
                 title: _selectedPhotosCount > 0
                     ? Text(_selectedPhotosCount.toString())
-                    : Text(_album.title),
+                    : Text(_album.title!),
                 centerTitle: _selectedPhotosCount > 0 ? false : null,
               ),
               leading: _selectedPhotosCount > 0
@@ -150,7 +150,7 @@ class AlbumDetailView extends StatelessWidget {
   }
 
   Future<void> _showRenameAlbumDialog(BuildContext context) async {
-    _renameAlbumTextFieldController.text = _album.title;
+    _renameAlbumTextFieldController.text = _album.title!;
     return showDialog(
         context: context,
         builder: (BuildContext context) {

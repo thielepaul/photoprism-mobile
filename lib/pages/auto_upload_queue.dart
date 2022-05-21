@@ -7,9 +7,9 @@ import 'package:photoprism/common/photoprism_uploader.dart';
 import 'package:photoprism/model/photoprism_model.dart';
 
 class FileList extends StatefulWidget {
-  const FileList(this.model, {Key key, this.files, this.title = ''})
+  const FileList(this.model, {Key? key, this.files, this.title = ''})
       : super(key: key);
-  final List<String> files;
+  final List<String>? files;
   final String title;
   final PhotoprismModel model;
 
@@ -36,16 +36,16 @@ class _FileListState extends State<FileList> {
     return Scaffold(
         appBar: AppBar(title: Text(widget.title)),
         body: ListView.builder(
-            itemCount: widget.files.length,
+            itemCount: widget.files!.length,
             itemBuilder: (BuildContext context, int index) {
-              final String id = widget.files[index];
+              final String id = widget.files![index];
               return ListTile(
                 leading: assets[id] == null
                     ? null
-                    : FutureBuilder<Uint8List>(
-                        future: assets[id].thumbnailData,
+                    : FutureBuilder<Uint8List?>(
+                        future: assets[id]!.thumbnailData,
                         builder: (BuildContext context,
-                            AsyncSnapshot<Uint8List> snapshot) {
+                            AsyncSnapshot<Uint8List?> snapshot) {
                           if (snapshot.data == null) {
                             return Container(
                               height: 1,
@@ -55,21 +55,21 @@ class _FileListState extends State<FileList> {
                           return AspectRatio(
                               aspectRatio: 1,
                               child: Image.memory(
-                                snapshot.data,
+                                snapshot.data!,
                                 fit: BoxFit.cover,
                               ));
                         }),
                 title: assets[id] == null
                     ? Text(id)
                     : FutureBuilder<String>(
-                        future: assets[id].titleAsync,
+                        future: assets[id]!.titleAsync,
                         builder: (BuildContext context,
                                 AsyncSnapshot<String> snapshot) =>
                             Text(snapshot.data ?? '')),
                 subtitle: assets[id] == null
                     ? null
                     : Text(DateFormat('yyyy-MM-dd HH:mm:ss')
-                        .format(assets[id].createDateTime)),
+                        .format(assets[id]!.createDateTime)),
               );
             }));
   }
