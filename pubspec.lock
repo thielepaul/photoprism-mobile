@@ -278,11 +278,11 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: HEAD
-      resolved-ref: "971c6dd35683d7f60e7e21f00b3c168683e0df3a"
-      url: "git://github.com/thielepaul/flutter-draggable-scrollbar.git"
+      ref: cfd570035bf393de541d32e9b28808b5d7e602df
+      resolved-ref: cfd570035bf393de541d32e9b28808b5d7e602df
+      url: "https://github.com/thielepaul/flutter-draggable-scrollbar.git"
     source: git
-    version: "0.0.4"
+    version: "0.1.0"
   drift:
     dependency: "direct main"
     description:
