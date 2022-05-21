@@ -107,6 +107,9 @@ class PhotoprismModel extends ChangeNotifier {
 
     database = await dbConnection();
 
+    // authentication only makes sense if the correct url is used
+    await photoprismCommonHelper.loadPhotoprismUrl();
+
     // uploader needs photoprismAuth to be initialized
     await photoprismAuth.initialize();
 
@@ -122,8 +125,6 @@ class PhotoprismModel extends ChangeNotifier {
 
     updatePhotosSubscription();
     updateAlbumsSubscription();
-
-    await photoprismCommonHelper.loadPhotoprismUrl();
 
     initialized = true;
     notifyListeners();

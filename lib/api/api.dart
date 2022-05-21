@@ -254,9 +254,7 @@ Future<bool> apiUpload(
 }
 
 Future<bool> apiGetNewSession(PhotoprismModel model) async {
-  await model.photoprismAuth.initialized;
-
-  if (model.photoprismAuth.enabled == false) {
+  if (!model.photoprismAuth.initialized || !model.photoprismAuth.enabled) {
     return false;
   }
 
@@ -271,8 +269,11 @@ Future<bool> apiGetNewSession(PhotoprismModel model) async {
     final String sessionId = response.headers['x-session-id'] ?? '';
     await model.photoprismAuth.setSessionId(sessionId);
     model.notify();
+    print('Api: loaded new session token from backend');
     return true;
   }
+  print(
+      'Api: loading new session token from backend failed: ${response?.statusCode} - ${response?.body}');
   return false;
 }
 

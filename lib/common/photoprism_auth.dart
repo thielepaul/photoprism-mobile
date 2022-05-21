@@ -11,15 +11,15 @@ class PhotoprismAuth {
 
   PhotoprismModel model;
   final FlutterSecureStorage secureStorage;
-  bool? enabled = false;
+  bool enabled = false;
   String user = 'admin';
   String password = '';
   String sessionId = '';
-  bool? httpBasicEnabled = false;
+  bool httpBasicEnabled = false;
   String httpBasicUser = '';
   String httpBasicPassword = '';
-  final Completer<void> _initCompleter = Completer<void>();
-  Future<void> get initialized => _initCompleter.future;
+  bool _initialized = false;
+  bool get initialized => _initialized;
 
   Future<void> initialize() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -61,15 +61,15 @@ class PhotoprismAuth {
       password = passwordStored;
     }
 
-    _initCompleter.complete();
+    _initialized = true;
     await apiGetNewSession(model);
   }
 
-  Future<void> setHttpBasicEnabled(bool? value) async {
+  Future<void> setHttpBasicEnabled(bool value) async {
     httpBasicEnabled = value;
     model.notify();
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    prefs.setBool('httpBasicAuthEnabled', httpBasicEnabled!);
+    prefs.setBool('httpBasicAuthEnabled', httpBasicEnabled);
   }
 
   Future<void> setHttpBasicUser(String value) async {
@@ -85,11 +85,11 @@ class PhotoprismAuth {
         key: 'httpBasicPassword', value: httpBasicPassword);
   }
 
-  Future<void> setEnabled(bool? value) async {
+  Future<void> setEnabled(bool value) async {
     enabled = value;
     model.notify();
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    prefs.setBool('authEnabled', enabled!);
+    prefs.setBool('authEnabled', enabled);
   }
 
   Future<void> setUser(String value) async {
@@ -112,11 +112,11 @@ class PhotoprismAuth {
 
   Map<String, String> getAuthHeaders() {
     final Map<String, String> headers = <String, String>{};
-    if (httpBasicEnabled!) {
+    if (httpBasicEnabled) {
       headers['Authorization'] = 'Basic ' +
           utf8.fuse(base64).encode('$httpBasicUser:$httpBasicPassword');
     }
-    if (enabled!) {
+    if (enabled) {
       headers['X-Session-ID'] = sessionId;
     }
     return headers;

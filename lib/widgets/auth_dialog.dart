@@ -30,10 +30,10 @@ class _AuthDialogState extends State<AuthDialog> {
   late PhotoprismModel model;
   TextEditingController? _httpBasicUserController;
   TextEditingController? _httpBasicPasswordController;
-  bool? httpBasicEnabled;
+  late bool httpBasicEnabled;
   TextEditingController? _userController;
   TextEditingController? _passwordController;
-  bool? enabled;
+  late bool enabled;
 
   @override
   Widget build(BuildContext context) {
@@ -64,10 +64,10 @@ class _AuthDialogState extends State<AuthDialog> {
                 enabled = value;
               });
             },
-            value: enabled!,
+            value: enabled,
           ),
           Visibility(
-              visible: enabled!,
+              visible: enabled,
               child: ListTile(
                   subtitle: const Text('user'),
                   title: TextField(
@@ -77,7 +77,7 @@ class _AuthDialogState extends State<AuthDialog> {
                     autofillHints: const <String>[AutofillHints.username],
                   ))),
           Visibility(
-              visible: enabled!,
+              visible: enabled,
               child: ListTile(
                   subtitle: const Text('password'),
                   title: TextField(
@@ -94,10 +94,10 @@ class _AuthDialogState extends State<AuthDialog> {
                 httpBasicEnabled = value;
               });
             },
-            value: httpBasicEnabled!,
+            value: httpBasicEnabled,
           ),
           Visibility(
-              visible: httpBasicEnabled!,
+              visible: httpBasicEnabled,
               child: ListTile(
                   subtitle: const Text('HTTP basic user'),
                   title: TextField(
@@ -107,7 +107,7 @@ class _AuthDialogState extends State<AuthDialog> {
                     autofillHints: const <String>[AutofillHints.username],
                   ))),
           Visibility(
-              visible: httpBasicEnabled!,
+              visible: httpBasicEnabled,
               child: ListTile(
                   subtitle: const Text('HTTP basic password'),
                   title: TextField(
