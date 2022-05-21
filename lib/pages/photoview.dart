@@ -55,7 +55,7 @@ class _FullscreenPhotoGalleryState extends State<FullscreenPhotoGallery>
     backgroundAnimation =
         Tween<double>(begin: 0, end: 1).animate(backgroundAnimationController);
 
-    WidgetsBinding.instance!.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       Future<void>.delayed(const Duration(milliseconds: 350), () {
         animationController.forward();
         backgroundAnimationController.forward();
@@ -524,14 +524,10 @@ class _AnimatedFullScreenPhoto extends AnimatedWidget {
 
 class _AnimatedBackground extends AnimatedWidget {
   const _AnimatedBackground(
-      {Key? key,
-      required Animation<double> animation,
-      this.child,
-      this.orientation})
+      {Key? key, required Animation<double> animation, this.child})
       : super(key: key, listenable: animation);
 
   final Widget? child;
-  final Orientation? orientation;
 
   @override
   Widget build(BuildContext context) {

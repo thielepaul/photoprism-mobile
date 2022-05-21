@@ -20,7 +20,8 @@ class AboutWidget extends StatelessWidget {
                 style: const TextStyle(color: Colors.blue),
                 recognizer: TapGestureRecognizer()
                   ..onTap = () {
-                    launch('https://github.com/photoprism/photoprism-mobile');
+                    launchUrl(Uri.parse(
+                        'https://github.com/photoprism/photoprism-mobile'));
                   },
               ),
               TextSpan(style: theme.headline6, text: '\n\nTrademarks'),
@@ -33,7 +34,7 @@ class AboutWidget extends StatelessWidget {
                 style: const TextStyle(color: Colors.blue),
                 recognizer: TapGestureRecognizer()
                   ..onTap = () {
-                    launch('https://photoprism.app/contact');
+                    launchUrl(Uri.parse('https://photoprism.app/contact'));
                   },
               ),
             ],
