@@ -4,6 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:drag_select_grid_view/drag_select_grid_view.dart';
 import 'package:draggable_scrollbar/draggable_scrollbar.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photoprism/api/api.dart';
@@ -242,62 +243,75 @@ class PhotosPage extends StatelessWidget {
 
     final int tileCount = model.photos != null ? model.photos!.length : 0;
 
-    return RefreshIndicator(child: OrientationBuilder(
-        builder: (BuildContext context, Orientation orientation) {
-      if (model.config == null) {
-        apiLoadConfig(model);
-      }
-      if (model.dbTimestamps!.isEmpty) {
-        apiUpdateDb(model, context: context);
-        return const Text('', key: ValueKey<String>('photosGridView'));
-      }
-
-      return DraggableScrollbar.semicircle(
-        labelTextBuilder: (double offset) => getMonthFromOffset(context),
-        heightScrollThumb: 50.0,
-        controller: _scrollController,
-        child: DragSelectGridView(
-            padding: const EdgeInsets.only(top: 0),
-            key: const ValueKey<String>('photosGridView'),
-            scrollController: _scrollController,
-            gridController: gridController,
-            physics: const AlwaysScrollableScrollPhysics(),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: orientation == Orientation.portrait ? 3 : 6,
-              mainAxisSpacing: 4,
-              crossAxisSpacing: 4,
+    return RefreshIndicator(
+        child: ScrollConfiguration(
+            behavior: ScrollConfiguration.of(context).copyWith(
+              dragDevices: {
+                PointerDeviceKind.touch,
+                PointerDeviceKind.mouse,
+              },
             ),
-            itemCount: tileCount,
-            itemBuilder: (BuildContext context, int index, bool selected) {
-              return SelectableTile(
-                  key: const ValueKey<String>('PhotoTile'),
-                  index: index,
-                  context: context,
-                  gridController: gridController,
-                  selected: selected,
-                  onTap: () {
-                    Provider.of<PhotoprismModel>(context, listen: false)
-                        .photoprismCommonHelper
-                        .setPhotoViewScaleState(PhotoViewScaleState.initial);
-                    Navigator.push(
-                        context,
-                        TransparentRoute(
-                          builder: (BuildContext context) =>
-                              FullscreenPhotoGallery(index, albumId),
-                        ));
-                  },
-                  child: Hero(
-                    tag: index.toString(),
-                    createRectTween: (Rect? begin, Rect? end) {
-                      return RectTween(begin: begin, end: end);
-                    },
-                    child: displayPhotoIfUrlLoaded(context, index),
-                  ));
-            }),
-      );
-    }), onRefresh: () async {
-      await apiLoadConfig(model);
-      await apiUpdateDb(model);
-    });
+            child: OrientationBuilder(
+                builder: (BuildContext context, Orientation orientation) {
+              if (model.config == null) {
+                apiLoadConfig(model);
+              }
+              if (model.dbTimestamps!.isEmpty) {
+                apiUpdateDb(model, context: context);
+                return const Text('', key: ValueKey<String>('photosGridView'));
+              }
+
+              return DraggableScrollbar.semicircle(
+                labelTextBuilder: (double offset) =>
+                    getMonthFromOffset(context),
+                heightScrollThumb: 50.0,
+                controller: _scrollController,
+                child: DragSelectGridView(
+                    padding: const EdgeInsets.only(top: 0),
+                    key: const ValueKey<String>('photosGridView'),
+                    scrollController: _scrollController,
+                    gridController: gridController,
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount:
+                          orientation == Orientation.portrait ? 3 : 6,
+                      mainAxisSpacing: 4,
+                      crossAxisSpacing: 4,
+                    ),
+                    itemCount: tileCount,
+                    itemBuilder:
+                        (BuildContext context, int index, bool selected) {
+                      return SelectableTile(
+                          key: const ValueKey<String>('PhotoTile'),
+                          index: index,
+                          context: context,
+                          gridController: gridController,
+                          selected: selected,
+                          onTap: () {
+                            Provider.of<PhotoprismModel>(context, listen: false)
+                                .photoprismCommonHelper
+                                .setPhotoViewScaleState(
+                                    PhotoViewScaleState.initial);
+                            Navigator.push(
+                                context,
+                                TransparentRoute(
+                                  builder: (BuildContext context) =>
+                                      FullscreenPhotoGallery(index, albumId),
+                                ));
+                          },
+                          child: Hero(
+                            tag: index.toString(),
+                            createRectTween: (Rect? begin, Rect? end) {
+                              return RectTween(begin: begin, end: end);
+                            },
+                            child: displayPhotoIfUrlLoaded(context, index),
+                          ));
+                    }),
+              );
+            })),
+        onRefresh: () async {
+          await apiLoadConfig(model);
+          await apiUpdateDb(model);
+        });
   }
 }

@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:photoprism/api/api.dart';
 import 'package:photoprism/api/db_api.dart';
@@ -85,63 +86,82 @@ class AlbumsPage extends StatelessWidget {
             ),
           ],
         ),
-        body: RefreshIndicator(child: OrientationBuilder(
-            builder: (BuildContext context, Orientation orientation) {
-          if (model.dbTimestamps!.isEmpty) {
-            apiUpdateDb(model);
-            return const Text('', key: ValueKey<String>('albumsGridView'));
-          }
-          return GridView.builder(
-              key: const ValueKey<String>('albumsGridView'),
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: orientation == Orientation.portrait ? 2 : 4,
-                mainAxisSpacing: 10,
-                crossAxisSpacing: 10,
-              ),
-              padding: const EdgeInsets.all(10),
-              itemCount: model.albums!.length,
-              itemBuilder: (BuildContext context, int index) {
-                return GestureDetector(
-                    onTap: () {
-                      model.albumUid = model.albums![index].uid;
-                      model.filterPhotos = FilterPhotos();
-                      model.updatePhotosSubscription();
-                      Navigator.push<void>(
-                          context,
-                          MaterialPageRoute<void>(
-                              builder: (BuildContext ctx) => AlbumDetailView(
-                                  model.albums![index], index, context)));
-                    },
-                    child: ClipRRect(
-                        borderRadius: BorderRadius.circular(8.0),
-                        child: GridTile(
-                          child: CachedNetworkImage(
-                            httpHeaders: model.photoprismAuth.getAuthHeaders(),
-                            imageUrl: getAlbumPreviewUrl(context, index),
-                            placeholder: (BuildContext context, String url) =>
-                                Container(color: Colors.grey),
-                            errorWidget: (BuildContext context, String url,
-                                    Object? error) =>
-                                const Icon(Icons.error),
-                          ),
-                          footer: GestureDetector(
-                            child: GridTileBar(
-                              backgroundColor: Colors.black45,
-                              trailing: Text(
-                                _albumCount(model, index),
-                                style: const TextStyle(color: Colors.white),
-                              ),
-                              title: _GridTitleText(
-                                  model.albums!.length - 1 >= index
-                                      ? model.albums![index].title
-                                      : ''),
-                            ),
-                          ),
-                        )));
-              });
-        }), onRefresh: () async {
-          return apiUpdateDb(model);
-        }));
+        body: RefreshIndicator(
+            child: ScrollConfiguration(
+                behavior: ScrollConfiguration.of(context).copyWith(
+                  dragDevices: {
+                    PointerDeviceKind.touch,
+                    PointerDeviceKind.mouse,
+                  },
+                ),
+                child: OrientationBuilder(
+                    builder: (BuildContext context, Orientation orientation) {
+                  if (model.dbTimestamps!.isEmpty) {
+                    apiUpdateDb(model);
+                    return const Text('',
+                        key: ValueKey<String>('albumsGridView'));
+                  }
+                  return GridView.builder(
+                      key: const ValueKey<String>('albumsGridView'),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount:
+                            orientation == Orientation.portrait ? 2 : 4,
+                        mainAxisSpacing: 10,
+                        crossAxisSpacing: 10,
+                      ),
+                      padding: const EdgeInsets.all(10),
+                      itemCount: model.albums!.length,
+                      itemBuilder: (BuildContext context, int index) {
+                        return GestureDetector(
+                            onTap: () {
+                              model.albumUid = model.albums![index].uid;
+                              model.filterPhotos = FilterPhotos();
+                              model.updatePhotosSubscription();
+                              Navigator.push<void>(
+                                  context,
+                                  MaterialPageRoute<void>(
+                                      builder: (BuildContext ctx) =>
+                                          AlbumDetailView(model.albums![index],
+                                              index, context)));
+                            },
+                            child: ClipRRect(
+                                borderRadius: BorderRadius.circular(8.0),
+                                child: GridTile(
+                                  child: CachedNetworkImage(
+                                    cacheKey: model.albums!.length - 1 >= index
+                                        ? 'album-${model.albums![index].uid}'
+                                        : 'album-none',
+                                    httpHeaders:
+                                        model.photoprismAuth.getAuthHeaders(),
+                                    imageUrl:
+                                        getAlbumPreviewUrl(context, index),
+                                    placeholder:
+                                        (BuildContext context, String url) =>
+                                            Container(color: Colors.grey),
+                                    errorWidget: (BuildContext context,
+                                            String url, Object? error) =>
+                                        const Icon(Icons.error),
+                                  ),
+                                  footer: GestureDetector(
+                                    child: GridTileBar(
+                                      backgroundColor: Colors.black45,
+                                      trailing: Text(
+                                        _albumCount(model, index),
+                                        style: const TextStyle(
+                                            color: Colors.white),
+                                      ),
+                                      title: _GridTitleText(
+                                          model.albums!.length - 1 >= index
+                                              ? model.albums![index].title
+                                              : ''),
+                                    ),
+                                  ),
+                                )));
+                      });
+                })),
+            onRefresh: () async {
+              return apiUpdateDb(model);
+            }));
   }
 }
 
