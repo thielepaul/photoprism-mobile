@@ -12,7 +12,7 @@ class FilterPhotos {
   FilterPhotos(
       {this.order = OrderingMode.desc,
       this.sort = PhotoSort.TakenAt,
-      Set<PhotoType> types = const <PhotoType>{
+      Set<PhotoType?> types = const <PhotoType>{
         PhotoType.Image,
         PhotoType.Live,
         PhotoType.Video,
@@ -38,10 +38,10 @@ class FilterPhotos {
     final SharedPreferences sp = await SharedPreferences.getInstance();
 
     if (sp.containsKey(_spKey)) {
-      print('found FilterPhotos in sharedprefs: ' + sp.getString(_spKey));
+      print('found FilterPhotos in sharedprefs: ' + sp.getString(_spKey)!);
       try {
         return FilterPhotos.fromJson(
-            json.decode(sp.getString(_spKey)) as Map<String, dynamic>);
+            json.decode(sp.getString(_spKey)!) as Map<String, dynamic>);
       } catch (e) {
         print(e);
         sp.remove(_spKey);
@@ -55,13 +55,14 @@ class FilterPhotos {
   Map<String, dynamic> toJson() => <String, dynamic>{
         'order': EnumToString.convertToString(order),
         'sort': EnumToString.convertToString(sort),
-        'types':
-            types.map((PhotoType e) => EnumToString.convertToString(e)).toList()
+        'types': types
+            .map((PhotoType? e) => EnumToString.convertToString(e))
+            .toList()
       };
 
-  OrderingMode order = OrderingMode.desc;
-  PhotoSort sort = PhotoSort.TakenAt;
-  Set<PhotoType> types = <PhotoType>{
+  OrderingMode? order = OrderingMode.desc;
+  PhotoSort? sort = PhotoSort.TakenAt;
+  Set<PhotoType?> types = <PhotoType>{
     PhotoType.Image,
     PhotoType.Live,
     PhotoType.Raw,

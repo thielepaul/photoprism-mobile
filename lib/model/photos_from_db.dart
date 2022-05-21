@@ -18,27 +18,27 @@ class PhotosFromDb {
   Map<int, PhotoWithFile> _cache = <int, PhotoWithFile>{};
   final Lock _dbLock = Lock();
 
-  PhotoWithFile getNow(int index) {
+  PhotoWithFile? getNow(int index) {
     if (_cache.containsKey(index)) {
       return _cache[index];
     }
     return null;
   }
 
-  Future<PhotoWithFile> operator [](int index) async {
+  Future<PhotoWithFile?> operator [](int? index) async {
     if (_cache.containsKey(index)) {
-      return _cache[index];
+      return _cache[index!];
     }
     return await _dbLock.synchronized(() async {
       if (_cache.containsKey(index)) {
-        return _cache[index];
+        return _cache[index!];
       }
       final Stopwatch stopwatch = Stopwatch()..start();
       _cache = <int, PhotoWithFile>{};
       const int limit = 500;
-      final int offset = max(0, index - (limit / 2).round());
-      final Iterable<PhotoWithFile> results = await _model.database
-          .photosWithFile(limit, offset, _model.filterPhotos,
+      final int offset = max(0, index! - (limit / 2).round());
+      final Iterable<PhotoWithFile> results = await _model.database!
+          .photosWithFile(limit, offset, _model.filterPhotos!,
               albumUid: _model.albumUid);
       int i = offset;
       for (final PhotoWithFile result in results) {

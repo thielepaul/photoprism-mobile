@@ -13,7 +13,7 @@ class PhotoprismRemoteSettingsLoader {
   Future<void> loadApplicationColor() async {
     // try to load application color from shared preference
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    final String applicationColor = prefs.getString('applicationColor');
+    final String? applicationColor = prefs.getString('applicationColor');
     if (applicationColor != null) {
       print('loading color scheme from cache');
       photoprismModel.applicationColor = applicationColor;
@@ -35,7 +35,7 @@ class PhotoprismRemoteSettingsLoader {
                 .map<String, String>((String key, dynamic value) =>
                     MapEntry<String, String>(key, value.toString()))
             as Map<String, String>;
-        final String themeSetting = settingsJson['theme'];
+        final String? themeSetting = settingsJson['theme'];
 
         final String themesJson =
             await rootBundle.loadString('assets/themes.json');
@@ -49,12 +49,12 @@ class PhotoprismRemoteSettingsLoader {
                                 MapEntry<String, String>(key, value.toString()))))
             as Map<String, Map<String, String>>;
 
-        final Map<String, String> currentTheme = parsedThemes[themeSetting];
+        final Map<String, String> currentTheme = parsedThemes[themeSetting!]!;
 
         photoprismModel.applicationColor = currentTheme['navigation'];
 
         // save new color scheme to shared preferences
-        prefs.setString('applicationColor', photoprismModel.applicationColor);
+        prefs.setString('applicationColor', photoprismModel.applicationColor!);
         photoprismModel.notify();
       } catch (_) {
         print('Could not parse color scheme!');

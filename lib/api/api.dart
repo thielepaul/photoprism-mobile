@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io' as io;
 
@@ -62,14 +63,14 @@ Future<String> apiCreateAlbum(String albumName, PhotoprismModel model) async {
 }
 
 Future<int> apiRenameAlbum(
-    String albumId, String newAlbumName, PhotoprismModel model) async {
+    String? albumId, String newAlbumName, PhotoprismModel model) async {
   final String body = '{"Title":"' + newAlbumName + '"}';
 
   try {
     final http.Response response = await apiHttpAuth(
         model,
         () => http.put(
-            Uri.parse(model.photoprismUrl + '/api/v1/albums/' + albumId),
+            Uri.parse(model.photoprismUrl + '/api/v1/albums/' + albumId!),
             body: body,
             headers: model.photoprismAuth.getAuthHeaders())) as http.Response;
 
@@ -105,11 +106,11 @@ Future<int> apiDeleteAlbum(String albumId, PhotoprismModel model) async {
 }
 
 Future<int> apiAddPhotosToAlbum(
-    String albumId, List<String> photoUUIDs, PhotoprismModel model) async {
+    String? albumId, List<String?> photoUUIDs, PhotoprismModel model) async {
   // wrap uuids in double quotes
 
   final List<String> photoUUIDsWrapped =
-      photoUUIDs.map<String>((String uuid) => '"' + uuid + '"').toList();
+      photoUUIDs.map<String>((String? uuid) => '"' + uuid! + '"').toList();
 
   final String body = '{"photos":' + photoUUIDsWrapped.toString() + '}';
 
@@ -118,7 +119,7 @@ Future<int> apiAddPhotosToAlbum(
         model,
         () => http.post(
             Uri.parse(
-                model.photoprismUrl + '/api/v1/albums/' + albumId + '/photos'),
+                model.photoprismUrl + '/api/v1/albums/' + albumId! + '/photos'),
             body: body,
             headers: model.photoprismAuth.getAuthHeaders())) as http.Response;
     if (response.statusCode == 200) {
@@ -132,10 +133,10 @@ Future<int> apiAddPhotosToAlbum(
 }
 
 Future<int> apiRemovePhotosFromAlbum(
-    String albumId, List<String> photoUUIDs, PhotoprismModel model) async {
+    String albumId, List<String?> photoUUIDs, PhotoprismModel model) async {
   // wrap uuids in double quotes
   final List<String> photoUUIDsWrapped =
-      photoUUIDs.map<String>((String uuid) => '"' + uuid + '"').toList();
+      photoUUIDs.map<String>((String? uuid) => '"' + uuid! + '"').toList();
 
   final String body = '{"photos":' + photoUUIDsWrapped.toString() + '}';
 
@@ -147,8 +148,8 @@ Future<int> apiRemovePhotosFromAlbum(
             model.photoprismUrl + '/api/v1/albums/' + albumId + '/photos'));
     request.headers['Content-Type'] = 'application/json';
     request.body = body;
-    model.photoprismAuth.getAuthHeaders().forEach((String k, String v) {
-      request.headers[k] = v;
+    model.photoprismAuth.getAuthHeaders().forEach((String k, String? v) {
+      request.headers[k] = v!;
     });
     final http.StreamedResponse response =
         await apiHttpAuth(model, () => client.send(request))
@@ -164,10 +165,10 @@ Future<int> apiRemovePhotosFromAlbum(
 }
 
 Future<int> apiArchivePhotos(
-    List<String> photoUUIDs, PhotoprismModel model) async {
+    List<String?> photoUUIDs, PhotoprismModel model) async {
   // wrap uuids in double quotes
   final List<String> photoUUIDsWrapped =
-      photoUUIDs.map<String>((String uuid) => '"' + uuid + '"').toList();
+      photoUUIDs.map<String>((String? uuid) => '"' + uuid! + '"').toList();
 
   final String body = '{"photos":' + photoUUIDsWrapped.toString() + '}';
 
@@ -263,45 +264,47 @@ Future<bool> apiGetNewSession(PhotoprismModel model) async {
           '{"username":"${model.photoprismAuth.user}", "password":"${model.photoprismAuth.password}"}');
   if (response.statusCode == 200 &&
       response.headers.containsKey('x-session-id')) {
-    await model.photoprismAuth.setSessionId(response.headers['x-session-id']);
+    final String sessionId = response.headers['x-session-id'] ?? '';
+    await model.photoprismAuth.setSessionId(sessionId);
     return true;
   }
   return false;
 }
 
-Future<io.File> apiDownloadVideo(
-    PhotoprismModel model, Future<PhotoWithFile> photoFuture) async {
-  final String videoUrl = await apiGetVideoUrl(model, photoFuture);
-  final PhotoWithFile photo = await photoFuture;
+Future<io.File?> apiDownloadVideo(
+    PhotoprismModel model, Future<PhotoWithFile?> photoFuture) async {
+  final String? videoUrl = await apiGetVideoUrl(model, photoFuture);
+  final PhotoWithFile? photo = await photoFuture;
   if (videoUrl == null) {
-    print('found no video file for photo: ' + photo.photo.uid);
+    print('found no video file for photo: ' + photo!.photo.uid);
     return null;
   }
-  final File videoFile =
-      await model.database.getVideoFileForPhoto(photo.photo.uid);
-  String fileName;
-  if (photo.file.originalName != null && photo.file.originalName.isNotEmpty) {
-    fileName = videoFile.originalName;
+  final File? videoFile =
+      await model.database!.getVideoFileForPhoto(photo!.photo.uid);
+  String? fileName;
+  if (photo.file.originalName != null && photo.file.originalName!.isNotEmpty) {
+    fileName = videoFile!.originalName;
   } else {
-    fileName = p.basename(videoFile.name);
+    fileName = p.basename(videoFile!.name!);
   }
   return apiDownloadAsFile(model, Uri.parse(videoUrl), fileName);
 }
 
-Future<io.File> apiDownloadPhoto(PhotoprismModel model, String fileHash) async {
+Future<io.File?> apiDownloadPhoto(
+    PhotoprismModel model, String? fileHash) async {
   return apiDownloadAsFile(
       model,
       Uri.parse(
-          '${model.photoprismUrl}/api/v1/dl/$fileHash?t=${model.config.downloadToken}'),
+          '${model.photoprismUrl}/api/v1/dl/$fileHash?t=${model.config!.downloadToken}'),
       '$fileHash.jpg');
 }
 
-Future<io.File> apiDownloadAsFile(
-    PhotoprismModel model, Uri uri, String fileName) async {
+Future<io.File?> apiDownloadAsFile(
+    PhotoprismModel model, Uri uri, String? fileName) async {
   final http.Client client = http.Client();
   final http.Request request = http.Request('GET', uri);
-  model.photoprismAuth.getAuthHeaders().forEach((String k, String v) {
-    request.headers[k] = v;
+  model.photoprismAuth.getAuthHeaders().forEach((String k, String? v) {
+    request.headers[k] = v!;
   });
   final http.StreamedResponse response =
       await apiHttpAuth(model, () => client.send(request))
@@ -326,7 +329,7 @@ Future<bool> apiLoadConfig(PhotoprismModel model) async {
       model,
       () => http.get(Uri.parse(model.photoprismUrl + '/api/v1/config'),
           headers: model.photoprismAuth.getAuthHeaders())) as http.Response;
-  if (response == null || response.statusCode != 200) {
+  if (response.statusCode != 200) {
     model.config = null;
     return false;
   }
@@ -335,13 +338,13 @@ Future<bool> apiLoadConfig(PhotoprismModel model) async {
   return true;
 }
 
-Future<String> apiGetVideoUrl(
-    PhotoprismModel model, Future<PhotoWithFile> photoWithFile) async {
+Future<String?> apiGetVideoUrl(
+    PhotoprismModel model, Future<PhotoWithFile?> photoWithFile) async {
   if (model.config == null) {
     return null;
   }
-  final File file = await model.database
-      .getVideoFileForPhoto((await photoWithFile).photo.uid);
+  final File? file = await model.database!
+      .getVideoFileForPhoto((await photoWithFile)!.photo.uid);
   if (file == null) {
     return null;
   }
@@ -349,12 +352,12 @@ Future<String> apiGetVideoUrl(
       '/api/v1/videos/' +
       file.hash +
       '/' +
-      model.config.previewToken +
+      model.config!.previewToken! +
       '/mp4';
 }
 
 Future<void> apiPreloadThumbnails(PhotoprismModel model) async {
-  if (model.photos == null || model.photos.isEmpty) {
+  if (model.photos == null || model.photos!.isEmpty) {
     await apiUpdateDb(model);
   }
 
@@ -366,24 +369,24 @@ Future<void> apiPreloadThumbnails(PhotoprismModel model) async {
 
   int photosLoaded = 0;
   int photosFailed = 0;
-  for (int i = 0; i < model.photos.length; i++) {
-    final PhotoWithFile photo = await model.photos[i];
+  for (int i = 0; i < model.photos!.length; i++) {
+    final PhotoWithFile? photo = await model.photos![i];
     final CachedNetworkImageProvider provider = CachedNetworkImageProvider(
       model.photoprismUrl +
           '/api/v1/t/' +
-          photo.file.hash +
+          photo!.file.hash +
           '/' +
-          model.config.previewToken +
+          model.config!.previewToken! +
           '/tile_224',
       cacheKey: photo.file.hash + 'tile_224',
       headers: model.photoprismAuth.getAuthHeaders(),
     );
 
-    final ImageErrorListener errorListener = (dynamic a, StackTrace b) {
+    final ImageErrorListener errorListener = (dynamic a, StackTrace? b) {
       photosFailed++;
       model.photoprismLoadingScreen.updateLoadingScreen(
           'Preloading thumbnails.. ($photosLoaded succcessful, $photosFailed failed)');
-      if (photosLoaded + photosFailed == model.photos.length) {
+      if (photosLoaded + photosFailed == model.photos!.length) {
         model.photoprismLoadingScreen.hideLoadingScreen();
       }
     };
@@ -393,7 +396,7 @@ Future<void> apiPreloadThumbnails(PhotoprismModel model) async {
       photosLoaded++;
       model.photoprismLoadingScreen.updateLoadingScreen(
           'Preloading thumbnails.. ($photosLoaded succcessful, $photosFailed failed)');
-      if (photosLoaded + photosFailed == model.photos.length) {
+      if (photosLoaded + photosFailed == model.photos!.length) {
         model.photoprismLoadingScreen.hideLoadingScreen();
       }
     }, onError: errorListener);

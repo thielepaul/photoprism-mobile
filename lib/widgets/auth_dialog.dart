@@ -5,11 +5,11 @@ import 'package:photoprism/pages/settings_page.dart';
 import 'package:provider/provider.dart';
 
 class AuthDialog extends StatefulWidget {
-  const AuthDialog({Key key, this.context}) : super(key: key);
-  final BuildContext context;
+  const AuthDialog({Key? key, this.context}) : super(key: key);
+  final BuildContext? context;
 
   @override
-  _AuthDialogState createState() => _AuthDialogState(context);
+  _AuthDialogState createState() => _AuthDialogState(context!);
 }
 
 class _AuthDialogState extends State<AuthDialog> {
@@ -21,31 +21,31 @@ class _AuthDialogState extends State<AuthDialog> {
     _userController = TextEditingController();
     _passwordController = TextEditingController();
     enabled = model.photoprismAuth.enabled;
-    _httpBasicUserController.text = model.photoprismAuth.httpBasicUser;
-    _httpBasicPasswordController.text = model.photoprismAuth.httpBasicPassword;
-    _userController.text = model.photoprismAuth.user;
-    _passwordController.text = model.photoprismAuth.password;
+    _httpBasicUserController!.text = model.photoprismAuth.httpBasicUser;
+    _httpBasicPasswordController!.text = model.photoprismAuth.httpBasicPassword;
+    _userController!.text = model.photoprismAuth.user;
+    _passwordController!.text = model.photoprismAuth.password;
   }
 
-  PhotoprismModel model;
-  TextEditingController _httpBasicUserController;
-  TextEditingController _httpBasicPasswordController;
-  bool httpBasicEnabled;
-  TextEditingController _userController;
-  TextEditingController _passwordController;
-  bool enabled;
+  late PhotoprismModel model;
+  TextEditingController? _httpBasicUserController;
+  TextEditingController? _httpBasicPasswordController;
+  bool? httpBasicEnabled;
+  TextEditingController? _userController;
+  TextEditingController? _passwordController;
+  bool? enabled;
 
   @override
   Widget build(BuildContext context) {
     Future<void> saveAndPop() async {
       await model.photoprismAuth.setHttpBasicEnabled(httpBasicEnabled);
       await model.photoprismAuth
-          .setHttpBasicUser(_httpBasicUserController.text);
+          .setHttpBasicUser(_httpBasicUserController!.text);
       await model.photoprismAuth
-          .setHttpBasicPassword(_httpBasicPasswordController.text);
+          .setHttpBasicPassword(_httpBasicPasswordController!.text);
       await model.photoprismAuth.setEnabled(enabled);
-      await model.photoprismAuth.setUser(_userController.text);
-      await model.photoprismAuth.setPassword(_passwordController.text);
+      await model.photoprismAuth.setUser(_userController!.text);
+      await model.photoprismAuth.setPassword(_passwordController!.text);
       await model.photoprismRemoteConfigLoader.loadApplicationColor();
       await SettingsPage.emptyCache(model);
       Navigator.of(context).pop();
@@ -64,10 +64,10 @@ class _AuthDialogState extends State<AuthDialog> {
                 enabled = value;
               });
             },
-            value: enabled,
+            value: enabled!,
           ),
           Visibility(
-              visible: enabled,
+              visible: enabled!,
               child: ListTile(
                   subtitle: const Text('user'),
                   title: TextField(
@@ -77,7 +77,7 @@ class _AuthDialogState extends State<AuthDialog> {
                     autofillHints: const <String>[AutofillHints.username],
                   ))),
           Visibility(
-              visible: enabled,
+              visible: enabled!,
               child: ListTile(
                   subtitle: const Text('password'),
                   title: TextField(
@@ -94,10 +94,10 @@ class _AuthDialogState extends State<AuthDialog> {
                 httpBasicEnabled = value;
               });
             },
-            value: httpBasicEnabled,
+            value: httpBasicEnabled!,
           ),
           Visibility(
-              visible: httpBasicEnabled,
+              visible: httpBasicEnabled!,
               child: ListTile(
                   subtitle: const Text('HTTP basic user'),
                   title: TextField(
@@ -107,7 +107,7 @@ class _AuthDialogState extends State<AuthDialog> {
                     autofillHints: const <String>[AutofillHints.username],
                   ))),
           Visibility(
-              visible: httpBasicEnabled,
+              visible: httpBasicEnabled!,
               child: ListTile(
                   subtitle: const Text('HTTP basic password'),
                   title: TextField(

@@ -22,17 +22,17 @@ import 'package:provider/provider.dart';
 import 'package:share/share.dart';
 
 class PhotosPage extends StatelessWidget {
-  const PhotosPage({Key key, this.albumId}) : super(key: key);
+  const PhotosPage({Key? key, this.albumId}) : super(key: key);
 
-  final int albumId;
+  final int? albumId;
 
   static Future<void> archiveSelectedPhotos(BuildContext context) async {
     final PhotoprismModel model =
         Provider.of<PhotoprismModel>(context, listen: false);
-    final List<Future<String>> selectedPhotos = model
+    final List<Future<String?>> selectedPhotos = model
         .gridController.value.selectedIndexes
-        .map<Future<String>>(
-            (int element) async => (await model.photos[element]).photo.uid)
+        .map<Future<String?>>(
+            (int element) async => (await model.photos![element])!.photo.uid)
         .toList();
 
     PhotoManager.archivePhotos(context, await Future.wait(selectedPhotos));
@@ -49,10 +49,10 @@ class PhotosPage extends StatelessWidget {
         context: context,
         builder: (BuildContext bc) {
           return ListView.builder(
-              itemCount: model.albums == null ? 0 : model.albums.length,
+              itemCount: model.albums == null ? 0 : model.albums!.length,
               itemBuilder: (BuildContext ctxt, int index) {
                 return ListTile(
-                  title: Text(model.albums[index].title),
+                  title: Text(model.albums![index].title!),
                   onTap: () {
                     addPhotosToAlbum(index, context);
                   },
@@ -69,8 +69,8 @@ class PhotosPage extends StatelessWidget {
     final List<String> photoFiles = <String>[];
     final List<String> mimeTypes = <String>[];
     for (final int index in model.gridController.value.selectedIndexes) {
-      final io.File photoFile =
-          await apiDownloadPhoto(model, (await model.photos[index]).file.hash);
+      final io.File? photoFile = await apiDownloadPhoto(
+          model, (await model.photos![index])!.file.hash);
       if (photoFile != null) {
         photoFiles.add(photoFile.path);
         mimeTypes.add('image/jpg');
@@ -86,10 +86,10 @@ class PhotosPage extends StatelessWidget {
 
     final PhotoprismModel model =
         Provider.of<PhotoprismModel>(context, listen: false);
-    final List<Future<String>> selectedPhotos = model
+    final List<Future<String?>> selectedPhotos = model
         .gridController.value.selectedIndexes
-        .map<Future<String>>(
-            (int element) async => (await model.photos[element]).photo.uid)
+        .map<Future<String?>>(
+            (int element) async => (await model.photos![element])!.photo.uid)
         .toList();
 
     model.gridController.clear();
@@ -99,33 +99,34 @@ class PhotosPage extends StatelessWidget {
 
   Text getMonthFromOffset(BuildContext context) {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
-    final PhotoWithFile photo =
-        model.photos.getNow(PhotoManager.getPhotoIndexInScrollView(context));
+    final PhotoWithFile? photo =
+        model.photos!.getNow(PhotoManager.getPhotoIndexInScrollView(context));
     if (photo == null) {
       return const Text('');
     }
-    final DateTime takenAt = photo.photo.takenAt;
+    final DateTime takenAt = photo.photo.takenAt!;
     return Text('${takenAt.month}/${takenAt.year}');
   }
 
   Widget displayPhotoIfUrlLoaded(BuildContext context, int index) {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
-    if (!(index < model.photos.length)) {
+    if (!(index < model.photos!.length)) {
       return Container(
         color: Colors.grey[300],
       );
     }
 
-    return FutureBuilder<PhotoWithFile>(
-        future: model.photos[index],
-        builder: (BuildContext context, AsyncSnapshot<PhotoWithFile> snapshot) {
+    return FutureBuilder<PhotoWithFile?>(
+        future: model.photos![index],
+        builder:
+            (BuildContext context, AsyncSnapshot<PhotoWithFile?> snapshot) {
           if (snapshot.data == null) {
             return Container(
               color: Colors.grey[300],
             );
           }
-          final PhotoWithFile photo = snapshot.data;
-          final String imageUrl =
+          final PhotoWithFile? photo = snapshot.data;
+          final String? imageUrl =
               PhotoManager.getPhotoThumbnailUrl(context, photo);
           if (imageUrl == null) {
             return Container(
@@ -133,7 +134,7 @@ class PhotosPage extends StatelessWidget {
             );
           }
           return CachedNetworkImage(
-            cacheKey: photo.file.hash + 'tile_224',
+            cacheKey: photo!.file.hash + 'tile_224',
             httpHeaders: model.photoprismAuth.getAuthHeaders(),
             alignment: Alignment.center,
             fit: BoxFit.contain,
@@ -141,7 +142,7 @@ class PhotosPage extends StatelessWidget {
             placeholder: (BuildContext context, String url) => Container(
               color: Colors.grey[300],
             ),
-            errorWidget: (BuildContext context, String url, Object error) =>
+            errorWidget: (BuildContext context, String url, Object? error) =>
                 Container(
               color: Colors.grey[300],
               child: const Icon(Icons.error),
@@ -158,7 +159,7 @@ class PhotosPage extends StatelessWidget {
       title: model.gridController.value.selectedIndexes.isNotEmpty
           ? Text(model.gridController.value.selectedIndexes.length.toString())
           : const Text('PhotoPrism'),
-      backgroundColor: HexColor(model.applicationColor),
+      backgroundColor: HexColor(model.applicationColor!),
       leading: model.gridController.value.selectedIndexes.isNotEmpty
           ? IconButton(
               icon: const Icon(Icons.close),
@@ -213,13 +214,13 @@ class PhotosPage extends StatelessWidget {
                   if (choice == 0) {
                     model.photoprismUploader.selectPhotoAndUpload(context);
                   } else if (choice == 1) {
-                    model.filterPhotos.list = PhotoList.Default;
+                    model.filterPhotos!.list = PhotoList.Default;
                     model.updatePhotosSubscription();
                   } else if (choice == 2) {
-                    model.filterPhotos.list = PhotoList.Archive;
+                    model.filterPhotos!.list = PhotoList.Archive;
                     model.updatePhotosSubscription();
                   } else if (choice == 3) {
-                    model.filterPhotos.list = PhotoList.Private;
+                    model.filterPhotos!.list = PhotoList.Private;
                     model.updatePhotosSubscription();
                   } else if (choice == 4) {
                     FilterPhotosDialog.show(context);
@@ -239,14 +240,14 @@ class PhotosPage extends StatelessWidget {
     final DragSelectGridViewController gridController =
         Provider.of<PhotoprismModel>(context).gridController;
 
-    final int tileCount = model.photos != null ? model.photos.length : 0;
+    final int tileCount = model.photos != null ? model.photos!.length : 0;
 
     return RefreshIndicator(child: OrientationBuilder(
         builder: (BuildContext context, Orientation orientation) {
       if (model.config == null) {
         apiLoadConfig(model);
       }
-      if (model.dbTimestamps.isEmpty) {
+      if (model.dbTimestamps!.isEmpty) {
         apiUpdateDb(model, context: context);
         return const Text('', key: ValueKey<String>('photosGridView'));
       }
@@ -287,7 +288,7 @@ class PhotosPage extends StatelessWidget {
                   },
                   child: Hero(
                     tag: index.toString(),
-                    createRectTween: (Rect begin, Rect end) {
+                    createRectTween: (Rect? begin, Rect? end) {
                       return RectTween(begin: begin, end: end);
                     },
                     child: displayPhotoIfUrlLoaded(context, index),

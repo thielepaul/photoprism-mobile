@@ -6,17 +6,17 @@ class PhotosAlbums extends Table {
   @JsonKey('AlbumUID')
   TextColumn get albumUID => text()();
   @JsonKey('Order')
-  IntColumn get order => integer().nullable()();
+  IntColumn? get order => integer().nullable()();
   @JsonKey('Hidden')
-  BoolColumn get hidden => boolean().nullable()();
+  BoolColumn? get hidden => boolean().nullable()();
   @JsonKey('Missing')
-  BoolColumn get missing => boolean().nullable()();
+  BoolColumn? get missing => boolean().nullable()();
   @JsonKey('CreatedAt')
-  DateTimeColumn get createdAt => dateTime().nullable()();
+  DateTimeColumn? get createdAt => dateTime().nullable()();
   @JsonKey('UpdatedAt')
-  DateTimeColumn get updatedAt => dateTime().nullable()();
+  DateTimeColumn? get updatedAt => dateTime().nullable()();
   @JsonKey('DeletedAt')
-  DateTimeColumn get deletedAt => dateTime().nullable()();
+  DateTimeColumn? get deletedAt => dateTime().nullable()();
 
   @override
   Set<Column<dynamic>> get primaryKey => <Column<dynamic>>{photoUID, albumUID};

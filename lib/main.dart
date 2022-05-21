@@ -44,7 +44,7 @@ class PhotoprismApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final Color applicationColor =
-        HexColor(Provider.of<PhotoprismModel>(context).applicationColor);
+        HexColor(Provider.of<PhotoprismModel>(context).applicationColor!);
 
     return MaterialApp(
       title: 'PhotoPrism',

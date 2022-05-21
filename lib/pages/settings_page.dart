@@ -280,7 +280,7 @@ class SettingsPage extends StatelessWidget {
     assets.sort((photolib.AssetPathEntity a, photolib.AssetPathEntity b) =>
         b.assetCount.compareTo(a.assetCount));
 
-    final Set<String> result = await showDialog(
+    final Set<String>? result = await showDialog(
         context: context,
         builder: (BuildContext context) => MultiSelectDialog(
             titles: assets
@@ -369,7 +369,7 @@ class SettingsPage extends StatelessWidget {
         }
         final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
         String selectedAlbums = '';
-        for (final photolib.AssetPathEntity album in snapshot.data) {
+        for (final photolib.AssetPathEntity album in snapshot.data!) {
           if (model.albumsToUpload.contains(album.id)) {
             selectedAlbums += '${album.name}, ';
           }

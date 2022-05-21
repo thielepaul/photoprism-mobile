@@ -5,6 +5,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:photoprism/common/db.dart';
 import 'package:photoprism/main.dart';
@@ -12,9 +13,11 @@ import 'package:photoprism/model/photoprism_model.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'widget_test.mocks.dart';
+
 class TestHttpOverrides extends HttpOverrides {}
 
-Future<void> pumpPhotoPrism(WidgetTester tester, PhotoprismModel model) async {
+Future<void> pumpPhotoPrism(WidgetTester tester, PhotoprismModel? model) async {
   await EasyLocalization.ensureInitialized();
 
   await tester.runAsync(() async {
@@ -26,7 +29,7 @@ Future<void> pumpPhotoPrism(WidgetTester tester, PhotoprismModel model) async {
           ],
           path: 'assets/translations',
           fallbackLocale: const Locale('en', 'US'),
-          child: ChangeNotifierProvider<PhotoprismModel>(
+          child: ChangeNotifierProvider<PhotoprismModel?>(
             create: (BuildContext context) => model,
             child: PhotoprismApp(),
           )),
@@ -36,24 +39,28 @@ Future<void> pumpPhotoPrism(WidgetTester tester, PhotoprismModel model) async {
   });
 }
 
-class SecureStorageMock extends Mock implements FlutterSecureStorage {}
-
+@GenerateMocks(<Type>[FlutterSecureStorage])
 void main() {
-  PhotoprismModel model;
+  PhotoprismModel? model;
 
   setUp(() async {
     SharedPreferences.setMockInitialValues(
         <String, String>{'url': 'http://localhost:2342'});
     HttpOverrides.global = TestHttpOverrides();
-    final SecureStorageMock secureStorageMock = SecureStorageMock();
+    final MockFlutterSecureStorage secureStorageMock =
+        MockFlutterSecureStorage();
+
+    when(secureStorageMock.read(key: anyNamed('key')))
+        .thenAnswer((_) => Future<String?>.value(''));
+
     model = PhotoprismModel(
         () async => MyDatabase(NativeDatabase.memory()), secureStorageMock);
-    await model.initialize();
+    await model!.initialize();
   });
 
   tearDown(() async {
     try {
-      await model.dispose();
+      await model!.dispose();
     } catch (e) {
       print('Disposing model failed: $e');
     }

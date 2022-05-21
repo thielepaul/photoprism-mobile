@@ -10,21 +10,20 @@ import 'package:photoprism/pages/album_detail_view.dart';
 import 'package:provider/provider.dart';
 
 class AlbumsPage extends StatelessWidget {
-  const AlbumsPage({Key key}) : super(key: key);
+  const AlbumsPage({Key? key}) : super(key: key);
 
   static String getAlbumPreviewUrl(BuildContext context, int index) {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
     if (model.albums != null &&
-        model.albums.length - 1 >= index &&
-        model.albums[index] != null &&
+        model.albums!.length - 1 >= index &&
         model.albumCounts != null &&
-        model.albumCounts[model.albums[index].uid] != null &&
+        model.albumCounts![model.albums![index].uid] != null &&
         model.config != null) {
       return model.photoprismUrl +
           '/api/v1/albums/' +
-          model.albums[index].uid +
+          model.albums![index].uid +
           '/t/' +
-          model.config.previewToken +
+          model.config!.previewToken! +
           '/tile_500';
     } else {
       return 'https://raw.githubusercontent.com/photoprism/photoprism-mobile/master/assets/emptyAlbum.jpg';
@@ -51,20 +50,20 @@ class AlbumsPage extends StatelessWidget {
         context,
         MaterialPageRoute<void>(
             builder: (BuildContext ctx) => AlbumDetailView(
-                model.albums[model.albums.length - 1],
-                model.albums.length - 1,
+                model.albums![model.albums!.length - 1],
+                model.albums!.length - 1,
                 context)),
       );
     }
   }
 
   String _albumCount(PhotoprismModel model, int index) {
-    if (index >= model.albums.length) {
+    if (index >= model.albums!.length) {
       return '0';
     }
-    final String uid = model.albums[index].uid;
-    if (model.albumCounts.containsKey(uid)) {
-      return model.albumCounts[uid].toString();
+    final String? uid = model.albums![index].uid;
+    if (model.albumCounts!.containsKey(uid)) {
+      return model.albumCounts![uid!].toString();
     }
     return '0';
   }
@@ -75,7 +74,7 @@ class AlbumsPage extends StatelessWidget {
     return Scaffold(
         appBar: AppBar(
           title: const Text('PhotoPrism'),
-          backgroundColor: HexColor(model.applicationColor),
+          backgroundColor: HexColor(model.applicationColor!),
           actions: <Widget>[
             IconButton(
               icon: const Icon(Icons.add),
@@ -88,7 +87,7 @@ class AlbumsPage extends StatelessWidget {
         ),
         body: RefreshIndicator(child: OrientationBuilder(
             builder: (BuildContext context, Orientation orientation) {
-          if (model.dbTimestamps.isEmpty) {
+          if (model.dbTimestamps!.isEmpty) {
             apiUpdateDb(model);
             return const Text('', key: ValueKey<String>('albumsGridView'));
           }
@@ -100,18 +99,18 @@ class AlbumsPage extends StatelessWidget {
                 crossAxisSpacing: 10,
               ),
               padding: const EdgeInsets.all(10),
-              itemCount: model.albums.length,
+              itemCount: model.albums!.length,
               itemBuilder: (BuildContext context, int index) {
                 return GestureDetector(
                     onTap: () {
-                      model.albumUid = model.albums[index].uid;
+                      model.albumUid = model.albums![index].uid;
                       model.filterPhotos = FilterPhotos();
                       model.updatePhotosSubscription();
                       Navigator.push<void>(
                           context,
                           MaterialPageRoute<void>(
                               builder: (BuildContext ctx) => AlbumDetailView(
-                                  model.albums[index], index, context)));
+                                  model.albums![index], index, context)));
                     },
                     child: ClipRRect(
                         borderRadius: BorderRadius.circular(8.0),
@@ -122,7 +121,7 @@ class AlbumsPage extends StatelessWidget {
                             placeholder: (BuildContext context, String url) =>
                                 Container(color: Colors.grey),
                             errorWidget: (BuildContext context, String url,
-                                    Object error) =>
+                                    Object? error) =>
                                 const Icon(Icons.error),
                           ),
                           footer: GestureDetector(
@@ -133,8 +132,8 @@ class AlbumsPage extends StatelessWidget {
                                 style: const TextStyle(color: Colors.white),
                               ),
                               title: _GridTitleText(
-                                  model.albums.length - 1 >= index
-                                      ? model.albums[index].title
+                                  model.albums!.length - 1 >= index
+                                      ? model.albums![index].title
                                       : ''),
                             ),
                           ),
@@ -149,14 +148,14 @@ class AlbumsPage extends StatelessWidget {
 class _GridTitleText extends StatelessWidget {
   const _GridTitleText(this.text);
 
-  final String text;
+  final String? text;
 
   @override
   Widget build(BuildContext context) {
     return FittedBox(
       fit: BoxFit.scaleDown,
       alignment: Alignment.centerLeft,
-      child: Text(text),
+      child: Text(text!),
     );
   }
 }

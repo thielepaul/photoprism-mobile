@@ -5,14 +5,14 @@ import 'package:photoprism/model/photoprism_model.dart';
 import 'package:provider/provider.dart';
 
 Future<void> albumManagerAddPhotosToAlbum(
-    BuildContext context, int albumId, List<String> photoUUIDs) async {
+    BuildContext context, int albumId, List<String?> photoUUIDs) async {
   final PhotoprismModel model =
       Provider.of<PhotoprismModel>(context, listen: false);
 
-  print('Adding photos to album ' + model.albums[albumId].uid);
+  print('Adding photos to album ' + model.albums![albumId].uid);
   model.photoprismLoadingScreen.showLoadingScreen('Adding photos to album..');
   final int status =
-      await apiAddPhotosToAlbum(model.albums[albumId].uid, photoUUIDs, model);
+      await apiAddPhotosToAlbum(model.albums![albumId].uid, photoUUIDs, model);
 
   if (status == 0) {
     await apiUpdateDb(model);

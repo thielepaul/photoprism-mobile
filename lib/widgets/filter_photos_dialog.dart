@@ -7,17 +7,17 @@ import 'package:photoprism/model/photoprism_model.dart';
 import 'package:provider/provider.dart';
 
 class FilterPhotosDialog extends StatefulWidget {
-  const FilterPhotosDialog({Key key, this.context}) : super(key: key);
-  final BuildContext context;
+  const FilterPhotosDialog({Key? key, this.context}) : super(key: key);
+  final BuildContext? context;
 
-  static Future<Widget> show(BuildContext context) => showDialog(
+  static Future<Widget?> show(BuildContext context) => showDialog(
       context: context,
       builder: (BuildContext context) => FilterPhotosDialog(
             context: context,
           ));
 
   @override
-  _FilterPhotosDialogState createState() => _FilterPhotosDialogState(context);
+  _FilterPhotosDialogState createState() => _FilterPhotosDialogState(context!);
 }
 
 class _FilterPhotosDialogState extends State<FilterPhotosDialog> {
@@ -26,8 +26,8 @@ class _FilterPhotosDialogState extends State<FilterPhotosDialog> {
     filter = model.filterPhotos;
   }
 
-  PhotoprismModel model;
-  FilterPhotos filter;
+  late PhotoprismModel model;
+  FilterPhotos? filter;
 
   List<Widget> _sortOptions(BuildContext context) {
     final List<Widget> sort = PhotoSort.values
@@ -35,9 +35,9 @@ class _FilterPhotosDialogState extends State<FilterPhotosDialog> {
               title: Text(EnumToString.convertToString(e).tr()),
               dense: true,
               value: e,
-              groupValue: filter.sort,
-              onChanged: (PhotoSort value) => setState(() {
-                filter.sort = value;
+              groupValue: filter!.sort,
+              onChanged: (PhotoSort? value) => setState(() {
+                filter!.sort = value;
               }),
             ))
         .toList();
@@ -47,9 +47,9 @@ class _FilterPhotosDialogState extends State<FilterPhotosDialog> {
             title: Text(EnumToString.convertToString(e).tr()),
             dense: true,
             value: e,
-            groupValue: filter.order,
-            onChanged: (moor.OrderingMode value) => setState(() {
-                  filter.order = value;
+            groupValue: filter!.order,
+            onChanged: (moor.OrderingMode? value) => setState(() {
+                  filter!.order = value;
                 })))
         .toList();
     return <Widget>[
@@ -68,16 +68,16 @@ class _FilterPhotosDialogState extends State<FilterPhotosDialog> {
               title: Text(EnumToString.convertToString(e)),
               dense: true,
               contentPadding: const EdgeInsets.symmetric(horizontal: 25),
-              onChanged: (bool value) {
+              onChanged: (bool? value) {
                 setState(() {
-                  if (value) {
-                    filter.types.add(e);
+                  if (value!) {
+                    filter!.types.add(e);
                   } else {
-                    filter.types.remove(e);
+                    filter!.types.remove(e);
                   }
                 });
               },
-              value: filter.types.contains(e)))
+              value: filter!.types.contains(e)))
           .toList()
     ];
   }
@@ -89,11 +89,11 @@ class _FilterPhotosDialogState extends State<FilterPhotosDialog> {
 
   @override
   Widget build(BuildContext context) {
-    Future<void> saveAndPop({bool asDefault}) async {
+    Future<void> saveAndPop({required bool asDefault}) async {
       model.filterPhotos = filter;
       await model.updatePhotosSubscription();
       if (asDefault) {
-        filter.saveTosharedPrefs();
+        filter!.saveTosharedPrefs();
       }
       Navigator.of(context).pop();
     }

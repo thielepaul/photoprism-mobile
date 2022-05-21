@@ -6,11 +6,11 @@ import 'package:provider/provider.dart';
 
 class SelectableTile extends StatefulWidget {
   const SelectableTile(
-      {Key key,
+      {Key? key,
       this.child,
       this.index,
       this.selected,
-      Function onTap,
+      Function? onTap,
       this.context,
       this.gridController})
       : onTapCallback = onTap,
@@ -18,27 +18,27 @@ class SelectableTile extends StatefulWidget {
 
   @override
   _SelectableTileState createState() => _SelectableTileState();
-  final Widget child;
-  final int index;
-  final bool selected;
-  final Function onTapCallback;
-  final BuildContext context;
-  final DragSelectGridViewController gridController;
+  final Widget? child;
+  final int? index;
+  final bool? selected;
+  final Function? onTapCallback;
+  final BuildContext? context;
+  final DragSelectGridViewController? gridController;
 }
 
 class _SelectableTileState extends State<SelectableTile>
     with SingleTickerProviderStateMixin {
-  Animation<double> animation;
-  AnimationController controller;
-  bool wasSelected;
-  bool initialState;
+  late Animation<double> animation;
+  late AnimationController controller;
+  bool? wasSelected;
+  bool? initialState;
 
   @override
   void initState() {
     super.initState();
     controller = AnimationController(
         duration: const Duration(milliseconds: 200), vsync: this);
-    if (widget.selected) {
+    if (widget.selected!) {
       animation = Tween<double>(begin: 17, end: 0).animate(controller);
     } else {
       animation = Tween<double>(begin: 0, end: 17).animate(controller);
@@ -48,18 +48,18 @@ class _SelectableTileState extends State<SelectableTile>
   }
 
   void onTap() {
-    final Selection selection = widget.gridController.value;
+    final Selection selection = widget.gridController!.value;
     if (selection.isSelecting) {
       final Set<int> selectedIndexes = selection.selectedIndexes.toSet();
       if (selectedIndexes.contains(widget.index)) {
         selectedIndexes.remove(widget.index);
       } else {
-        selectedIndexes.add(widget.index);
+        selectedIndexes.add(widget.index!);
       }
-      widget.gridController.value = Selection(selectedIndexes);
+      widget.gridController!.value = Selection(selectedIndexes);
       return;
     }
-    widget.onTapCallback();
+    widget.onTapCallback!();
   }
 
   @override
@@ -90,21 +90,24 @@ class _SelectableTileState extends State<SelectableTile>
 
 class _AnimatedSelectableTile extends AnimatedWidget {
   const _AnimatedSelectableTile(
-      {Key key, Animation<double> animation, this.child, this.selected})
+      {Key? key,
+      required Animation<double> animation,
+      this.child,
+      this.selected})
       : super(key: key, listenable: animation);
 
-  final Widget child;
-  final bool selected;
+  final Widget? child;
+  final bool? selected;
 
   Widget getIcon(BuildContext context) {
-    if (selected) {
+    if (selected!) {
       return Positioned(
         left: 3.0,
         top: 3.0,
         child: Icon(
           Icons.check_circle,
           color:
-              HexColor(Provider.of<PhotoprismModel>(context).applicationColor),
+              HexColor(Provider.of<PhotoprismModel>(context).applicationColor!),
         ),
       );
     } else if (Provider.of<PhotoprismModel>(context)
@@ -117,7 +120,7 @@ class _AnimatedSelectableTile extends AnimatedWidget {
         child: Icon(
           Icons.radio_button_unchecked,
           color:
-              HexColor(Provider.of<PhotoprismModel>(context).applicationColor),
+              HexColor(Provider.of<PhotoprismModel>(context).applicationColor!),
         ),
       );
     }

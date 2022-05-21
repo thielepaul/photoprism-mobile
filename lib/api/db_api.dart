@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:drift/native.dart';
@@ -16,8 +17,8 @@ class DbApiException implements Exception {
 
 const int _resultCount = 1000;
 
-Future<Map<String, dynamic>> _loadDbBatch(
-    PhotoprismModel model, String table, int offset, String since) async {
+Future<Map<String, dynamic>?> _loadDbBatch(
+    PhotoprismModel model, String table, int offset, String? since) async {
   final Uri url = Uri.parse(model.photoprismUrl +
       '/api/v1/db' +
       '?count=' +
@@ -30,10 +31,6 @@ Future<Map<String, dynamic>> _loadDbBatch(
   final http.Response response = await apiHttpAuth(model,
           () => http.get(url, headers: model.photoprismAuth.getAuthHeaders()))
       as http.Response;
-  if (response == null) {
-    print('ERROR: api DB call failed with response null ($url)');
-    throw const DbApiException('no-connection');
-  }
   if (response.statusCode != 200) {
     print(
         'ERROR: api DB call failed with return type ${response.statusCode} ($url)');
@@ -48,7 +45,7 @@ Future<Map<String, dynamic>> _loadDbBatch(
     throw const DbApiException('api-fail');
   }
   try {
-    return json.decode(response.body) as Map<String, dynamic>;
+    return json.decode(response.body) as Map<String, dynamic>?;
   } catch (error) {
     print(response);
     print('decoding answer from db api failed: ' + error.toString());
@@ -56,19 +53,22 @@ Future<Map<String, dynamic>> _loadDbBatch(
   }
 }
 
-Future<List<dynamic>> _loadDbBatchUpdated(
-    PhotoprismModel model, String table, int offset, String since) async {
-  final Map<String, dynamic> parsed =
+Future<List<dynamic>?> _loadDbBatchUpdated(
+    PhotoprismModel model, String table, int offset, String? since) async {
+  final Map<String, dynamic>? parsed =
       await _loadDbBatch(model, table, offset, since);
+  if (parsed == null) {
+    return <dynamic>[];
+  }
 
   if (offset == 0 &&
       parsed.containsKey('QueryTimestamp') &&
       parsed['QueryTimestamp'] != null) {
-    model.dbTimestamps
-        .setQueryTimestamp(table, parsed['QueryTimestamp'] as String);
+    model.dbTimestamps!
+        .setQueryTimestamp(table, parsed['QueryTimestamp'] as String?);
   }
   if (parsed.containsKey('Results') && parsed['Results'] is List) {
-    return parsed['Results'] as List<dynamic>;
+    return parsed['Results'] as List<dynamic>?;
   }
   return <dynamic>[];
 }
@@ -76,8 +76,8 @@ Future<List<dynamic>> _loadDbBatchUpdated(
 Future<List<dynamic>> _loadDbAll(PhotoprismModel model, String table,
     {bool deleted = true}) async {
   final List<dynamic> rowsFromApiCollected = <dynamic>[];
-  List<dynamic> rowsFromApi;
-  final String since = model.dbTimestamps.getQueryTimestamp(table);
+  List<dynamic>? rowsFromApi;
+  final String? since = model.dbTimestamps!.getQueryTimestamp(table);
 
   while (rowsFromApi == null || rowsFromApi.length == _resultCount) {
     if (rowsFromApi != null) {
@@ -85,7 +85,7 @@ Future<List<dynamic>> _loadDbAll(PhotoprismModel model, String table,
           .showLoadingScreen('loading metadata from backend...');
     }
     rowsFromApi = (await _loadDbBatchUpdated(
-            model, table, rowsFromApiCollected.length, since))
+            model, table, rowsFromApiCollected.length, since))!
         .toList();
     print('download batch of rows from db based on QueryTimestamp for table ' +
         table +
@@ -135,25 +135,25 @@ Future<void> _updateDbSynced(PhotoprismModel model) async {
     final Iterable<Photo> photos = await _loadPhotosDb(model);
     if (photos.isNotEmpty) {
       print('update Photo table');
-      await model.database.createOrUpdateMultiplePhotos(
+      await model.database!.createOrUpdateMultiplePhotos(
           photos.map((Photo p) => p.toCompanion(false)).toList());
     }
     final Iterable<File> files = await _loadFilesDb(model);
     if (files.isNotEmpty) {
       print('update File table');
-      await model.database.createOrUpdateMultipleFiles(
+      await model.database!.createOrUpdateMultipleFiles(
           files.map((File p) => p.toCompanion(false)).toList());
     }
     final Iterable<Album> albums = await _loadAlbumsDb(model);
     if (albums.isNotEmpty) {
       print('update Album table');
-      await model.database.createOrUpdateMultipleAlbums(
+      await model.database!.createOrUpdateMultipleAlbums(
           albums.map((Album p) => p.toCompanion(false)).toList());
     }
     final Iterable<PhotosAlbum> photosAlbums = await _loadPhotosAlbumsDb(model);
     if (photosAlbums.isNotEmpty) {
       print('update PhotosAlbum table');
-      await model.database.createOrUpdateMultiplePhotosAlbums(
+      await model.database!.createOrUpdateMultiplePhotosAlbums(
           photosAlbums.map((PhotosAlbum p) => p.toCompanion(false)).toList());
     }
   } on SqliteException catch (e) {
@@ -162,7 +162,7 @@ Future<void> _updateDbSynced(PhotoprismModel model) async {
   }
 }
 
-Future<void> apiUpdateDb(PhotoprismModel model, {BuildContext context}) async {
+Future<void> apiUpdateDb(PhotoprismModel model, {BuildContext? context}) async {
   await model.dbLoadingLock.synchronized(() async {
     if (model.dbTimestamps == null) {
       return;
@@ -172,8 +172,8 @@ Future<void> apiUpdateDb(PhotoprismModel model, {BuildContext context}) async {
     } on DbApiException catch (e) {
       print('Exception: ${e.toString()}');
       if (context != null) {
-        String msg;
-        if (e.msg == 'no-connection' && model.dbTimestamps.isEmpty) {
+        String? msg;
+        if (e.msg == 'no-connection' && model.dbTimestamps!.isEmpty) {
           msg = 'Can not connect to server ${model.photoprismUrl}';
         } else if (e.msg == 'auth-missing') {
           msg = 'Server requires authentification';
@@ -186,7 +186,7 @@ Future<void> apiUpdateDb(PhotoprismModel model, {BuildContext context}) async {
               builder: (BuildContext context) {
                 return AlertDialog(
                   title: const Text('Error'),
-                  content: Text(msg),
+                  content: Text(msg!),
                 );
               });
         }

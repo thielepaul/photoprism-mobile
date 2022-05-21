@@ -23,10 +23,10 @@ class PhotoprismUploader {
   }
 
   PhotoprismModel photoprismModel;
-  Completer<int> manualUploadFinishedCompleter;
-  FlutterUploader uploader;
+  late Completer<int> manualUploadFinishedCompleter;
+  late FlutterUploader uploader;
   String deviceName = '';
-  Map<String, Album> deviceAlbums = <String, Album>{};
+  Map<String?, Album> deviceAlbums = <String, Album>{};
   int uploadsinProgress = 0;
   int failedUploads = 0;
 
@@ -113,7 +113,7 @@ class PhotoprismUploader {
 
   /// Starts image file picker, uploads photo(s) and imports them.
   Future<void> selectPhotoAndUpload(BuildContext context) async {
-    final FilePickerResult result =
+    final FilePickerResult? result =
         await FilePicker.platform.pickFiles(type: FileType.media);
 
     // list for flutter uploader
@@ -124,7 +124,7 @@ class PhotoprismUploader {
       filesToUpload
           .addAll(result.files.map<FileItem>((PlatformFile file) => FileItem(
                 field: 'files',
-                path: file.path,
+                path: file.path!,
               )));
 
       if (result.count > 1) {
@@ -337,15 +337,15 @@ class PhotoprismUploader {
   Future<int> getRemoteAlbumsWithDeviceName(PhotoprismModel model) async {
     // Get list of albums from server which name is the device name of the smartphone.
     await apiUpdateDb(model);
-    final List<Album> deviceAlbumList = model.albums
-        .where((Album album) => album.title.contains(deviceName))
-        .toList();
-    if (deviceAlbumList == null) {
+    if (model.albums == null) {
       return -1;
     }
+    final List<Album> deviceAlbumList = model.albums!
+        .where((Album album) => album.title!.contains(deviceName))
+        .toList();
 
-    deviceAlbums = Map<String, Album>.fromEntries(deviceAlbumList
-        .map((Album album) => MapEntry<String, Album>(album.title, album)));
+    deviceAlbums = Map<String?, Album>.fromEntries(deviceAlbumList
+        .map((Album album) => MapEntry<String?, Album>(album.title, album)));
 
     return 0;
   }
@@ -354,11 +354,11 @@ class PhotoprismUploader {
       photolib.AssetPathEntity album, PhotoprismModel model) async {
     model.addLogEntry('AutoUploader', 'Creating album for mobile uploads.');
 
-    String albumId;
+    String? albumId;
     final String albumName = '$deviceName – ${album.name}';
 
     if (deviceAlbums.containsKey(albumName)) {
-      albumId = deviceAlbums[albumName].uid;
+      albumId = deviceAlbums[albumName]!.uid;
       model.addLogEntry(
           'AutoUploader',
           "Album '" +
@@ -399,8 +399,16 @@ class PhotoprismUploader {
         continue;
       }
 
-      final String filename = await assets[id].titleAsync;
-      final io.File imageFile = await assets[id].originFile;
+      final String filename = await assets[id]!.titleAsync;
+      final io.File? imageFile = await assets[id]!.originFile;
+      if (imageFile == null) {
+        model.addLogEntry(
+            'AutoUploader',
+            "ERROR: Original file for photo which should be uploaded with ID '" +
+                id +
+                "' was not found on the phone.");
+        continue;
+      }
       final String filehash =
           (await sha1.bind(imageFile.openRead()).first).toString();
 
@@ -452,13 +460,16 @@ class PhotoprismUploader {
 
   static Future<bool> isPhotoOnServerAndAddToAlbum(
       PhotoprismModel model, String id, String filehash, String albumId) async {
-    final List<File> file = await model.database.getFileFromHash(filehash);
-    if (file == null || file.isEmpty || file[0].photoUID == null) {
+    if (model.database == null) {
       return false;
     }
-    if (!await model.database.isPhotoAlbum(file[0].photoUID, albumId)) {
+    final List<File> file = await model.database!.getFileFromHash(filehash);
+    if (file.isEmpty) {
+      return false;
+    }
+    if (!await model.database!.isPhotoAlbum(file[0].photoUID, albumId)) {
       if (await apiAddPhotosToAlbum(
-              albumId, <String>[file[0].photoUID], model) !=
+              albumId, <String?>[file[0].photoUID], model) !=
           0) {
         return false;
       }

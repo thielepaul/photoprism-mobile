@@ -10,64 +10,63 @@ class PhotoprismAuth {
 
   PhotoprismModel model;
   final FlutterSecureStorage secureStorage;
-  bool enabled = false;
+  bool? enabled = false;
   String user = 'admin';
   String password = '';
   String sessionId = '';
-  bool httpBasicEnabled = false;
+  bool? httpBasicEnabled = false;
   String httpBasicUser = '';
   String httpBasicPassword = '';
 
   Future<void> initialize() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    final bool httpBasicEnabledStored = prefs.getBool('httpBasicAuthEnabled');
+    final bool? httpBasicEnabledStored = prefs.getBool('httpBasicAuthEnabled');
     if (httpBasicEnabledStored != null) {
       httpBasicEnabled = httpBasicEnabledStored;
     }
 
-    final String httpBasicUserStored =
+    final String? httpBasicUserStored =
         await secureStorage.read(key: 'httpBasicUser');
     if (httpBasicUserStored != null) {
       httpBasicUser = httpBasicUserStored;
     }
 
-    final String httpBasicPasswordStored =
+    final String? httpBasicPasswordStored =
         await secureStorage.read(key: 'httpBasicPassword');
     if (httpBasicPasswordStored != null) {
       httpBasicPassword = httpBasicPasswordStored;
     }
 
-    final bool enabledStored = prefs.getBool('authEnabled');
+    final bool? enabledStored = prefs.getBool('authEnabled');
     if (enabledStored != null) {
       enabled = enabledStored;
     }
 
-    final String sessionTokenStored =
+    final String? sessionTokenStored =
         await secureStorage.read(key: 'sessionToken');
     if (sessionTokenStored != null) {
       sessionId = sessionTokenStored;
     }
 
-    final String userStored = await secureStorage.read(key: 'user');
+    final String? userStored = await secureStorage.read(key: 'user');
     if (userStored != null) {
       user = userStored;
     }
 
-    final String passwordStored = await secureStorage.read(key: 'password');
+    final String? passwordStored = await secureStorage.read(key: 'password');
     if (passwordStored != null) {
       password = passwordStored;
     }
 
     apiGetNewSession(model);
     model.notify();
-    return 0;
   }
 
-  Future<void> setHttpBasicEnabled(bool value) async {
+  Future<void> setHttpBasicEnabled(bool? value) async {
     httpBasicEnabled = value;
     model.notify();
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    prefs.setBool('httpBasicAuthEnabled', httpBasicEnabled);
+    prefs.setBool('httpBasicAuthEnabled', httpBasicEnabled!);
   }
 
   Future<void> setHttpBasicUser(String value) async {
@@ -83,11 +82,11 @@ class PhotoprismAuth {
         key: 'httpBasicPassword', value: httpBasicPassword);
   }
 
-  Future<void> setEnabled(bool value) async {
+  Future<void> setEnabled(bool? value) async {
     enabled = value;
     model.notify();
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    prefs.setBool('authEnabled', enabled);
+    prefs.setBool('authEnabled', enabled!);
   }
 
   Future<void> setUser(String value) async {
@@ -110,11 +109,11 @@ class PhotoprismAuth {
 
   Map<String, String> getAuthHeaders() {
     final Map<String, String> headers = <String, String>{};
-    if (httpBasicEnabled) {
+    if (httpBasicEnabled!) {
       headers['Authorization'] = 'Basic ' +
           utf8.fuse(base64).encode('$httpBasicUser:$httpBasicPassword');
     }
-    if (enabled) {
+    if (enabled!) {
       headers['X-Session-ID'] = sessionId;
     }
     return headers;
