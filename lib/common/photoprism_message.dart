@@ -1,4 +1,4 @@
-import 'package:flushbar/flushbar.dart';
+import 'package:another_flushbar/flushbar.dart';
 import 'package:photoprism/model/photoprism_model.dart';
 
 class PhotoprismMessage {
