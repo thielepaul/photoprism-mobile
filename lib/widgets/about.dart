@@ -23,9 +23,7 @@ class AboutWidget extends StatelessWidget {
                     launch('https://github.com/photoprism/photoprism-mobile');
                   },
               ),
-              TextSpan(
-                  style: theme.headline6,
-                  text: '\n\nTrademarks'),
+              TextSpan(style: theme.headline6, text: '\n\nTrademarks'),
               TextSpan(
                   style: theme.bodyText1,
                   text:
