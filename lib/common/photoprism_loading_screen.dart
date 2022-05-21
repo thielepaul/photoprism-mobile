@@ -50,10 +50,15 @@ class PhotoprismLoadingScreen {
   }
 
   Future<void> hideLoadingScreen() async {
+    if (messages == null) {
+      return;
+    }
+
     final Completer<void> hideLoadingScreenCompleter = Completer<void>();
     Future<void>.delayed(const Duration(milliseconds: 500)).then((_) {
       Navigator.of(dialogKey.currentContext, rootNavigator: true).pop();
       hideLoadingScreenCompleter.complete();
+      messages = null;
     });
     photoprismModel.notify();
     return hideLoadingScreenCompleter.future;
