@@ -266,7 +266,8 @@ class PhotoprismUploader {
     }
 
     if (photoprismModel.photoprismUrl == 'https://demo.photoprism.org' ||
-        photoprismModel.photoprismUrl == 'https://photoprism.p4u1.de') {
+        photoprismModel.photoprismUrl == 'https://photoprism.p4u1.de' ||
+        photoprismModel.photoprismUrl == 'https://photoprism.herokuapp.com') {
       model.addLogEntry('AutoUploader',
           'Auto upload disabled for demo page. Stopping autoupload routine.');
       return;

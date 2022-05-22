@@ -27,7 +27,7 @@ import 'package:synchronized/synchronized.dart';
 class PhotoprismModel extends ChangeNotifier {
   PhotoprismModel(this.dbConnection, this.secureStorage);
   // general
-  String photoprismUrl = 'https://photoprism.p4u1.de';
+  String photoprismUrl = 'https://photoprism.herokuapp.com';
   Config? config;
   Lock dbLoadingLock = Lock();
   bool _dataFromCacheLoaded = false;
