@@ -212,6 +212,7 @@ class PhotosPage extends StatelessWidget {
           ? Text(model.gridController.value.selectedIndexes.length.toString())
           : const Text('PhotoPrism'),
       backgroundColor: HexColor(model.applicationColor!),
+      automaticallyImplyLeading: false,
       leading: model.gridController.value.selectedIndexes.isNotEmpty
           ? IconButton(
               icon: const Icon(Icons.close),

@@ -25,6 +25,7 @@ class SettingsPage extends StatelessWidget {
     return Scaffold(
         appBar: AppBar(
           title: const Text('PhotoPrism'),
+          automaticallyImplyLeading: false,
         ),
         body: Container(
             //width: double.maxFinite,

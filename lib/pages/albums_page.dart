@@ -112,6 +112,7 @@ class AlbumsPage extends StatelessWidget {
         appBar: AppBar(
           title: const Text('PhotoPrism'),
           backgroundColor: HexColor(model.applicationColor!),
+          automaticallyImplyLeading: false,
           actions: <Widget>[
             IconButton(
               icon: const Icon(Icons.add),
