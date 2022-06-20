@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:photoprism/api/api.dart';
 import 'package:photoprism/api/db_api.dart';
 import 'package:photoprism/common/hexcolor.dart';
@@ -31,12 +32,57 @@ class AlbumsPage extends StatelessWidget {
     }
   }
 
-  Future<void> createAlbum(BuildContext context) async {
+  Future<void> _showCreateAlbumDialog(BuildContext context) async {
+    final GlobalKey<FormState> formKey = GlobalKey<FormState>();
+    final TextEditingController nameTextFieldController =
+        TextEditingController();
+    return showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Create album'),
+            content: Form(
+              key: formKey,
+              child: TextFormField(
+                controller: nameTextFieldController,
+                autofocus: true,
+                decoration: const InputDecoration(
+                  hintText: 'Name',
+                ),
+                validator: (String? text) {
+                  if (text == null || text.isEmpty) {
+                    return 'Can\'t be empty';
+                  }
+                  return null;
+                },
+              ),
+            ),
+            actions: <Widget>[
+              TextButton(
+                child: const Text('Cancel'),
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+              ),
+              TextButton(
+                child: const Text('Create'),
+                onPressed: () {
+                  if (formKey.currentState!.validate()) {
+                    createAlbum(context, nameTextFieldController.text);
+                  }
+                },
+              )
+            ],
+          );
+        });
+  }
+
+  Future<void> createAlbum(BuildContext context, String name) async {
     final PhotoprismModel model =
         Provider.of<PhotoprismModel>(context, listen: false);
     model.photoprismLoadingScreen
         .showLoadingScreen('create_album'.tr() + '...');
-    final String uuid = await apiCreateAlbum('New album', model);
+    final String uuid = await apiCreateAlbum(name, model);
 
     if (uuid == '-1') {
       await model.photoprismLoadingScreen.hideLoadingScreen();
@@ -46,15 +92,6 @@ class AlbumsPage extends StatelessWidget {
       model.albumUid = uuid;
       model.updatePhotosSubscription();
       await model.photoprismLoadingScreen.hideLoadingScreen();
-
-      Navigator.push<void>(
-        context,
-        MaterialPageRoute<void>(
-            builder: (BuildContext ctx) => AlbumDetailView(
-                model.albums![model.albums!.length - 1],
-                model.albums!.length - 1,
-                context)),
-      );
     }
   }
 
@@ -81,7 +118,7 @@ class AlbumsPage extends StatelessWidget {
               icon: const Icon(Icons.add),
               tooltip: 'create_album'.tr(),
               onPressed: () {
-                createAlbum(context);
+                _showCreateAlbumDialog(context);
               },
             ),
           ],
