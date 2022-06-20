@@ -262,6 +262,7 @@ class PhotosPage extends StatelessWidget {
               }
 
               return DraggableScrollbar.semicircle(
+                backgroundColor: Theme.of(context).canvasColor,
                 labelTextBuilder: (double offset) =>
                     getMonthFromOffset(context),
                 heightScrollThumb: 50.0,
