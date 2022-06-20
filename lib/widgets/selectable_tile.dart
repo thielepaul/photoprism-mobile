@@ -133,7 +133,7 @@ class _AnimatedSelectableTile extends AnimatedWidget {
     return Stack(
       children: <Widget>[
         Container(
-          color: const Color(0xffeeeeee),
+          color: Theme.of(context).backgroundColor,
           padding: EdgeInsets.all(animation.value),
           child: child,
         ),
