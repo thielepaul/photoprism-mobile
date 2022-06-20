@@ -103,7 +103,11 @@ class AlbumDetailView extends StatelessWidget {
                         _model.gridController.clear();
                       },
                     )
-                  : null,
+                  : IconButton(
+                      icon: const Icon(Icons.arrow_back),
+                      onPressed: () => Navigator.of(context)
+                          .popUntil((Route<void> route) => route.isFirst),
+                    ),
               actions: _selectedPhotosCount > 0
                   ? <Widget>[
                       PopupMenuButton<int>(
