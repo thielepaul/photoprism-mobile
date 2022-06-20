@@ -2,7 +2,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:photoprism/api/api.dart';
 import 'package:photoprism/api/db_api.dart';
 import 'package:photoprism/common/hexcolor.dart';
