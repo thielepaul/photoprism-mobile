@@ -146,7 +146,8 @@ class AlbumDetailView extends StatelessWidget {
           ];
         },
         body: Container(
-            color: Colors.white, child: PhotosPage(albumId: _albumId)));
+            color: Theme.of(context).scaffoldBackgroundColor,
+            child: PhotosPage(albumId: _albumId)));
   }
 
   Future<void> _showRenameAlbumDialog(BuildContext context) async {
