@@ -173,7 +173,9 @@ class AlbumsPage extends StatelessWidget {
                                         getAlbumPreviewUrl(context, index),
                                     placeholder:
                                         (BuildContext context, String url) =>
-                                            Container(color: Colors.grey),
+                                            Container(
+                                                color: Theme.of(context)
+                                                    .backgroundColor),
                                     errorWidget: (BuildContext context,
                                             String url, Object? error) =>
                                         const Icon(Icons.error),

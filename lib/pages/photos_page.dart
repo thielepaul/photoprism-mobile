@@ -113,7 +113,7 @@ class PhotosPage extends StatelessWidget {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
     if (!(index < model.photos!.length)) {
       return Container(
-        color: Colors.grey[300],
+        color: Theme.of(context).backgroundColor,
       );
     }
 
@@ -123,7 +123,7 @@ class PhotosPage extends StatelessWidget {
             (BuildContext context, AsyncSnapshot<PhotoWithFile?> snapshot) {
           if (snapshot.data == null) {
             return Container(
-              color: Colors.grey[300],
+              color: Theme.of(context).backgroundColor,
             );
           }
           final PhotoWithFile? photo = snapshot.data;
@@ -131,7 +131,7 @@ class PhotosPage extends StatelessWidget {
               PhotoManager.getPhotoThumbnailUrl(context, photo);
           if (imageUrl == null) {
             return Container(
-              color: Colors.grey[300],
+              color: Theme.of(context).backgroundColor,
             );
           }
           return CachedNetworkImage(
@@ -141,11 +141,11 @@ class PhotosPage extends StatelessWidget {
             fit: BoxFit.contain,
             imageUrl: imageUrl,
             placeholder: (BuildContext context, String url) => Container(
-              color: Colors.grey[300],
+              color: Theme.of(context).backgroundColor,
             ),
             errorWidget: (BuildContext context, String url, Object? error) =>
                 Container(
-              color: Colors.grey[300],
+              color: Theme.of(context).backgroundColor,
               child: const Icon(Icons.error),
               alignment: Alignment.center,
             ),

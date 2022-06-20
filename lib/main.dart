@@ -53,6 +53,7 @@ class PhotoprismApp extends StatelessWidget {
       locale: context.locale,
       theme: ThemeData(
         primaryColor: applicationColor,
+        backgroundColor: Colors.grey[300], // used for placeholders
         colorScheme: ColorScheme.light(
           primary: applicationColor,
         ),
