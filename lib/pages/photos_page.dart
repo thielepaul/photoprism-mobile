@@ -47,19 +47,44 @@ class PhotosPage extends StatelessWidget {
     }
 
     showModalBottomSheet<void>(
-        context: context,
-        builder: (BuildContext bc) {
-          return ListView.builder(
-              itemCount: model.albums == null ? 0 : model.albums!.length,
-              itemBuilder: (BuildContext ctxt, int index) {
-                return ListTile(
-                  title: Text(model.albums![index].title!),
-                  onTap: () {
-                    addPhotosToAlbum(index, context);
-                  },
-                );
-              });
-        });
+      context: context,
+      isScrollControlled: true,
+      isDismissible: true,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
+      builder: (BuildContext context) => DraggableScrollableSheet(
+        expand: false,
+        builder: (_, ScrollController controller) => Column(
+          children: <Widget>[
+            ListTile(
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+              title: const Text(
+                'Add to Album',
+                style: TextStyle(fontSize: 24.0),
+              ),
+            ),
+            Expanded(
+              child: ListView.builder(
+                itemCount: model.albums?.length ?? 0,
+                itemBuilder: (BuildContext ctxt, int index) {
+                  return ListTile(
+                    title: Text(model.albums![index].title!),
+                    onTap: () {
+                      addPhotosToAlbum(index, context);
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   static Future<void> _sharePhotos(BuildContext context) async {
