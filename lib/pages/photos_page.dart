@@ -27,6 +27,32 @@ class PhotosPage extends StatelessWidget {
 
   final int? albumId;
 
+  static Future<void> _showArchiveDialog(BuildContext albumContext) async {
+    return showDialog(
+        context: albumContext,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Archive photos?'),
+            content: const Text(
+                'Are you sure you want to archive the selected photos?'),
+            actions: <Widget>[
+              TextButton(
+                child: const Text('Cancel'),
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+              ),
+              TextButton(
+                child: const Text('Archive photos'),
+                onPressed: () {
+                  archiveSelectedPhotos(albumContext);
+                },
+              )
+            ],
+          );
+        });
+  }
+
   static Future<void> archiveSelectedPhotos(BuildContext context) async {
     final PhotoprismModel model =
         Provider.of<PhotoprismModel>(context, listen: false);
@@ -200,7 +226,7 @@ class PhotosPage extends StatelessWidget {
                 icon: const Icon(Icons.archive),
                 tooltip: 'archive_photos'.tr(),
                 onPressed: () {
-                  archiveSelectedPhotos(context);
+                  _showArchiveDialog(context);
                 },
               ),
               IconButton(
