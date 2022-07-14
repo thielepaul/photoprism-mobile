@@ -103,7 +103,11 @@ class AlbumDetailView extends StatelessWidget {
                         _model.gridController.clear();
                       },
                     )
-                  : null,
+                  : IconButton(
+                      icon: const Icon(Icons.arrow_back),
+                      onPressed: () => Navigator.of(context)
+                          .popUntil((Route<void> route) => route.isFirst),
+                    ),
               actions: _selectedPhotosCount > 0
                   ? <Widget>[
                       PopupMenuButton<int>(
@@ -146,7 +150,8 @@ class AlbumDetailView extends StatelessWidget {
           ];
         },
         body: Container(
-            color: Colors.white, child: PhotosPage(albumId: _albumId)));
+            color: Theme.of(context).scaffoldBackgroundColor,
+            child: PhotosPage(albumId: _albumId)));
   }
 
   Future<void> _showRenameAlbumDialog(BuildContext context) async {

@@ -27,6 +27,32 @@ class PhotosPage extends StatelessWidget {
 
   final int? albumId;
 
+  static Future<void> _showArchiveDialog(BuildContext albumContext) async {
+    return showDialog(
+        context: albumContext,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Archive photos?'),
+            content: const Text(
+                'Are you sure you want to archive the selected photos?'),
+            actions: <Widget>[
+              TextButton(
+                child: const Text('Cancel'),
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+              ),
+              TextButton(
+                child: const Text('Archive photos'),
+                onPressed: () {
+                  archiveSelectedPhotos(albumContext);
+                },
+              )
+            ],
+          );
+        });
+  }
+
   static Future<void> archiveSelectedPhotos(BuildContext context) async {
     final PhotoprismModel model =
         Provider.of<PhotoprismModel>(context, listen: false);
@@ -47,19 +73,44 @@ class PhotosPage extends StatelessWidget {
     }
 
     showModalBottomSheet<void>(
-        context: context,
-        builder: (BuildContext bc) {
-          return ListView.builder(
-              itemCount: model.albums == null ? 0 : model.albums!.length,
-              itemBuilder: (BuildContext ctxt, int index) {
-                return ListTile(
-                  title: Text(model.albums![index].title!),
-                  onTap: () {
-                    addPhotosToAlbum(index, context);
-                  },
-                );
-              });
-        });
+      context: context,
+      isScrollControlled: true,
+      isDismissible: true,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
+      builder: (BuildContext context) => DraggableScrollableSheet(
+        expand: false,
+        builder: (_, ScrollController controller) => Column(
+          children: <Widget>[
+            ListTile(
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+              title: const Text(
+                'Add to Album',
+                style: TextStyle(fontSize: 24.0),
+              ),
+            ),
+            Expanded(
+              child: ListView.builder(
+                itemCount: model.albums?.length ?? 0,
+                itemBuilder: (BuildContext ctxt, int index) {
+                  return ListTile(
+                    title: Text(model.albums![index].title!),
+                    onTap: () {
+                      addPhotosToAlbum(index, context);
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   static Future<void> _sharePhotos(BuildContext context) async {
@@ -113,7 +164,7 @@ class PhotosPage extends StatelessWidget {
     final PhotoprismModel model = Provider.of<PhotoprismModel>(context);
     if (!(index < model.photos!.length)) {
       return Container(
-        color: Colors.grey[300],
+        color: Theme.of(context).backgroundColor,
       );
     }
 
@@ -123,7 +174,7 @@ class PhotosPage extends StatelessWidget {
             (BuildContext context, AsyncSnapshot<PhotoWithFile?> snapshot) {
           if (snapshot.data == null) {
             return Container(
-              color: Colors.grey[300],
+              color: Theme.of(context).backgroundColor,
             );
           }
           final PhotoWithFile? photo = snapshot.data;
@@ -131,7 +182,7 @@ class PhotosPage extends StatelessWidget {
               PhotoManager.getPhotoThumbnailUrl(context, photo);
           if (imageUrl == null) {
             return Container(
-              color: Colors.grey[300],
+              color: Theme.of(context).backgroundColor,
             );
           }
           return CachedNetworkImage(
@@ -141,11 +192,11 @@ class PhotosPage extends StatelessWidget {
             fit: BoxFit.contain,
             imageUrl: imageUrl,
             placeholder: (BuildContext context, String url) => Container(
-              color: Colors.grey[300],
+              color: Theme.of(context).backgroundColor,
             ),
             errorWidget: (BuildContext context, String url, Object? error) =>
                 Container(
-              color: Colors.grey[300],
+              color: Theme.of(context).backgroundColor,
               child: const Icon(Icons.error),
               alignment: Alignment.center,
             ),
@@ -161,6 +212,7 @@ class PhotosPage extends StatelessWidget {
           ? Text(model.gridController.value.selectedIndexes.length.toString())
           : const Text('PhotoPrism'),
       backgroundColor: HexColor(model.applicationColor!),
+      automaticallyImplyLeading: false,
       leading: model.gridController.value.selectedIndexes.isNotEmpty
           ? IconButton(
               icon: const Icon(Icons.close),
@@ -175,7 +227,7 @@ class PhotosPage extends StatelessWidget {
                 icon: const Icon(Icons.archive),
                 tooltip: 'archive_photos'.tr(),
                 onPressed: () {
-                  archiveSelectedPhotos(context);
+                  _showArchiveDialog(context);
                 },
               ),
               IconButton(
@@ -262,6 +314,7 @@ class PhotosPage extends StatelessWidget {
               }
 
               return DraggableScrollbar.semicircle(
+                backgroundColor: Theme.of(context).canvasColor,
                 labelTextBuilder: (double offset) =>
                     getMonthFromOffset(context),
                 heightScrollThumb: 50.0,

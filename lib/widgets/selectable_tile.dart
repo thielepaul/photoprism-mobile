@@ -1,6 +1,5 @@
 import 'package:drag_select_grid_view/drag_select_grid_view.dart';
 import 'package:flutter/material.dart';
-import 'package:photoprism/common/hexcolor.dart';
 import 'package:photoprism/model/photoprism_model.dart';
 import 'package:provider/provider.dart';
 
@@ -106,8 +105,7 @@ class _AnimatedSelectableTile extends AnimatedWidget {
         top: 3.0,
         child: Icon(
           Icons.check_circle,
-          color:
-              HexColor(Provider.of<PhotoprismModel>(context).applicationColor!),
+          color: Theme.of(context).iconTheme.color,
         ),
       );
     } else if (Provider.of<PhotoprismModel>(context)
@@ -119,8 +117,7 @@ class _AnimatedSelectableTile extends AnimatedWidget {
         top: 3.0,
         child: Icon(
           Icons.radio_button_unchecked,
-          color:
-              HexColor(Provider.of<PhotoprismModel>(context).applicationColor!),
+          color: Theme.of(context).iconTheme.color,
         ),
       );
     }
@@ -133,7 +130,7 @@ class _AnimatedSelectableTile extends AnimatedWidget {
     return Stack(
       children: <Widget>[
         Container(
-          color: const Color(0xffeeeeee),
+          color: Theme.of(context).backgroundColor,
           padding: EdgeInsets.all(animation.value),
           child: child,
         ),
