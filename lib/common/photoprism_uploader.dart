@@ -9,7 +9,6 @@ import 'package:device_info/device_info.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_uploader/flutter_uploader.dart';
 import 'package:intl/intl.dart';
 import 'package:isar/isar.dart';
 import 'package:photo_manager/photo_manager.dart' as photolib;
@@ -28,10 +27,7 @@ class PhotoprismUploader {
 
   PhotoprismModel model;
   late Completer<int> manualUploadFinishedCompleter;
-  late FlutterUploader uploader;
   Map<String?, Album> deviceAlbums = <String, Album>{};
-  int uploadsinProgress = 0;
-  int failedUploads = 0;
   late Isar isar;
   int currentlyIndexingCounter = 0;
   int maxIndexingCounter = 10;
@@ -46,40 +42,10 @@ class PhotoprismUploader {
     initPlatformState();
     getPhotosToUpload();
 
-    uploader = FlutterUploader();
     BackgroundFetch.start().then((int status) {
       print('[BackgroundFetch] start success: $status');
     }).catchError((Object e) {
       print('[BackgroundFetch] start FAILURE: $e');
-    });
-
-    uploader.progress.listen((UploadTaskProgress progress) {
-      //print("Progress: " + progress.progress.toString());
-    });
-
-    uploader.result.listen((UploadTaskResponse result) async {
-      uploadsinProgress--;
-      if (result.statusCode != 200) {
-        failedUploads++;
-      }
-
-      if (uploadsinProgress == 0) {
-        print('Upload finished.');
-        manualUploadFinishedCompleter.complete(failedUploads == 0 ? 0 : 1);
-        // clear out the failedUploads count manually, to make sure we're
-        // set up for the next upload
-        failedUploads = 0;
-      }
-    }, onError: (Object ex, StackTrace stacktrace) {
-      uploadsinProgress--;
-      failedUploads++;
-
-      if (uploadsinProgress == 0) {
-        manualUploadFinishedCompleter.complete(failedUploads == 0 ? 0 : 1);
-        // clear out the failedUploads count manually, to make sure we're
-        // set up for the next upload
-        failedUploads = 0;
-      }
     });
 
     isar = await Isar.open(<CollectionSchema<LocalFile>>[LocalFileSchema]);
@@ -128,78 +94,45 @@ class PhotoprismUploader {
 
   /// Starts image file picker, uploads photo(s) and imports them.
   Future<void> selectPhotoAndUpload(BuildContext context) async {
-    final FilePickerResult? result =
-        await FilePicker.platform.pickFiles(type: FileType.media);
+    final FilePickerResult? result = await FilePicker.platform
+        .pickFiles(type: FileType.media, allowMultiple: true);
 
-    // list for flutter uploader
-    final List<FileItem> filesToUpload = <FileItem>[];
+    if (result == null) {
+      return;
+    }
 
-    // check if at least one file was selected
-    if (result != null) {
-      filesToUpload
-          .addAll(result.files.map<FileItem>((PlatformFile file) => FileItem(
-                field: 'files',
-                path: file.path!,
-              )));
+    model.photoprismLoadingScreen.showLoadingScreen('Starting upload...');
 
-      if (result.count > 1) {
-        model.photoprismLoadingScreen.showLoadingScreen('Uploading photos..');
-      } else {
-        model.photoprismLoadingScreen.showLoadingScreen('Uploading photo..');
-      }
+    final void Function(String step, int count) showStatus = (String step,
+            int count) =>
+        model.photoprismLoadingScreen.updateLoadingScreen(
+            '$step photo${result.count > 1 ? 's' : ''}... ($count/${result.count})');
 
+    for (int idx = 0; idx < result.files.length; idx++) {
+      final PlatformFile file = result.files[idx];
       final Random rng = Random.secure();
       String event = '';
       for (int i = 0; i < 12; i++) {
         event += rng.nextInt(9).toString();
       }
 
-      print('Uploading event ' + event);
-
-      final int status = await uploadPhoto(filesToUpload, event);
-
-      if (status == 0) {
-        print('Manual upload successful.');
-        print('Importing photos..');
-        model.photoprismLoadingScreen.updateLoadingScreen('Importing photos..');
-        final int status = await apiImportPhotoEvent(model, event);
-
-        if (status == 0) {
-          await apiUpdateDb(model);
-          await model.photoprismLoadingScreen.hideLoadingScreen();
-          model.photoprismMessage
-              .showMessage('Uploading and importing successful.');
-        } else if (status == 3) {
-          await model.photoprismLoadingScreen.hideLoadingScreen();
-          model.photoprismMessage
-              .showMessage('Photo already imported or import failed.');
-        } else {
-          await model.photoprismLoadingScreen.hideLoadingScreen();
-          model.photoprismMessage.showMessage('Importing failed.');
-        }
+      final String? path = file.path;
+      if (path == null) {
+        return;
+      }
+      showStatus('Uploading', idx + 1);
+      final bool status =
+          await apiUpload(model, event, file.name, io.File(path), <String>[]);
+      if (status) {
+        print('Manual upload successful for ${file.name}.');
       } else {
-        print('Manual upload failed.');
-        await model.photoprismLoadingScreen.hideLoadingScreen();
-        model.photoprismMessage.showMessage('Manual upload failed.');
+        print('Manual upload failed for ${file.name}.');
+        model.photoprismMessage
+            .showMessage('Uploading photo "${file.name}" failed!');
       }
     }
-  }
-
-  Future<int> uploadPhoto(List<FileItem> filesToUpload, String event) async {
-    manualUploadFinishedCompleter = Completer<int>();
-
-    await apiGetNewSession(model);
-    for (final FileItem fileToUpload in filesToUpload) {
-      await uploader.enqueue(RawUpload(
-          url: model.photoprismUrl + '/api/v1/upload/' + event,
-          path: fileToUpload.path,
-          method: UploadMethod.POST,
-          tag: 'manual',
-          headers: model.photoprismAuth.getAuthHeaders()));
-      uploadsinProgress += 1;
-    }
-
-    return manualUploadFinishedCompleter.future;
+    await model.photoprismLoadingScreen.hideLoadingScreen();
+    await apiUpdateDb(model);
   }
 
   Future<void> getPhotosToUpload() async {
@@ -532,8 +465,12 @@ class PhotoprismUploader {
     model.addLogEntry('AutoUploader',
         "Uploading photo '${file.filename}' to album '${file.albumName}'.");
     final io.File? imageFile = await asset.originFile;
+    if (imageFile == null) {
+      await failUpload('original file could not be accessed.');
+      return;
+    }
     final bool status = await apiUpload(
-        model, fileHash, file.filename, imageFile!, <String>[file.albumName]);
+        model, fileHash, file.filename, imageFile, <String>[file.albumName]);
     if (status) {
       model.addLogEntry(
           'AutoUploader', "Uploading photo ${file.filename} successful'.");

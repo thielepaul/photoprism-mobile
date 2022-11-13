@@ -39,7 +39,6 @@ dependencies:
     sdk: flutter
   flutter_cache_manager: ^3.0.0-nullsafety.1
   flutter_secure_storage: ^6.0.0
-  flutter_uploader: ^3.0.0-beta.4
   http: ^0.13.4
   image_picker: ^0.8.4+8
   intl: ^0.17.0
