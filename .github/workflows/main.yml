@@ -104,7 +104,6 @@ jobs:
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           prerelease: false
-          title: "Development CI Build (DB API)"
           files: |
             photoprism.apk
             photoprism.AppImage
