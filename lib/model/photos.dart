@@ -97,5 +97,5 @@ class Photos extends Table {
   DateTimeColumn? get deletedAt => dateTime().nullable()();
 
   @override
-  Set<Column<dynamic>> get primaryKey => <Column<dynamic>>{id};
+  Set<Column<Object>> get primaryKey => <Column<Object>>{id};
 }

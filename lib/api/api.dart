@@ -228,11 +228,13 @@ Future<int> apiImportPhotoEvent(PhotoprismModel model, String event) async {
   }
 }
 
-Future<bool> apiUpload(
-    PhotoprismModel model, String fileId, String fileName, io.File file) async {
+Future<bool> apiUpload(PhotoprismModel model, String fileId, String fileName,
+    io.File file, List<String> albums) async {
   try {
     final http.MultipartRequest request = http.MultipartRequest(
-        'POST', Uri.parse('${model.photoprismUrl}/api/v1/upload/$fileId'));
+        'POST',
+        Uri.parse(
+            '${model.photoprismUrl}/api/v1/users/${model.photoprismAuth.userId}/upload/$fileId'));
     request.files.add(http.MultipartFile(
         'files', file.openRead(), await file.length(),
         filename: fileName, contentType: MediaType('image', 'jpeg')));
@@ -241,12 +243,23 @@ Future<bool> apiUpload(
         await apiHttpAuth(model, () => request.send())
             as http.StreamedResponse?;
 
-    if (response != null && response.statusCode == 200) {
-      return true;
-    } else {
-      print('Upload failed: statusCode=${response?.statusCode}');
+    if (response == null || response.statusCode != 200) {
+      print('Uploading failed: statusCode=${response?.statusCode}');
       return false;
     }
+
+    final http.Response? putResponse = await apiHttpAuth(
+        model,
+        () => http.put(
+            Uri.parse(
+                '${model.photoprismUrl}/api/v1/users/${model.photoprismAuth.userId}/upload/$fileId'),
+            body: jsonEncode(<String, List<String>>{'albums': albums}),
+            headers: model.photoprismAuth.getAuthHeaders())) as http.Response?;
+    if (putResponse == null || putResponse.statusCode != 200) {
+      print('Upload processing failed: statusCode=${putResponse?.statusCode}');
+      return false;
+    }
+    return true;
   } catch (e) {
     print('Upload failed: $e');
     return false;
@@ -268,6 +281,8 @@ Future<bool> apiGetNewSession(PhotoprismModel model) async {
       response.headers.containsKey('x-session-id')) {
     final String sessionId = response.headers['x-session-id'] ?? '';
     await model.photoprismAuth.setSessionId(sessionId);
+    await model.photoprismAuth
+        .setUserId(json.decode(response.body)['user']['UID'] as String);
     model.notify();
     print('Api: loaded new session token from backend');
     return true;

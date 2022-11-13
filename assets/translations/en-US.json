@@ -50,5 +50,6 @@
   "theme": "Theme",
   "dark": "Dark",
   "light": "Light",
-  "system": "System default"
+  "system": "System default",
+  "not_supported_on_platform": "Not supported on this platform"
 }

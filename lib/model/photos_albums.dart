@@ -19,5 +19,5 @@ class PhotosAlbums extends Table {
   DateTimeColumn? get deletedAt => dateTime().nullable()();
 
   @override
-  Set<Column<dynamic>> get primaryKey => <Column<dynamic>>{photoUID, albumUID};
+  Set<Column<Object>> get primaryKey => <Column<Object>>{photoUID, albumUID};
 }

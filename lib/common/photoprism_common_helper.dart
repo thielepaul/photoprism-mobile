@@ -28,24 +28,6 @@ class PhotoprismCommonHelper {
     final PhotoprismModel model =
         Provider.of<PhotoprismModel>(context, listen: false);
 
-    if (sp.containsKey('alreadyUploadedPhotos')) {
-      try {
-        PhotoprismUploader.saveAndSetAlreadyUploadedPhotos(
-            model, sp.getStringList('alreadyUploadedPhotos')!.toSet());
-      } catch (_) {
-        sp.remove('alreadyUploadedPhotos');
-      }
-    }
-
-    if (sp.containsKey('photosUploadFailed')) {
-      try {
-        PhotoprismUploader.saveAndSetPhotosUploadFailed(
-            model, sp.getStringList('photosUploadFailed')!.toSet());
-      } catch (_) {
-        sp.remove('photosUploadFailed');
-      }
-    }
-
     if (sp.containsKey('albumsToUpload')) {
       try {
         PhotoprismUploader.saveAndSetAlbumsToUpload(
