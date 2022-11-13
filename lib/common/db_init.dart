@@ -30,7 +30,7 @@ Future<DriftIsolate> _createMoorIsolate() async {
 void _startBackground(_IsolateStartRequest request) {
   final NativeDatabase executor = NativeDatabase(io.File(request.targetPath));
   final DriftIsolate moorIsolate = DriftIsolate.inCurrent(
-    () => DatabaseConnection.fromExecutor(executor),
+    () => DatabaseConnection(executor),
   );
   request.sendMoorIsolate.send(moorIsolate);
 }

@@ -89,12 +89,12 @@ class MyDatabase extends _$MyDatabase {
           useColumns: false)
     ])
       ..where(photosAlbums.hidden.not())
-      ..addColumns(<Expression<dynamic>>[photoCount])
-      ..groupBy(<Expression<dynamic>>[albums.uid]);
+      ..addColumns(<Expression<Object>>[photoCount])
+      ..groupBy(<Expression<Object>>[albums.uid]);
 
     return query.watch().map((List<TypedResult> rows) => <String?, int>{
           for (TypedResult row in rows)
-            row.read(albums.uid): row.read(photoCount),
+            row.read(albums.uid): row.read(photoCount) ?? 0,
         });
   }
 
@@ -117,7 +117,7 @@ class MyDatabase extends _$MyDatabase {
       ]);
     }
 
-    GeneratedColumn<DateTime?> sortColumn;
+    GeneratedColumn<DateTime> sortColumn;
     switch (filterPhotos.sort) {
       case PhotoSort.CreatedAt:
         sortColumn = photos.createdAt;
@@ -177,7 +177,7 @@ class MyDatabase extends _$MyDatabase {
 
     return (query..addColumns(<Expression<int>>[filesCount]))
         .watchSingle()
-        .map((TypedResult row) => row.read(filesCount));
+        .map((TypedResult row) => row.read(filesCount) ?? 0);
   }
 
   @override

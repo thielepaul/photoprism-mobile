@@ -1,6 +1,7 @@
 import 'package:collection/collection.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:photo_manager/photo_manager.dart' as photolib;
 import 'package:photoprism/api/api.dart';
@@ -72,7 +73,7 @@ class SettingsPage extends StatelessWidget {
               leading: Container(
                 width: 10,
                 alignment: Alignment.center,
-                child: const Icon(Icons.delete),
+                child: const Icon(Icons.download),
               ),
               onTap: () {
                 apiPreloadThumbnails(model);
@@ -96,8 +97,14 @@ class SettingsPage extends StatelessWidget {
               secondary: const Icon(Icons.cloud_upload),
               value: model.autoUploadEnabled,
               onChanged: (bool newState) async {
-                final photolib.PermissionState _ps =
-                    await photolib.PhotoManager.requestPermissionExtend();
+                photolib.PermissionState _ps;
+                try {
+                  _ps = await photolib.PhotoManager.requestPermissionExtend();
+                } on MissingPluginException {
+                  model.photoprismMessage
+                      .showMessage('not_supported_on_platform'.tr());
+                  return;
+                }
                 if (_ps.isAuth) {
                   model.photoprismUploader.setAutoUpload(newState);
                   model.photoprismUploader.initialize();
@@ -167,7 +174,7 @@ class SettingsPage extends StatelessWidget {
                   child: const Icon(Icons.refresh),
                 ),
                 onTap: () {
-                  PhotoprismUploader.clearFailedUploadList(model);
+                  model.photoprismUploader.retryFailedUploads(model);
                 },
               ),
             if (model.autoUploadEnabled)
@@ -180,7 +187,7 @@ class SettingsPage extends StatelessWidget {
                 ),
                 onTap: () {
                   model.photoprismUploader
-                      .runAutoUploadBackgroundRoutine(model, 'Manual');
+                      .runAutoUploadBackgroundRoutine('Manual');
                 },
               ),
             if (model.autoUploadEnabled)
@@ -260,10 +267,9 @@ class SettingsPage extends StatelessWidget {
   }
 
   Future<void> deleteUploadInfo(BuildContext context) async {
-    await PhotoprismUploader.saveAndSetAlreadyUploadedPhotos(
-        Provider.of<PhotoprismModel>(context), <String>{});
-    await PhotoprismUploader.saveAndSetPhotosUploadFailed(
-        Provider.of<PhotoprismModel>(context), <String>{});
+    final PhotoprismModel model =
+        Provider.of<PhotoprismModel>(context, listen: false);
+    await model.photoprismUploader.resetState();
   }
 
   Future<void> configureAlbumsToUpload(BuildContext context) async {
@@ -278,8 +284,13 @@ class SettingsPage extends StatelessWidget {
 
     final List<photolib.AssetPathEntity> assets =
         await photolib.PhotoManager.getAssetPathList();
+    final Map<photolib.AssetPathEntity, int> assetCounts =
+        <photolib.AssetPathEntity, int>{};
+    for (final photolib.AssetPathEntity asset in assets) {
+      assetCounts[asset] = await asset.assetCountAsync;
+    }
     assets.sort((photolib.AssetPathEntity a, photolib.AssetPathEntity b) =>
-        b.assetCount.compareTo(a.assetCount));
+        (assetCounts[b] ?? 0).compareTo(assetCounts[a] ?? 0));
 
     final Set<String>? result = await showDialog(
         context: context,
@@ -289,7 +300,7 @@ class SettingsPage extends StatelessWidget {
                 .toList(),
             subtitles: assets
                 .map((photolib.AssetPathEntity asset) =>
-                    '${asset.assetCount} Elements')
+                    '${assetCounts[asset]} Elements')
                 .toList(),
             ids: assets
                 .map((photolib.AssetPathEntity asset) => asset.id)
@@ -302,7 +313,7 @@ class SettingsPage extends StatelessWidget {
     if (!const SetEquality<String>().equals(result, model.albumsToUpload)) {
       print('album selection updated');
       PhotoprismUploader.saveAndSetAlbumsToUpload(model, result);
-      PhotoprismUploader.getPhotosToUpload(model);
+      model.photoprismUploader.getPhotosToUpload();
     }
   }
 

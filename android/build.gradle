@@ -1,10 +1,10 @@
 buildscript {
     ext {
-        compileSdkVersion = 31      // or higher
+        compileSdkVersion = 33      // or higher
         targetSdkVersion  = 28      // or higher
         appCompatVersion  = "1.1.0" // or higher
     }
-    ext.kotlin_version = '1.5.31'
+    ext.kotlin_version = '1.7.20'
     repositories {
         google()
         jcenter()

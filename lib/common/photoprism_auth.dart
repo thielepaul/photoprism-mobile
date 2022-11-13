@@ -15,6 +15,7 @@ class PhotoprismAuth {
   String user = 'admin';
   String password = '';
   String sessionId = '';
+  String userId = '';
   bool httpBasicEnabled = false;
   String httpBasicUser = '';
   String httpBasicPassword = '';
@@ -49,6 +50,11 @@ class PhotoprismAuth {
         await secureStorage.read(key: 'sessionToken');
     if (sessionTokenStored != null) {
       sessionId = sessionTokenStored;
+    }
+
+    final String? userIdStored = await secureStorage.read(key: 'userId');
+    if (userIdStored != null) {
+      userId = userIdStored;
     }
 
     final String? userStored = await secureStorage.read(key: 'user');
@@ -108,6 +114,12 @@ class PhotoprismAuth {
     sessionId = value;
     model.notify();
     await secureStorage.write(key: 'sessionToken', value: sessionId);
+  }
+
+  Future<void> setUserId(String value) async {
+    userId = value;
+    model.notify();
+    await secureStorage.write(key: 'userId', value: userId);
   }
 
   Map<String, String> getAuthHeaders() {
