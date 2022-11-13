@@ -40,7 +40,6 @@ class PhotoprismUploader {
       return;
     }
     initPlatformState();
-    getPhotosToUpload();
 
     BackgroundFetch.start().then((int status) {
       print('[BackgroundFetch] start success: $status');
@@ -49,6 +48,7 @@ class PhotoprismUploader {
     });
 
     isar = await Isar.open(<CollectionSchema<LocalFile>>[LocalFileSchema]);
+    updatePhotoSets();
   }
 
   Future<void> resetState() async {
@@ -141,21 +141,26 @@ class PhotoprismUploader {
     }
 
     final String deviceName = await getNameOfCurrentDevice(model);
-    model.addLogEntry('AutoUploader', 'Getting device name: ' + deviceName);
+    await getRemoteAlbumsWithDeviceName(deviceName);
 
     if ((await photolib.PhotoManager.requestPermissionExtend()).isAuth) {
       final List<photolib.AssetPathEntity> albums =
           await photolib.PhotoManager.getAssetPathList();
       for (final photolib.AssetPathEntity album in albums) {
         if (model.albumsToUpload.contains(album.id)) {
+          model.addLogEntry('AutoUploader',
+              "start checking album '${album.name}' for changes");
           const int pageSize = 100;
           int page = 0;
           List<photolib.AssetEntity> entries;
           do {
             entries = await album.getAssetListPaged(page: page, size: pageSize);
-            for (final photolib.AssetEntity entry in entries) {
-              final LocalFile? file =
-                  await isar.localFiles.get(fastHash(entry.id));
+            final List<LocalFile?> files = await isar.localFiles.getAll(entries
+                .map((photolib.AssetEntity e) => fastHash(e.id))
+                .toList());
+            for (int i = 0; i < entries.length; i++) {
+              final photolib.AssetEntity entry = entries[i];
+              final LocalFile? file = files[i];
               if (file != null) {
                 if (file.uploadStatus == UploadStatus.none) {
                   await isar.writeTxn(() async {
@@ -176,6 +181,8 @@ class PhotoprismUploader {
             }
             page++;
           } while (entries.length == pageSize);
+          model.addLogEntry('AutoUploader',
+              "finished checking album '${album.name}' for changes");
         }
       }
     }
@@ -469,11 +476,14 @@ class PhotoprismUploader {
       await failUpload('original file could not be accessed.');
       return;
     }
+
+    final String serverAlbumId =
+        deviceAlbums[file.albumName]?.uid ?? file.albumName;
     final bool status = await apiUpload(
-        model, fileHash, file.filename, imageFile, <String>[file.albumName]);
+        model, fileHash, file.filename, imageFile, <String>[serverAlbumId]);
     if (status) {
-      model.addLogEntry(
-          'AutoUploader', "Uploading photo ${file.filename} successful'.");
+      model.addLogEntry('AutoUploader',
+          "Uploading photo ${file.filename} successful to album '$serverAlbumId'.");
     } else {
       await failUpload('backend returned error.');
       return;
@@ -512,6 +522,17 @@ class PhotoprismUploader {
       await isar.localFiles.putAll(dbfiles);
     });
     await updatePhotoSets();
+  }
+
+  Future<void> getRemoteAlbumsWithDeviceName(String deviceName) async {
+    // Get list of albums from server which name contains the device name of the smartphone.
+    await apiUpdateDb(model);
+    final List<Album> deviceAlbumList = model.albums!
+        .where((Album album) => album.title!.contains(deviceName))
+        .toList();
+
+    deviceAlbums = Map<String?, Album>.fromEntries(deviceAlbumList
+        .map((Album album) => MapEntry<String?, Album>(album.title, album)));
   }
 
   static Future<void> saveAndSetAlbumsToUpload(
