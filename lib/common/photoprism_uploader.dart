@@ -343,6 +343,9 @@ class PhotoprismUploader {
     model.addLogEntry('AutoUploader', 'Next, uploading all new photos.');
     await Future.wait(<Future<void>>[prepareForUpload(), uploadPhotos()]);
 
+    model.addLogEntry('AutoUploader', 'Next, checking album assignments.');
+    await fixAlbumAssignments();
+
     model.addLogEntry('AutoUploader', 'Autoupload routine finished.');
     autoUploadIsRunning = false;
   }
@@ -541,6 +544,63 @@ class PhotoprismUploader {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setStringList('albumsToUpload', albumsToUpload.toList());
     await model.photoprismUploader.getPhotosToUpload();
+  }
+
+  Future<void> fixAlbumAssignments() async {
+    final Map<String, List<String>> albumAssignments = <String, List<String>>{};
+    final List<LocalFile> dbfiles = await isar.localFiles
+        .filter()
+        .uploadStatusEqualTo(UploadStatus.uploaded)
+        .findAll();
+    for (final LocalFile dbfile in dbfiles) {
+      final String? hash = dbfile.hash;
+      if (hash == null) {
+        model.addLogEntry('AutoUploader',
+            'ERROR: photo is marked as uploaded, but hash is null.');
+        continue;
+      }
+      final List<File> file = await model.database!.getFileFromHash(hash);
+      if (file.isEmpty) {
+        model.addLogEntry('AutoUploader',
+            'ERROR: photo is marked as uploaded, but found no file in database.');
+        continue;
+      }
+      String? serverAlbumId = deviceAlbums[dbfile.albumName]?.uid;
+      if (serverAlbumId == null) {
+        serverAlbumId = await apiCreateAlbum(dbfile.albumName, model);
+        if (serverAlbumId == '-1') {
+          model.addLogEntry('AutoUploader', 'ERROR: creating album failed.');
+          continue;
+        }
+        await apiUpdateDb(model);
+        final String deviceName = await getNameOfCurrentDevice(model);
+        await getRemoteAlbumsWithDeviceName(deviceName);
+      }
+      if (await model.database!.isPhotoAlbum(file[0].photoUID, serverAlbumId)) {
+        continue;
+      }
+      if (!albumAssignments.containsKey(serverAlbumId)) {
+        albumAssignments[serverAlbumId] = <String>[];
+      }
+      albumAssignments[serverAlbumId]!.add(file[0].photoUID);
+    }
+    for (final MapEntry<String, List<String>> entry
+        in albumAssignments.entries) {
+      model.addLogEntry('AutoUploader',
+          'INFO: adding ${entry.value.length} photos to album ${entry.key}.');
+      const int batchSize = 100;
+      for (int i = 0; i < entry.value.length; i += batchSize) {
+        final int result = await apiAddPhotosToAlbum(
+            entry.key,
+            entry.value.sublist(i, min(i + batchSize, entry.value.length)),
+            model);
+        if (result != 0) {
+          model.addLogEntry(
+              'AutoUploader', 'ERROR: adding photos to album failed.');
+          return;
+        }
+      }
+    }
   }
 
   // Returns the device name of the current device (smartphone).
