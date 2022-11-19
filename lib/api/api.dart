@@ -270,12 +270,16 @@ Future<bool> apiGetNewSession(PhotoprismModel model) async {
   if (!model.photoprismAuth.initialized || !model.photoprismAuth.enabled) {
     return false;
   }
-
-  final http.Response? response = await http.post(
-      Uri.parse(model.photoprismUrl + '/api/v1/session'),
-      headers: model.photoprismAuth.getAuthHeaders(),
-      body:
-          '{"username":"${model.photoprismAuth.user}", "password":"${model.photoprismAuth.password}"}');
+  http.Response? response;
+  try {
+    response = await http.post(
+        Uri.parse(model.photoprismUrl + '/api/v1/session'),
+        headers: model.photoprismAuth.getAuthHeaders(),
+        body:
+            '{"username":"${model.photoprismAuth.user}", "password":"${model.photoprismAuth.password}"}');
+  } on io.SocketException catch (e) {
+    print('SocketException: ${e.message}');
+  }
   if (response != null &&
       response.statusCode == 200 &&
       response.headers.containsKey('x-session-id')) {
