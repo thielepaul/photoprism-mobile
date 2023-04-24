@@ -1,4 +1,4 @@
-FROM cirrusci/flutter:3.3.7
+FROM docker pull ghcr.io/cirruslabs/flutter:3.7.12
 RUN useradd -m flutter -s /bin/bash
 RUN adduser flutter sudo
 RUN echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers

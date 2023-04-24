@@ -46,18 +46,18 @@ class PhotoprismApp extends StatelessWidget {
     final Color applicationColor =
         HexColor(Provider.of<PhotoprismModel>(context).applicationColor!);
 
+    final ThemeData theme = ThemeData();
     return MaterialApp(
       title: 'PhotoPrism',
       localizationsDelegates: context.localizationDelegates,
       supportedLocales: context.supportedLocales,
       locale: context.locale,
-      theme: ThemeData(
+      theme: theme.copyWith(
         primaryColor: applicationColor,
-        backgroundColor: Colors.grey[300], // used for placeholders
         colorScheme: ColorScheme.light(
           primary: applicationColor,
+          background: Colors.grey[300]!, // used for placeholders
         ),
-        toggleableActiveColor: applicationColor,
         textSelectionTheme: TextSelectionThemeData(
             cursorColor: applicationColor,
             selectionColor: applicationColor,
@@ -67,6 +67,52 @@ class PhotoprismApp extends StatelessWidget {
         inputDecorationTheme: InputDecorationTheme(
             focusedBorder: UnderlineInputBorder(
                 borderSide: BorderSide(color: applicationColor))),
+        switchTheme: SwitchThemeData(
+          thumbColor: MaterialStateProperty.resolveWith<Color?>(
+              (Set<MaterialState> states) {
+            if (states.contains(MaterialState.disabled)) {
+              return null;
+            }
+            if (states.contains(MaterialState.selected)) {
+              return applicationColor;
+            }
+            return null;
+          }),
+          trackColor: MaterialStateProperty.resolveWith<Color?>(
+              (Set<MaterialState> states) {
+            if (states.contains(MaterialState.disabled)) {
+              return null;
+            }
+            if (states.contains(MaterialState.selected)) {
+              return applicationColor;
+            }
+            return null;
+          }),
+        ),
+        radioTheme: RadioThemeData(
+          fillColor: MaterialStateProperty.resolveWith<Color?>(
+              (Set<MaterialState> states) {
+            if (states.contains(MaterialState.disabled)) {
+              return null;
+            }
+            if (states.contains(MaterialState.selected)) {
+              return applicationColor;
+            }
+            return null;
+          }),
+        ),
+        checkboxTheme: CheckboxThemeData(
+          fillColor: MaterialStateProperty.resolveWith<Color?>(
+              (Set<MaterialState> states) {
+            if (states.contains(MaterialState.disabled)) {
+              return null;
+            }
+            if (states.contains(MaterialState.selected)) {
+              return applicationColor;
+            }
+            return null;
+          }),
+        ),
       ),
       darkTheme: ThemeData.dark(),
       themeMode: Provider.of<PhotoprismModel>(context).themeMode,

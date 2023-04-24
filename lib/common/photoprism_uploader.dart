@@ -11,6 +11,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:isar/isar.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:photo_manager/photo_manager.dart' as photolib;
 import 'package:photo_manager/photo_manager.dart';
 import 'package:photoprism/api/api.dart';
@@ -47,7 +48,9 @@ class PhotoprismUploader {
       print('[BackgroundFetch] start FAILURE: $e');
     });
 
-    isar = await Isar.open(<CollectionSchema<LocalFile>>[LocalFileSchema]);
+    final io.Directory dir = await getApplicationDocumentsDirectory();
+    isar = await Isar.open(<CollectionSchema<LocalFile>>[LocalFileSchema],
+        directory: dir.path);
     updatePhotoSets();
   }
 

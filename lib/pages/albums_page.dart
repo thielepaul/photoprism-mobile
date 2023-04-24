@@ -176,7 +176,8 @@ class AlbumsPage extends StatelessWidget {
                                         (BuildContext context, String url) =>
                                             Container(
                                                 color: Theme.of(context)
-                                                    .backgroundColor),
+                                                    .colorScheme
+                                                    .background),
                                     errorWidget: (BuildContext context,
                                             String url, Object? error) =>
                                         const Icon(Icons.error),

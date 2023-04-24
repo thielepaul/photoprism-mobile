@@ -12,7 +12,7 @@ class AboutWidget extends StatelessWidget {
           text: TextSpan(
             children: <InlineSpan>[
               TextSpan(
-                  style: theme.bodyText1,
+                  style: theme.bodyLarge,
                   text:
                       'This PhotoPrism Flutter App is a community-maintained application to browse the photos on your PhotoPrism server.\n\nThe source code of the app is licensed under the GPLv3. The source code of the app can be found here: '),
               TextSpan(
@@ -24,9 +24,9 @@ class AboutWidget extends StatelessWidget {
                         'https://github.com/photoprism/photoprism-mobile'));
                   },
               ),
-              TextSpan(style: theme.headline6, text: '\n\nTrademarks'),
+              TextSpan(style: theme.titleLarge, text: '\n\nTrademarks'),
               TextSpan(
-                  style: theme.bodyText1,
+                  style: theme.bodyLarge,
                   text:
                       '\n\nPhotoPrism® is a registered trademark of Michael Mayer. You may use it as required to describe our software, run your server, for educational purposes, but not for offering commercial goods, products, or services without prior written permission.\n\nFeel free to reach out if you have questions:\n'),
               TextSpan(
